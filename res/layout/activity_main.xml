@@ -8,9 +8,34 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.robotics.MainActivity" >
 
-    <TextView
+    <Button
+        android:id="@+id/btForward"
+        style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="33dp"
+        android:text="W" />
+
+    <Button
+        android:id="@+id/btBackward"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginRight="24dp"
+        android:layout_marginTop="30dp"
+        android:text="S" />
+
+    <Button
+        android:id="@+id/btConnect"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btBackward"
+        android:layout_marginRight="27dp"
+        android:layout_toLeftOf="@+id/btBackward"
+        android:text="Connect" />
 
 </RelativeLayout>
