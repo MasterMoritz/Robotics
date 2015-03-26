@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Robot</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="powah">POWAH</string>
+    <string name="disconnect">disconnect</string>
+    <string name="powaaaah">POWAAAAH</string>
+    <string name="connect">connect</string>
+    <string name="power">POWER</string>
+    <string name="travel_distance">travel distance</string>
+    <string name="turn_angle">turn angle</string>
+    <string name="make_a_square">make a square</string>
+
+</resources>

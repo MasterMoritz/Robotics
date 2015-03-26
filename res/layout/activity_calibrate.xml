@@ -1,0 +1,47 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="com.ebstor.robot.CalibrateActivity">
+
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="calibrate translation"
+            android:id="@+id/calibrate_translation" android:layout_gravity="center_horizontal"
+            android:layout_marginTop="79dp"
+            android:layout_alignParentTop="true" android:layout_centerHorizontal="true"
+            android:onClick="translationTestRun"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="calibrate rotation"
+            android:id="@+id/calibrate_rotation"
+            android:layout_below="@+id/calibrate_translation" android:layout_centerHorizontal="true"
+            android:layout_marginTop="51dp"
+            android:onClick="rotationTestRun"/>
+
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/realvalue"
+            android:layout_marginTop="48dp"
+            android:text="enter real value" android:inputType="number" android:layout_below="@+id/calibrate_rotation"
+            android:layout_centerHorizontal="true"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="submit centimetres"
+            android:id="@+id/submitcm"
+            android:layout_below="@+id/realvalue" android:layout_centerHorizontal="true"
+            android:onClick="calibrateTranslation"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="submit degrees"
+            android:id="@+id/submitdegrees"
+            android:layout_below="@+id/submitcm" android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:onClick="calibrateRotation"/>
+</RelativeLayout>

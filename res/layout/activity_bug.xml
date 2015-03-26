@@ -1,0 +1,30 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="com.ebstor.robot.BugActivity">
+
+
+    <EditText
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/x_coordinate" android:layout_alignParentTop="true" android:layout_centerHorizontal="true"
+            android:layout_marginTop="81dp" android:text="x"/>
+    <EditText android:layout_width="100dp" android:layout_height="wrap_content" android:id="@+id/y_coordinate"
+              android:text="y" android:layout_below="@+id/x_coordinate" android:layout_centerHorizontal="true"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="START BUG 0"
+            android:id="@+id/start_bug0" android:layout_centerVertical="true" android:layout_centerHorizontal="true"
+            android:onClick="startBug0"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ORIGIN"
+            android:id="@+id/origin" android:layout_above="@+id/start_bug0" android:layout_centerHorizontal="true"
+            android:onClick="origin"/>
+
+</RelativeLayout>
+
