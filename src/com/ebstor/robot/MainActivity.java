@@ -1,6 +1,7 @@
 package com.ebstor.robot;
 
 import android.content.Intent;
+import android.widget.ToggleButton;
 import com.ebstor.robot.corefunctions.Robot;
 import jp.ksksue.driver.serial.FTDriver;
 
@@ -18,53 +19,47 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import static java.lang.Thread.sleep;
-
 public class MainActivity extends Activity {
 
-
-	private Button powah;
-	private Button connect;
-	private Button disconnect;
-    private Button distanceButton;
-    private Button angleButton;
-    private Button squareButton;
 	private EditText distance;
     private EditText angle;
-    private TextView sensor;
     public static Robot robot;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-		powah = (Button) findViewById(R.id.powah);
-		connect = (Button) findViewById(R.id.connect);
-		disconnect = (Button) findViewById(R.id.disconnect);
+        Button powah = (Button) findViewById(R.id.powah);
         robot = new Robot((TextView) findViewById(R.id.textLog),new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
         powah.setOnTouchListener(new OnTouchListener() {
-			
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-					switch (event.getAction()) {
-					case MotionEvent.ACTION_DOWN:
-						robot.drive();
-						break;
-					case MotionEvent.ACTION_UP:
-						robot.stop();
-						break;			
-					}
-				return true;
-			}
-		});
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        robot.drive();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        robot.stop();
+                        break;
+                }
+                return true;
+            }
+        });
 
         distance = (EditText) findViewById(R.id.distance);
         angle = (EditText) findViewById(R.id.angle);
-		distanceButton = (Button) findViewById(R.id.distancebutton);
-        angleButton = (Button) findViewById(R.id.angleButton);
-        squareButton = (Button) findViewById(R.id.makeASqaure);
-        sensor = (TextView) findViewById(R.id.sensor);
 	}
+
+    public void switchConnection(View v) {
+        boolean on = ((ToggleButton) v).isChecked();
+
+        if (on) {
+            disconnect();
+        } else {
+            connect();
+        }
+    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -92,11 +87,11 @@ public class MainActivity extends Activity {
         startActivity(intent);
     }
 
-    public void connect(View v) {
+    public void connect() {
         robot.connect();
     }
 
-    public void disconnect(View v) {
+    public void disconnect() {
         robot.disconnect();
     }
 

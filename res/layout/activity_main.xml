@@ -17,28 +17,6 @@
         android:layout_marginTop="111dp"
         android:text="@string/power" />
 
-    <Button
-        android:id="@+id/disconnect"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/disconnect"
-        android:onClick="disconnect"
-        />
-
-    <Button
-        android:id="@+id/connect"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/connect"
-        android:onClick="connect"
-        />
-
     <TextView
         android:id="@+id/textLog"
         android:layout_width="500dp"
@@ -77,6 +55,13 @@
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/sensor" android:layout_below="@+id/disconnect" android:layout_centerHorizontal="true"/>
+            android:id="@+id/sensor" android:layout_centerHorizontal="true"/>
+    <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/connectionSwitch"
+            android:checked="false" android:clickable="true" android:textOff="offline" android:textOn="online"
+            android:layout_below="@+id/sensor" android:layout_toEndOf="@+id/powah"
+            android:onClick="switchConnection"/>
 
 </RelativeLayout>
