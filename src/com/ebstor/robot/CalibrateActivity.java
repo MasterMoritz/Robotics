@@ -4,15 +4,23 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import com.ebstor.robot.corefunctions.Robot;
 import com.example.robot.R;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Created by johannes on 3/23/15.
  */
-public class CalibrateActivity extends Activity {
-
-    private final int CALIBRATION_DIST = 95;
-    private final int CALIBRATION_DEG = 360;
+public class CalibrateActivity extends MainActivity {
+    /**
+     * in ms
+     */
+    private final int CALIBRATION_DRIVE = 5000;
+    /**
+     * in ms
+      */
+    private final int CALIBRATION_TURN = 5000;
     private EditText realValue;
 
     @Override
@@ -23,23 +31,32 @@ public class CalibrateActivity extends Activity {
     }
 
     public void translationTestRun(View v) {
-       // TODO implement time using gyroskop
-        MainActivity.robot.drive(CALIBRATION_DIST);
+        robot.drive();
+        try {
+            sleep(CALIBRATION_DRIVE);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        robot.stop();
     }
 
     public void rotationTestRun(View v) {
-       // TODO implement time using gyroskop
-        MainActivity.robot.turn(90);
-        MainActivity.robot.turn(CALIBRATION_DEG-90);
+        robot.turnLeft();
+        try {
+            sleep(CALIBRATION_TURN);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        robot.stop();
     }
 
     public void calibrateTranslation(View v) {
         Integer actual = Integer.parseInt(realValue.getText().toString());
-        MainActivity.robot.setTRANSLATION_COEFFICIENT(CALIBRATION_DIST/actual);
+        Robot.CM_PER_MILLISECOND = actual/CALIBRATION_DRIVE;
     }
 
     public void calibrateRotation(View v) {
         Integer actual = Integer.parseInt(realValue.getText().toString());
-        MainActivity.robot.setROTATION_COEFFICIENT(CALIBRATION_DEG/actual);
+        Robot.DEGREE_PER_MILLISECOND = actual/CALIBRATION_TURN;
     }
 }

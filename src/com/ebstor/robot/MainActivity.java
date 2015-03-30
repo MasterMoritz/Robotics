@@ -1,7 +1,7 @@
 package com.ebstor.robot;
 
 import android.content.Intent;
-import com.ebstor.robot.robotcommunication.Robot;
+import com.ebstor.robot.corefunctions.Robot;
 import jp.ksksue.driver.serial.FTDriver;
 
 import com.example.robot.R;
@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event) {
 					switch (event.getAction()) {
 					case MotionEvent.ACTION_DOWN:
-						robot.moveForward();
+						robot.drive();
 						break;
 					case MotionEvent.ACTION_UP:
 						robot.stop();

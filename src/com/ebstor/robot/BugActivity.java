@@ -3,15 +3,14 @@ package com.ebstor.robot;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import com.ebstor.robot.robotcommunication.Location;
+import com.ebstor.robot.corefunctions.Location;
 import com.example.robot.R;
 
 /**
  * Created by johannes on 3/24/15.
  */
-public class BugActivity extends Activity {
+public class BugActivity extends MainActivity {
 
     private EditText x_coordinate, y_coordinate;
 
@@ -24,13 +23,13 @@ public class BugActivity extends Activity {
     }
 
     public void origin(View v) {
-        MainActivity.robot.robotLocation = new Location();
+        robot.robotLocation = new Location();
     }
 
     public void startBug0(View v) {
         int x = Integer.valueOf(x_coordinate.getText().toString());
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
-        MainActivity.robot.bug0(goal);
+        robot.bug0(goal);
     }
 }
