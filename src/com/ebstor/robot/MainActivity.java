@@ -1,7 +1,7 @@
 package com.ebstor.robot;
 
 import android.content.Intent;
-import android.widget.ToggleButton;
+import android.widget.*;
 import com.ebstor.robot.corefunctions.Robot;
 import jp.ksksue.driver.serial.FTDriver;
 
@@ -15,9 +15,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
@@ -52,7 +49,7 @@ public class MainActivity extends Activity {
 	}
 
     public void switchConnection(View v) {
-        boolean on = ((ToggleButton) v).isChecked();
+        boolean on = ((Switch) v).isChecked();
 
         if (on) {
             disconnect();
