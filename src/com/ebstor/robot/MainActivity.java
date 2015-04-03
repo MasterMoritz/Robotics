@@ -52,9 +52,9 @@ public class MainActivity extends Activity {
         boolean on = robot.com.isConnected();
 
         if (on) {
-            disconnect();
-        } else {
             connect();
+        } else {
+            disconnect();
         }
     }
 
