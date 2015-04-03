@@ -1,8 +1,10 @@
-<<<<<<< HEAD
 /.idea
 /.classpath
 /.project
-=======
+.project
+bin/
+gen/
+src/jp/
 # Ignore Play! working directory #
 bin/
 /db
