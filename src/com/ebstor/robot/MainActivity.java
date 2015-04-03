@@ -52,9 +52,9 @@ public class MainActivity extends Activity {
         boolean on = ((Switch) v).isChecked();
 
         if (on) {
-            disconnect();
-        } else {
             connect();
+        } else {
+            disconnect();
         }
     }
 
