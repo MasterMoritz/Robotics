@@ -48,7 +48,7 @@ public class Robot {
     }
 
     private long distanceToTime(double distance_cm) {
-        return (long) (1/CM_PER_MILLISECOND/distance_cm);
+        return (long) (CM_PER_MILLISECOND/distance_cm);
     }
 
     private double timeToDistance(long distanceToTimeMillis) {
@@ -56,7 +56,7 @@ public class Robot {
     }
 
     private long degreesToTime(double degrees) {
-        return (long) (1/DEGREE_PER_MILLISECOND/degrees);
+        return (long) (DEGREE_PER_MILLISECOND/degrees);
     }
 
     private double timeToDegrees(long turnTimeMillis) {
@@ -127,7 +127,7 @@ public class Robot {
     }
 
     public void turn(double degree) {
-        int time = (int) (degree * DEGREE_PER_MILLISECOND);
+        int time = (int) (degreesToTime(degree));
         if (degree <= 0) com.setVelocity((byte)30,(byte) -30);
         else com.setVelocity((byte)-30,(byte)30);
         sleep_h(time);
