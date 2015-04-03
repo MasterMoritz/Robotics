@@ -20,6 +20,7 @@ public class BugActivity extends MainActivity {
         setContentView(R.layout.activity_bug);
         x_coordinate = (EditText) findViewById(R.id.x_coordinate);
         y_coordinate = (EditText) findViewById(R.id.y_coordinate);
+        MainActivity.robot.connect();
     }
 
     public void origin(View v) {

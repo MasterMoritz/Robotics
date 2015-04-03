@@ -84,7 +84,7 @@ public class Robot {
     }
 
     /**
-     * sets both wheels to 30/100
+     * sets both wheels to 30/30
      */
     public void drive() {
         com.setVelocity((byte) 30, (byte) 30);

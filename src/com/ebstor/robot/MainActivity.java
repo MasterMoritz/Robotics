@@ -20,7 +20,7 @@ public class MainActivity extends Activity {
 
 	private EditText distance;
     private EditText angle;
-    public static Robot robot;
+    public static Robot robot = null;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {

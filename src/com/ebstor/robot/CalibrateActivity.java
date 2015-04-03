@@ -31,13 +31,14 @@ public class CalibrateActivity extends MainActivity {
     }
 
     public void translationTestRun(View v) {
-        robot.drive();
-        try {
-            sleep(CALIBRATION_DRIVE);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        robot.stop();
+    	MainActivity.robot.connect();
+    	if (MainActivity.robot != null) {
+	        MainActivity.robot.drive();
+	        try {
+	            sleep(CALIBRATION_DRIVE);
+	        } catch (Exception e) {}
+	        MainActivity.robot.stop();
+    	}
     }
 
     public void rotationTestRun(View v) {
