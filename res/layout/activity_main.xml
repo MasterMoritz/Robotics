@@ -56,12 +56,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/sensor" android:layout_centerHorizontal="true"/>
-    <Switch
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/connectionSwitch"
-            android:checked="false" android:clickable="true" android:textOff="offline" android:textOn="online"
-            android:layout_below="@+id/sensor" android:layout_toEndOf="@+id/powah"
-            android:onClick="switchConnection"/>
+
+    <Button
+        android:id="@+id/btConnect"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/angleButton"
+        android:layout_alignTop="@+id/sensor"
+        android:layout_marginTop="15dp"
+        android:text="connect/disconnect"
+        android:onClick="switchConnection" />
 
 </RelativeLayout>

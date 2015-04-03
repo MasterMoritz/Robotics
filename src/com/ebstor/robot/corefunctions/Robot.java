@@ -40,7 +40,7 @@ public class Robot {
     private static final int RANGE_THRESHOLD = 15;
 
     public Location robotLocation;
-    private Communicator com;
+    public Communicator com;
 
     public Robot(TextView textLog, FTDriver driver) {
         this.com = new Communicator(driver,textLog);
@@ -79,6 +79,7 @@ public class Robot {
         long time = distanceToTime(distance_cm);
         drive();
         sleep_h(time);
+        stop();
         robotLocation.translate(distance_cm);
     }
 
@@ -196,7 +197,7 @@ public class Robot {
 
     private void sleep_h(long millis) {
         try {
-            sleep(millis);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

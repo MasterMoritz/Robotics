@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
 	}
 
     public void switchConnection(View v) {
-        boolean on = ((Switch) v).isChecked();
+        boolean on = robot.com.isConnected();
 
         if (on) {
             disconnect();

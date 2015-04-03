@@ -30,6 +30,10 @@ public class Communicator {
         if (!driver.isConnected()) textLog.append("disconnected! ");
     }
 
+    public boolean isConnected() {
+    	return driver.isConnected();
+    }
+    
     public void write(byte[] data) {
         if (driver.isConnected()) {
             driver.write(data);
