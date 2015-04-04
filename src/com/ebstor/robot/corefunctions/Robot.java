@@ -40,6 +40,7 @@ public class Robot {
     private static final int RANGE_THRESHOLD = 15;
 
     public Location robotLocation;
+    public Location goal;
     public Communicator com;
 
     public Robot(TextView textLog, FTDriver driver) {
@@ -218,4 +219,21 @@ public class Robot {
         driveUntil(isObstacle,dist);
     }
 
+    public void bug2(Location goal) {
+        this.goal = goal;
+    }
+
+    private boolean mlineEncountered() {
+        return distanceToMline() <= 3; // (cm) this depends on how far robot travels between checks, can therefore be reduced
+    }
+
+    /**
+     * computes the shortest distance between the current robot location and the m-line
+     */
+    public double distanceToMline() {
+        double x = robotLocation.getX();
+        double y = robotLocation.getY();
+        double normalLength = Math.sqrt(Math.pow(goal.getX(),2)+Math.pow(goal.getY(),2));
+        return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
+    }
 }
