@@ -16,14 +16,14 @@
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="START BUG 0"
-            android:id="@+id/start_bug0" android:layout_centerVertical="true" android:layout_centerHorizontal="true"
-            android:onClick="startBug0"/>
+            android:text="START BUG"
+            android:id="@+id/start_bug" android:layout_centerVertical="true" android:layout_centerHorizontal="true"
+            android:onClick="startBug"/>
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="ORIGIN"
-            android:id="@+id/origin" android:layout_above="@+id/start_bug0" android:layout_centerHorizontal="true"
+            android:id="@+id/origin" android:layout_above="@+id/start_bug" android:layout_centerHorizontal="true"
             android:onClick="origin"/>
 
 </RelativeLayout>

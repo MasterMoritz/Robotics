@@ -27,7 +27,7 @@ public class BugActivity extends MainActivity {
         robot.robotLocation = new Location();
     }
 
-    public void startBug0(View v) {
+    public void startBug(View v) {
         int x = Integer.valueOf(x_coordinate.getText().toString());
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);

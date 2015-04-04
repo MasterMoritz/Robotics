@@ -8,5 +8,5 @@ public interface SensorCondition {
      * important: must check sensors of the robot so that it stops!
      * @return if the condition holds
      */
-    boolean reached();
+    boolean holds();
 }

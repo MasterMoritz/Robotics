@@ -31,9 +31,9 @@ public class Robot {
      */
     private long TURN_INTERVAL = 250;
     /**
-     * the circumference in cm from the within which the robot assumes he has reached it
+     * the circumference in cm from the within which the robot assumes he has holds it
      */
-    private static final int CIRCUMFERENCE_GOAL = 10;
+    private static final int CIRCUMFERENCE_GOAL = 5;
     /**
      * the threshold in cm where the robot starts avoiding an obstacle
      */
@@ -95,7 +95,7 @@ public class Robot {
      * drives until a certain sensor condition is met (e.g. obstacle in front)
      */
     public void driveUntil(SensorCondition condition) {
-        while (!condition.reached()) {
+        while (!condition.holds()) {
             drive();
             long t0 = System.currentTimeMillis();
             sleep_h(DRIVE_INTERVAL);
@@ -112,20 +112,21 @@ public class Robot {
         int time = (int) (1/CM_PER_MILLISECOND/distance_cm);
         boolean reached = false;
         for (int i = 0; i < time/DRIVE_INTERVAL; i++) {
-            if (reached = condition.reached()) break;
+            if (reached = condition.holds()) break;
             drive();
             long t0 = System.currentTimeMillis();
             sleep_h(DRIVE_INTERVAL);
             long dt = System.currentTimeMillis() - t0;
             robotLocation.translate(timeToDistance(dt));
         }
-        if (!reached) {    // drive the rest of the time, provided that the stopping condition has not been reached
+        if (!reached) {    // drive the rest of the time, provided that the stopping condition has not been holds
             drive();
             long t0 = System.currentTimeMillis();
             sleep_h(time%DRIVE_INTERVAL);
             long dt = System.currentTimeMillis() - t0;
             robotLocation.translate(timeToDistance(dt));
         }
+        com.stop();
     }
 
     public void turn(double degree) {
@@ -149,10 +150,10 @@ public class Robot {
      * turns left until a certain sensor condition is met (e.g. obstacle parallel to object)
      */
     public void turnLeftUntil(SensorCondition condition) {
-        while (!condition.reached()) {
+        while (!condition.holds()) {
             turnLeft();
             long t0 = System.currentTimeMillis();
-            sleep_h(DRIVE_INTERVAL);
+            sleep_h(TURN_INTERVAL);
             long dt = System.currentTimeMillis() - t0;
             robotLocation.rotate(timeToDegrees(dt));
         }
@@ -163,7 +164,7 @@ public class Robot {
      * turns right until a certain sensor condition is met (e.g. obstacle parallel to object)
      */
     public void turnRightUntil(SensorCondition condition)  {
-        while (!condition.reached()) {
+        while (!condition.holds()) {
             turnRight();
             long t0 = System.currentTimeMillis();
             sleep_h(DRIVE_INTERVAL);
@@ -173,14 +174,6 @@ public class Robot {
         com.stop();
     }
 
-    /**
-     *
-     * @return if the goal has been reached
-     */
-    public boolean bug0(Location goal) {
-        // TODO implement (or implement some other bug)
-        return true;
-    }
 
     private boolean withinCircumferenceOfGoal(Location goal) {
         return (euclideanDistance(robotLocation,goal) <= CIRCUMFERENCE_GOAL);
@@ -207,7 +200,7 @@ public class Robot {
     public void driveAndStopForObstacles(Integer dist) {
         SensorCondition isObstacle = new SensorCondition() {
             @Override
-            public boolean reached() {
+            public boolean holds() {
                 int[] sensors = com.getSensors();
                 int left = sensors[0];
                 int center = sensors[1];
@@ -230,10 +223,57 @@ public class Robot {
     /**
      * computes the shortest distance between the current robot location and the m-line
      */
-    public double distanceToMline() {
+    private double distanceToMline() {
         double x = robotLocation.getX();
         double y = robotLocation.getY();
         double normalLength = Math.sqrt(Math.pow(goal.getX(),2)+Math.pow(goal.getY(),2));
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
+    }
+
+    private void followObstacleUntil(SensorCondition leavingCondition) {
+        // condition holds when the robot is aligned parallel to an obstacle
+        SensorCondition alignedParallel = new SensorCondition() {
+            @Override
+            public boolean holds() {
+                int sensors[] = com.getSensors();
+                int left = sensors[0];
+                int center = sensors[1];
+                int right = sensors[2];
+
+                //TODO implement
+                return false;
+            }
+        };
+        // holds when the leaving condition holds or the robot is no longer correctly following the obstacle
+        SensorCondition driveCondition = new SensorCondition() {
+            @Override
+            public boolean holds() {
+                return !alignedParallel.holds() || leavingCondition.holds();
+            }
+        };
+
+        turnLeftUntil(alignedParallel); // left-turning robot
+
+        while(true) {
+            /* this are the sensor values when the robot is nicely aligned */
+            int sensors[] = com.getSensors();
+            int alignedRight = sensors[2];
+
+            driveUntil(driveCondition);
+
+            if (leavingCondition.holds())
+                return;
+            else {
+            /* here the robot is not aligned correctly,
+            now decide whether to correct the orientation to the right or to the left */
+                sensors = com.getSensors();
+                int badlyAlignedRight = sensors[2];
+                if (badlyAlignedRight > alignedRight)   // new distance to the right is greater so we must turn right
+                    turnRightUntil(alignedParallel);
+                else
+                    turnLeftUntil(alignedParallel);
+            }
+        }
+
     }
 }
