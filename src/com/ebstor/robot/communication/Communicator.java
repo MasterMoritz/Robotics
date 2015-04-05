@@ -3,6 +3,7 @@ package com.ebstor.robot.communication;
 import android.widget.TextView;
 import jp.ksksue.driver.serial.FTDriver;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Thread.sleep;
@@ -83,13 +84,20 @@ public class Communicator {
 
     public int[] getSensors() {
         int[] sensors = new int[3];
-        String answer = readWrite(
-                new byte[]{'q', '\r', '\n'}
-        );
-        String[] output = answer.split(" ");
-        sensors[0] = hexaToDecimal(output[3]);
-        sensors[1] = hexaToDecimal(output[4]);
-        sensors[2] = hexaToDecimal(output[5]);
+        
+        String[] parsed = readWrite(new byte[] { 'q', '\r', '\n' }).split("\\s+");
+		ArrayList<String> hexas = new ArrayList<>();
+		
+		for (String s : parsed) {
+			if (s.charAt(0) == '0') {
+				hexas.add(s);
+			}
+		}
+		
+		sensors[0] = Integer.decode(hexas.get(2)); //left
+		sensors[1] = Integer.decode(hexas.get(3)); //right
+		sensors[2] = Integer.decode(hexas.get(4)); //middle
+		
         return sensors;
     }
 
