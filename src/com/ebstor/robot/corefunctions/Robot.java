@@ -14,10 +14,10 @@ public class Robot {
     //private float TRANSLATION_COEFFICIENT = 12f/9f;
     //private float ROTATION_COEFFICIENT = 34.5f/30f;
     // TODO add default values
-    /** degrees turned per millisecond */
+    /** degrees turned per millisecond for velocity 30*/
     public static double DEGREE_PER_MILLISECOND;
     
-    /** cm travelled per millisecond */
+    /** cm travelled per millisecond for velocity 30*/
     public static double CM_PER_MILLISECOND;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
@@ -94,6 +94,12 @@ public class Robot {
     public void drive(int distance_cm, int velocity) {
     	//drive distance
         long time = distanceToTime(distance_cm);
+        
+        //drive backward if distance is negative
+        if (distance_cm < 0) {
+        	velocity *= -1;
+        }
+        
         com.setVelocity(velocity, velocity);
         sleep_h(time);
         com.stop();
@@ -127,21 +133,39 @@ public class Robot {
      * drives until a certain sensor condition is met and maximally distance_cm
      */
     public void driveUntil(SensorCondition condition, int distance_cm) {
-        int time = (int) (1/CM_PER_MILLISECOND/distance_cm);
         boolean reached = false;
-        for (int i = 0; i < time/DRIVE_INTERVAL; i++) {
-            if (reached = condition.holds()) break;
+        double distance_driven = 0; //the driven distance in cm
+        
+        while(distance_cm > distance_driven) {
+            if (condition.holds()) {
+            	reached = true;
+            	break;
+            }
+            
             drive();
+            
             long t0 = System.currentTimeMillis();
             sleep_h(DRIVE_INTERVAL);
             long dt = System.currentTimeMillis() - t0;
-            robotLocation.translate(timeToDistance(dt));
+            
+            double iteration_distance = timeToDistance(dt); // distance driven in current loop iteration
+            distance_driven += iteration_distance;
+            
+            //update robot pose
+            robotLocation.translate(iteration_distance);
+            
+            com.stop(); // idk if multiple drive commands work without stopping inbetween, gotta test it
         }
-        if (!reached) {    // drive the rest of the time, provided that the stopping condition has not been holds
-            drive();
-            long t0 = System.currentTimeMillis();
-            sleep_h(time%DRIVE_INTERVAL);
+        
+        // drive the rest of the distance, provided that the stopping condition has not been met
+        if (!reached) {
+        	int dd = (int) (distance_cm - distance_driven);
+        	
+        	long t0 = System.currentTimeMillis();
+            drive(dd, 30);
+            sleep_h(distanceToTime(dd));
             long dt = System.currentTimeMillis() - t0;
+            
             robotLocation.translate(timeToDistance(dt));
         }
         com.stop();
@@ -207,6 +231,7 @@ public class Robot {
         return Math.sqrt(Math.pow(a.getX()-b.getX(),2) + Math.pow(a.getY() - b.getY(),2));
     }
 
+    /** sleep wrapper */
     private void sleep_h(long millis) {
         try {
             Thread.sleep(millis);
