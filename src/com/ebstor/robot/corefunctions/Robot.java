@@ -57,11 +57,11 @@ public class Robot {
     }
 
     private long degreesToTime(double degrees) {
-        return (long) (1/DEGREE_PER_MILLISECOND/degrees);
+        return (long) ( (1/DEGREE_PER_MILLISECOND) * degrees);
     }
 
-    private double timeToDegrees(long turnTimeMillis) {
-        return turnTimeMillis*DEGREE_PER_MILLISECOND;
+    private double timeToDegrees(long time_ms) {
+        return time_ms*DEGREE_PER_MILLISECOND;
     }
 
     public void connect() {
