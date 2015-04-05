@@ -19,6 +19,12 @@ public class Location {
         theta = 0;
     }
 
+    public Location(double x, double y, double theta) {
+        this.x = x;
+        this.y = y;
+        this.theta = theta;
+    }
+    
     public void translate(double dist_cm) {
         x += Math.cos(Math.toRadians(theta)) * dist_cm;
         y += Math.sin(Math.toRadians(theta)) * dist_cm;

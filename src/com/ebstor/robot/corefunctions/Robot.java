@@ -14,52 +14,64 @@ public class Robot {
     //private float TRANSLATION_COEFFICIENT = 12f/9f;
     //private float ROTATION_COEFFICIENT = 34.5f/30f;
     // TODO add default values
-    /**
-     * degrees turned per millisecond
-     */
+    /** degrees turned per millisecond */
     public static double DEGREE_PER_MILLISECOND;
-    /**
-     * cm travelled per millisecond
-     */
+    
+    /** cm travelled per millisecond */
     public static double CM_PER_MILLISECOND;
-    /**
-     * the interval in ms after which conditions are checked and odometry is updated (when moving forward)
-     */
+    
+    /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
-    /**
-     * the interval in ms after which conditions are checked and odometry is updated (when turning)
-     */
+    
+    /** the interval in ms after which conditions are checked and odometry is updated (when turning) */
     private long TURN_INTERVAL = 250;
-    /**
-     * the circumference in cm from the within which the robot assumes he has holds it
-     */
+    
+    /** the circumference in cm from the within which the robot assumes he has holds it */
     private static final int CIRCUMFERENCE_GOAL = 5;
-    /**
-     * the threshold in cm where the robot starts avoiding an obstacle
-     */
+    
+    /** the threshold in cm where the robot starts avoiding an obstacle */
     private static final int RANGE_THRESHOLD = 15;
 
+    /** holds the pose of the robot */
     public Location robotLocation;
+    
+    /** holds the desired pose of the robot after reaching its destination */
     public Location goal;
+    
+    /** serial communicator */
     public Communicator com;
 
+    /** setup serial communicator and initialize locations */
     public Robot(TextView textLog, FTDriver driver) {
         this.com = new Communicator(driver,textLog);
-        robotLocation = new Location();
+        robotLocation = new Location(0, 0, 0);
+        goal = new Location(0, 0, 0);
     }
 
+    /**
+     * @return time[ms] needed to drive the given distance[cm]
+     */
     private long distanceToTime(double distance_cm) {
         return (long) ( (1/CM_PER_MILLISECOND) * distance_cm);
     }
 
+    /**
+     * @return distance[cm] covered in the given time[ms]
+     */
     private double timeToDistance(long time_ms) {
         return time_ms*CM_PER_MILLISECOND;
     }
 
+    /**
+     * @return time[ms] needed to turn the given angle[°]
+     */
     private long degreesToTime(double degrees) {
         return (long) ( (1/DEGREE_PER_MILLISECOND) * degrees);
     }
 
+    /**
+     * @return angle[°] covered in the given time[ms]
+     */
     private double timeToDegrees(long time_ms) {
         return time_ms*DEGREE_PER_MILLISECOND;
     }
@@ -67,25 +79,31 @@ public class Robot {
     public void connect() {
         com.connect();
     }
-
     public void disconnect() {
         com.disconnect();
     }
-
     public void stop() {
         com.stop();
     }
    
-    public void drive(int distance_cm) {
+    /**
+     * drive straight a certain distance and update robot location 
+     * @param distance_cm : the distance[cm] to drive
+     * @param velocity : the speed of the robot
+     */
+    public void drive(int distance_cm, int velocity) {
+    	//drive distance
         long time = distanceToTime(distance_cm);
-        drive();
+        com.setVelocity(velocity, velocity);
         sleep_h(time);
-        stop();
+        com.stop();
+        
+        //update robot location
         robotLocation.translate(distance_cm);
     }
 
     /**
-     * sets both wheels to 30/30
+     * drive straight with 30 velocity
      */
     public void drive() {
         com.setVelocity((byte) 30, (byte) 30);

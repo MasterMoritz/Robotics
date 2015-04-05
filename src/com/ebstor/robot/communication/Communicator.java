@@ -71,6 +71,11 @@ public class Communicator {
                 new byte[]{'i', left, right, '\r', '\n'}
         );
     }
+    public void setVelocity(int left, int right) {
+        readWrite(
+                new byte[]{'i', (byte)left, (byte)right, '\r', '\n'}
+        );
+    }
 
     public void stop() {
         write(new byte[]{'s', '\r', '\n'});

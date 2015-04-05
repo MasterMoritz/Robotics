@@ -94,7 +94,7 @@ public class MainActivity extends Activity {
 
     public void travelDistance(View v) {
         Integer dist = Integer.valueOf(distance.getText().toString());
-        robot.drive(dist);
+        robot.drive(dist, 30);
 
     }
 
