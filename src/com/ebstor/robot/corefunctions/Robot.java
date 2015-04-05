@@ -49,11 +49,11 @@ public class Robot {
     }
 
     private long distanceToTime(double distance_cm) {
-        return (long) (1/CM_PER_MILLISECOND/distance_cm);
+        return (long) ( (1/CM_PER_MILLISECOND) * distance_cm);
     }
 
-    private double timeToDistance(long distanceToTimeMillis) {
-        return distanceToTimeMillis*CM_PER_MILLISECOND;
+    private double timeToDistance(long time_ms) {
+        return time_ms*CM_PER_MILLISECOND;
     }
 
     private long degreesToTime(double degrees) {
