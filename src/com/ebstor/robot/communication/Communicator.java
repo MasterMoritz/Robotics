@@ -95,8 +95,8 @@ public class Communicator {
 		}
 		
 		sensors[0] = Integer.decode(hexas.get(2)); //left
-		sensors[1] = Integer.decode(hexas.get(3)); //middle
-		sensors[2] = Integer.decode(hexas.get(4)); //right
+		sensors[1] = Integer.decode(hexas.get(4)); //middle
+		sensors[2] = Integer.decode(hexas.get(3)); //right
 		
         return sensors;
     }
