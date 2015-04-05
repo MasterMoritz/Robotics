@@ -31,6 +31,6 @@ public class BugActivity extends MainActivity {
         int x = Integer.valueOf(x_coordinate.getText().toString());
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
-        robot.bug2(goal);
+        robot.setGoal(goal);
     }
 }

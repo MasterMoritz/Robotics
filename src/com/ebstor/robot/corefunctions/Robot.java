@@ -38,6 +38,9 @@ public class Robot {
     /** holds the desired pose of the robot after reaching its destination */
     public Location goal;
     
+    /** the last point on the m-line that the robot hit */
+    public Location m_point;
+    
     /** serial communicator */
     public Communicator com;
 
@@ -46,6 +49,7 @@ public class Robot {
         this.com = new Communicator(driver,textLog);
         robotLocation = new Location(0, 0, 0);
         goal = new Location(0, 0, 0);
+        m_point = new Location(0, 0, 0);
     }
 
     /**
@@ -255,7 +259,7 @@ public class Robot {
         driveUntil(isObstacle,dist);
     }
 
-    public void bug2(Location goal) {
+    public void setGoal(Location goal) {
         this.goal = goal;
     }
 
@@ -273,6 +277,11 @@ public class Robot {
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
     }
 
+    /**
+     * The Roboter should change into following mode 
+     * leave following mode if it hits the m-line (closer to goal than m_point) again
+     * 
+     */
     private void followObstacleUntil(SensorCondition leavingCondition) {
         // condition holds when the robot is aligned parallel to an obstacle
         SensorCondition alignedParallel = new SensorCondition() {
