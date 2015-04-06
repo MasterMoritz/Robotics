@@ -106,4 +106,11 @@ public class Communicator {
         return Integer.valueOf(parsed, 16);
     }
 
+    public void setTextLog(TextView txlog) {
+    	textLog = txlog;
+    }
+    
+    public void setText(String text) {
+    	this.textLog.setText(text);
+    }
 }

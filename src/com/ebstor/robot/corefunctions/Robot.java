@@ -1,9 +1,10 @@
 package com.ebstor.robot.corefunctions;
 
 import android.widget.TextView;
-import com.ebstor.robot.communication.Communicator;
-import jp.ksksue.driver.serial.FTDriver;
 
+import com.ebstor.robot.communication.Communicator;
+
+import jp.ksksue.driver.serial.FTDriver;
 import static java.lang.Thread.sleep;
 
 /**
@@ -32,6 +33,18 @@ public class Robot {
     /** the threshold in cm where the robot starts avoiding an obstacle */
     private static final int RANGE_THRESHOLD = 15;
 
+    /** the threshold in cm at which the robot may start driving again */
+    private static final int SOFT_THRESHOLD = 30;
+    
+    /** the angle between the LOS of the front sensor and the side sensor */
+    private static final int ANGLE_FRONT_SIDE = 15;
+    
+    /** the minimum angle we have to turn to pass an obstacle point in front without collision */
+    private static final int MINIMUM_TURN = 20;
+    
+    /** the minimum distance we have to drive after detecting a wall end, should be about the length of the robot */
+    private static final int MINIMUM_DRIVE = 20;
+    
     /** holds the pose of the robot */
     public Location robotLocation;
     
@@ -137,42 +150,16 @@ public class Robot {
      * drives until a certain sensor condition is met and maximally distance_cm
      */
     public void driveUntil(SensorCondition condition, int distance_cm) {
-        boolean reached = false;
-        double distance_driven = 0; //the driven distance in cm
+        long t0 = System.currentTimeMillis();
         
-        while(distance_cm > distance_driven) {
-            if (condition.holds()) {
-            	reached = true;
-            	break;
-            }
-            
-            drive();
-            
-            long t0 = System.currentTimeMillis();
-            sleep_h(DRIVE_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            
-            double iteration_distance = timeToDistance(dt); // distance driven in current loop iteration
-            distance_driven += iteration_distance;
-            
-            //update robot pose
-            robotLocation.translate(iteration_distance);
-            
-            com.stop(); // idk if multiple drive commands work without stopping inbetween, gotta test it
-        }
+        drive();
+        while(!condition.holds()) {}
         
-        // drive the rest of the distance, provided that the stopping condition has not been met
-        if (!reached) {
-        	int dd = (int) (distance_cm - distance_driven);
-        	
-        	long t0 = System.currentTimeMillis();
-            drive(dd, 30);
-            sleep_h(distanceToTime(dd));
-            long dt = System.currentTimeMillis() - t0;
-            
-            robotLocation.translate(timeToDistance(dt));
-        }
+        long dt = System.currentTimeMillis() - t0;
         com.stop();
+            
+        //update robot pose
+        robotLocation.translate(timeToDistance(dt));
     }
 
     public void turn(double degree) {
@@ -225,10 +212,14 @@ public class Robot {
         return (euclideanDistance(robotLocation,goal) <= CIRCUMFERENCE_GOAL);
     }
 
-    private void turnToGoal(Location goal) throws InterruptedException {
-        double angle = Math.toDegrees(Math.atan2(goal.getY()-robotLocation.getY(),goal.getX()-robotLocation.getX()));
-        double turningAngle = robotLocation.getTheta() - angle;
-        turn(turningAngle);
+    private void turnToGoal(Location goal) {
+    	try {
+	        double angle = Math.toDegrees(Math.atan2(goal.getY()-robotLocation.getY(),goal.getX()-robotLocation.getX()));
+	        double turningAngle = robotLocation.getTheta() - angle;
+	        turn(turningAngle);
+    	} catch(Exception e) {
+    		com.setText("failed to turn towards goal");
+    	}
     }
 
     private double euclideanDistance(Location a, Location b) {
@@ -255,6 +246,9 @@ public class Robot {
 
                 return (Math.min(left,Math.min(center,right)) <= RANGE_THRESHOLD);
             }
+            
+            @Override
+            public void init() {}
         };
         driveUntil(isObstacle,dist);
     }
@@ -277,53 +271,113 @@ public class Robot {
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
     }
 
+    /** the robot should realign to whatever obstacle it is facing now <br>
+     * @param direction : +1 -> turn right, -1 -> turn left
+     */
+    private void realign(int direction) {
+    	
+    	//left/right sensor now measures the distance of front, this should save time because front sensor is slow like shiet
+    	turn(ANGLE_FRONT_SIDE * direction);
+    	
+    	turn(MINIMUM_TURN);
+    	
+    	int turnDirection = 0; //left sensor if turning right
+    	if (direction < 0) {
+    		turnDirection = 2; //right sensor if turning left
+    	}
+    	
+    	//sensor[0] = left
+    	//sensor[1] = middle
+    	//sensor[2] = right
+    	int [] sensor = com.getSensors();
+    	
+    	//get front into soft treshold
+    	while(sensor[turnDirection] < SOFT_THRESHOLD) {
+    		turn(3 * (direction));
+    		sensor = com.getSensors();
+    	}
+    	
+    	//front sensor now measures front again
+    	turn(-ANGLE_FRONT_SIDE * (-direction));
+    	
+    	//get left/right into soft threshold
+    	sensor = com.getSensors();
+    	while(sensor[turnDirection] < SOFT_THRESHOLD) {
+    		turn(3 * (direction));
+    		sensor = com.getSensors();
+    	}
+    }
+    
     /**
      * The Roboter should change into following mode 
      * leave following mode if it hits the m-line (closer to goal than m_point) again
-     * 
+     * @param turnDirection : 1 ->turn clockwise, -1 -> turn counterclockwise <br>
+     * note: for now always clockwise turning should be used because the param is not fully implemented
      */
-    private void followObstacleUntil(SensorCondition leavingCondition) {
-        // condition holds when the robot is aligned parallel to an obstacle
-        SensorCondition alignedParallel = new SensorCondition() {
+    public void followObstacle(int turnDirection) {
+    	com.setText("following obstacle");
+        
+    	int[] sensors = com.getSensors();
+    	int distance = sensors[1] - RANGE_THRESHOLD - 1;
+    	
+    	//drive to the obstacle
+    	if (distance > 0) {
+    		drive(distance, 30);
+    	}
+    	
+    	//now realign
+        realign(turnDirection);
+        
+
+        // stop if misaligned or m-line hit or wall ends
+        SensorCondition driveCondition = new SensorCondition() {
+        	public int[] sensors_old;
+        	public int[] sensors_new;
+        	
             @Override
             public boolean holds() {
-                int sensors[] = com.getSensors();
-                int left = sensors[0];
-                int center = sensors[1];
-                int right = sensors[2];
+            	sensors_new = com.getSensors();
 
-                //TODO implement
+            	if ((sensors_new[0] - sensors_old[0]) > 20 || sensors_new[0] < RANGE_THRESHOLD || sensors_new[1] < RANGE_THRESHOLD 
+            		|| mlineEncountered()) {
+            		return true;
+            	}
+            	
+            	sensors_old[0] = sensors_new[0];
+            	sensors_old[1] = sensors_new[1];
+            	sensors_old[2] = sensors_new[2];
                 return false;
             }
-        };
-        // holds when the leaving condition holds or the robot is no longer correctly following the obstacle
-        SensorCondition driveCondition = new SensorCondition() {
+            
             @Override
-            public boolean holds() {
-                return !alignedParallel.holds() || leavingCondition.holds();
+            public void init() {
+            	sensors_old = com.getSensors();
+            	sensors_new = com.getSensors();
             }
         };
 
-        turnLeftUntil(alignedParallel); // left-turning robot
-
         while(true) {
-            /* this are the sensor values when the robot is nicely aligned */
-            int sensors[] = com.getSensors();
-            int alignedRight = sensors[2];
-
+        	driveCondition.init();
             driveUntil(driveCondition);
 
-            if (leavingCondition.holds())
+            //m-line hit
+            if (mlineEncountered()) {
+            	turnToGoal(goal);
                 return;
+            }
+            //misaligned or wall ends
             else {
-            /* here the robot is not aligned correctly,
-            now decide whether to correct the orientation to the right or to the left */
-                sensors = com.getSensors();
-                int badlyAlignedRight = sensors[2];
-                if (badlyAlignedRight > alignedRight)   // new distance to the right is greater so we must turn right
-                    turnRightUntil(alignedParallel);
-                else
-                    turnLeftUntil(alignedParallel);
+            	sensors = com.getSensors();
+            	if (sensors[0] < RANGE_THRESHOLD || sensors[1] < RANGE_THRESHOLD) {
+            		com.setText("Realign");
+            		realign(turnDirection);
+            	}
+            	else {
+            		com.setText("Wall ended");
+            		//the current wall has ended, thus turn around to continue following the obstacle
+            		drive(MINIMUM_DRIVE, 30);
+            		turn(-90);
+            	}
             }
         }
 

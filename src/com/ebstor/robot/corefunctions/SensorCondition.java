@@ -9,4 +9,5 @@ public interface SensorCondition {
      * @return if the condition holds
      */
     boolean holds();
+    void init();
 }

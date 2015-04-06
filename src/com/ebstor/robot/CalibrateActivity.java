@@ -28,10 +28,10 @@ public class CalibrateActivity extends MainActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calibrate);
         realValue = (EditText) findViewById(R.id.realvalue);
+        robot.connect();
     }
 
     public void translationTestRun(View v) {
-    	robot.connect();
     	if (robot != null) {
 	        robot.drive();
 	        try {

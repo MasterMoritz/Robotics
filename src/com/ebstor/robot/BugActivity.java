@@ -20,11 +20,11 @@ public class BugActivity extends MainActivity {
         setContentView(R.layout.activity_bug);
         x_coordinate = (EditText) findViewById(R.id.x_coordinate);
         y_coordinate = (EditText) findViewById(R.id.y_coordinate);
-        MainActivity.robot.connect();
+        robot.connect();
     }
 
     public void origin(View v) {
-        robot.robotLocation = new Location();
+        robot.robotLocation = new Location(0, 0, 0);
     }
 
     public void startBug(View v) {
@@ -32,5 +32,8 @@ public class BugActivity extends MainActivity {
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
+        
+        robot.com.setText("Test following an obstacle");
+        robot.followObstacle(1);
     }
 }
