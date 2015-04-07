@@ -1,5 +1,7 @@
 package com.ebstor.robot.corefunctions;
 
+import java.util.EmptyStackException;
+
 import android.widget.TextView;
 
 import com.ebstor.robot.communication.Communicator;
@@ -109,16 +111,18 @@ public class Robot {
      * drive straight a certain distance and update robot location 
      * @param distance_cm : the distance[cm] to drive
      */
-    public void drive(int distance_cm) {
+    public void drive(double distance_cm) {
+    	int velocity = VELOCITY;
+    	
     	//drive distance
         long time = distanceToTime(distance_cm);
         
         //drive backward if distance is negative
         if (distance_cm < 0) {
-        	VELOCITY *= -1;
+        	velocity *= -1;
         }
         
-        com.setVelocity(VELOCITY, VELOCITY);
+        com.setVelocity(velocity, velocity);
         sleep_h(time);
         com.stop();
         
@@ -230,6 +234,20 @@ public class Robot {
     	}
     }
 
+    public void turnToLocation(Location point) {
+    	try {
+	        double angle = Math.toDegrees(Math.atan2(point.getY()-robotLocation.getY(),point.getX()-robotLocation.getX()));
+            double turningAngle =  angle - robotLocation.getTheta();
+            if (turningAngle > 180) turningAngle = 360 - turningAngle;
+            if (turningAngle < -180) turningAngle = 360 + turningAngle;
+            turn(turningAngle);
+            com.setText(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
+    	} catch(Exception e) {
+    		com.setText("failed to turn towards location");
+            com.setText(e.toString());
+    	}
+    }
+    
     private double euclideanDistance(Location a, Location b) {
         return Math.sqrt(Math.pow(a.getX()-b.getX(),2) + Math.pow(a.getY() - b.getY(),2));
     }
@@ -324,18 +342,13 @@ public class Robot {
     	//turn right until the left sensor can't detect the obstacle anymore
     	int leftSensor_new = com.getSensors()[0];
     	int leftSensor_old = leftSensor_new;
-    	int rotated = 0;
-    	int accuracy = -1;
+    	final int accuracy = -1;
     	
     	while ( (leftSensor_new - leftSensor_old) < 30) { //maybe have to play with the < value, but 30 should be alright
     		turn(accuracy);
-    		rotated += accuracy;
     		leftSensor_old = leftSensor_new;
     		leftSensor_new = com.getSensors()[0];
     	}
-    	
-    	//update robot location
-    	robotLocation.rotate(rotated);
     	
     	//calculate the corner point which we want to pass
     	double alpha = robotLocation.getTheta() + ANGLE_FRONT_SIDE;
@@ -343,82 +356,60 @@ public class Robot {
     	double gk = Math.sin(alpha) * hyp; //difference of Robot_y and Point_y
     	double ak = Math.cos(alpha) * hyp; //difference of Robot_x and Point_x
     	
-    	return new Location(ak + robotLocation.getX(), gk + robotLocation.getY(), alpha);
-    	
+    	return new Location(ak + robotLocation.getX(), gk + robotLocation.getY(), alpha);	
     }
     
     /**
-     * The Roboter should change into following mode 
-     * leave following mode if it hits the m-line (closer to goal than m_point) again
-     * @param turnDirection : 1 ->turn clockwise, -1 -> turn counterclockwise <br>
-     * note: for now always clockwise turning should be used because the param is not fully implemented
+     * The robot will drive to the given location ignoring any obstacles in its way
+     * after reaching the location the robot will turn according to location's theta
      */
-    public void followObstacle(int turnDirection) {
-    	com.setText("following obstacle");
-        
-    	int[] sensors = com.getSensors();
-    	int distance = sensors[1] - RANGE_THRESHOLD - 1;
+    public void berserkDriveToLocation(Location point) {
+    	com.append("starting berserk drive towards point: " + point);
     	
-    	//drive to the obstacle
-    	if (distance > 0) {
-    		drive(distance);
+    	turnToLocation(point);
+    	
+    	double hyp = euclideanDistance(robotLocation, point);
+    	com.append("calculated distance to drive: " + hyp);
+    	drive(hyp);
+    	
+    	turn(point.getTheta() - robotLocation.getTheta());
+    }
+    
+    /**
+     * The Roboter should change into obstacle mode <br>
+     * in this mode the robot will drive around the obstacle until it hits the m-line <br>
+     * note: the new m-line point has to be closer to the goal than m_point
+     */
+    public void obstacleMode() {
+    	com.setText("starting obstacle mode");
+
+    	//sensors[0] - left
+    	//sensors[1] - middle
+    	//sensors[2] - right
+    	int[] sensors = com.getSensors();
+    	
+    	//a temporary goal the robot may drive to
+    	Location temporary_goal;
+    	
+    	//only right sensor detects obstacle
+    	if (sensors[0] > RANGE_THRESHOLD && sensors[2] <= RANGE_THRESHOLD) {
+    		turn(-ANGLE_RIGHT_LEFT);
     	}
     	
-    	//now realign
-        realign(turnDirection);
-        
+    	temporary_goal = calculateObstaclePoint();
 
-        // stop if misaligned or m-line hit or wall ends
-        SensorCondition driveCondition = new SensorCondition() {
-        	public int[] sensors_old;
-        	public int[] sensors_new;
-        	
-            @Override
-            public boolean holds() {
-            	sensors_new = com.getSensors();
-
-            	if ((sensors_new[0] - sensors_old[0]) > 20 || sensors_new[0] < RANGE_THRESHOLD || sensors_new[1] < RANGE_THRESHOLD 
-            		|| mlineEncountered()) {
-            		return true;
-            	}
-            	
-            	sensors_old[0] = sensors_new[0];
-            	sensors_old[1] = sensors_new[1];
-            	sensors_old[2] = sensors_new[2];
-                return false;
-            }
-            
-            @Override
-            public void init() {
-            	sensors_old = com.getSensors();
-            	sensors_new = com.getSensors();
-            }
-        };
-
-        while(true) {
-        	driveCondition.init();
-            driveUntil(driveCondition);
-
-            //m-line hit
-            if (mlineEncountered()) {
-            	turnToGoal();
-                return;
-            }
-            //misaligned or wall ends
-            else {
-            	sensors = com.getSensors();
-            	if (sensors[0] < RANGE_THRESHOLD || sensors[1] < RANGE_THRESHOLD) {
-            		com.setText("Realign");
-            		realign(turnDirection);
-            	}
-            	else {
-            		com.setText("Wall ended");
-            		//the current wall has ended, thus turn around to continue following the obstacle
-            		drive(MINIMUM_DRIVE);
-            		turn(-90);
-            	}
-            }
-        }
-
+    	if (temporary_goal.getY() >= robotLocation.getY()) {
+    		temporary_goal.setX(temporary_goal.getX() + RANGE_THRESHOLD);
+    	}
+    	else {
+    		temporary_goal.setX(temporary_goal.getX() - RANGE_THRESHOLD);
+    	}
+    	
+   		berserkDriveToLocation(temporary_goal);	
+   		
+   		//TODO
+   		//see if anything works, probably not though
+   		//if it works continue doeing something
     }
+
 }

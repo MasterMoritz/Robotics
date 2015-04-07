@@ -127,6 +127,10 @@ public class Communicator {
     }
     
     public void setText(String text) {
-    	this.textLog.setText(text);
+    	this.textLog.setText(text + "\n");
+    }
+    
+    public void append(String text) {
+    	this.textLog.append(text + "\n");
     }
 }
