@@ -4,9 +4,7 @@
 .project
 bin/
 gen/
-src/jp/
 # Ignore Play! working directory #
-bin/
 /db
 .eclipse
 /lib/
@@ -61,9 +59,6 @@ $RECYCLE.BIN/
 
 # Java class files
 *.class
-
-# Generated files
-gen/
 
 # Gradle files
 .gradle/

@@ -32,7 +32,7 @@ public class Location {
 
     public void rotate(double degrees) {
         theta = (theta + degrees) %360;
-        if (theta < 0) theta = 360 - theta;
+        if (theta < 0) theta = 360 + theta;
     }
 
 

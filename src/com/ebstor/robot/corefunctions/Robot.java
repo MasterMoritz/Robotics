@@ -11,15 +11,13 @@ import static java.lang.Thread.sleep;
  * this class contains all abilities the robot has
  */
 public class Robot {
-    
     //private float TRANSLATION_COEFFICIENT = 12f/9f;
     //private float ROTATION_COEFFICIENT = 34.5f/30f;
-    // TODO add default values
     /** degrees turned per millisecond for velocity 30*/
-    public static double DEGREE_PER_MILLISECOND;
+    public static double DEGREE_PER_MILLISECOND = 0.145;
     
     /** cm travelled per millisecond for velocity 30*/
-    public static double CM_PER_MILLISECOND;
+    public static double CM_PER_MILLISECOND = 0.0255;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
@@ -68,28 +66,28 @@ public class Robot {
     /**
      * @return time[ms] needed to drive the given distance[cm]
      */
-    private long distanceToTime(double distance_cm) {
-        return (long) ( (1/CM_PER_MILLISECOND) * distance_cm);
+    public static long distanceToTime(double distance_cm) {
+        return (long) Math.abs((1 / CM_PER_MILLISECOND) * distance_cm);
     }
 
     /**
      * @return distance[cm] covered in the given time[ms]
      */
-    private double timeToDistance(long time_ms) {
-        return time_ms*CM_PER_MILLISECOND;
+    public static double timeToDistance(long time_ms) {
+        return (time_ms)*CM_PER_MILLISECOND;
     }
 
     /**
-     * @return time[ms] needed to turn the given angle[°]
+     * @return time[ms] needed to turn the given angle[ï¿½]
      */
-    private long degreesToTime(double degrees) {
-        return (long) ( (1/DEGREE_PER_MILLISECOND) * degrees);
+    public static long degreesToTime(double degrees) {
+        return (long) Math.abs((1/DEGREE_PER_MILLISECOND) * degrees);
     }
 
     /**
-     * @return angle[°] covered in the given time[ms]
+     * @return angle[ï¿½] covered in the given time[ms]
      */
-    private double timeToDegrees(long time_ms) {
+    public static double timeToDegrees(long time_ms) {
         return time_ms*DEGREE_PER_MILLISECOND;
     }
 
@@ -163,12 +161,15 @@ public class Robot {
     }
 
     public void turn(double degree) {
-        int time = (int) (degreesToTime(degree));
-        if (degree <= 0) com.setVelocity((byte)30,(byte) -30);
-        else com.setVelocity((byte)-30,(byte)30);
-        sleep_h(time);
-        com.stop();
-        robotLocation.rotate(degree);
+        if (degree != 0) {
+            long time = degreesToTime(degree);
+            if (degree < 0) com.setVelocity((byte)30,(byte) -30);
+            else com.setVelocity((byte)-30,(byte)30);
+            sleep_h(time);
+            com.stop();
+            robotLocation.rotate(degree);
+        }
+
     }
 
     public void turnLeft() {
@@ -212,13 +213,17 @@ public class Robot {
         return (euclideanDistance(robotLocation,goal) <= CIRCUMFERENCE_GOAL);
     }
 
-    private void turnToGoal(Location goal) {
+    public void turnToGoal() {
     	try {
 	        double angle = Math.toDegrees(Math.atan2(goal.getY()-robotLocation.getY(),goal.getX()-robotLocation.getX()));
-	        double turningAngle = robotLocation.getTheta() - angle;
-	        turn(turningAngle);
+            double turningAngle =  angle - robotLocation.getTheta();
+            if (turningAngle > 180) turningAngle = 360 - turningAngle;
+            if (turningAngle < -180) turningAngle = 360 + turningAngle;
+            turn(turningAngle);
+            com.setText(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
     	} catch(Exception e) {
     		com.setText("failed to turn towards goal");
+            com.setText(e.toString());
     	}
     }
 
@@ -362,7 +367,7 @@ public class Robot {
 
             //m-line hit
             if (mlineEncountered()) {
-            	turnToGoal(goal);
+            	turnToGoal();
                 return;
             }
             //misaligned or wall ends

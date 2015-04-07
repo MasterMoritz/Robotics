@@ -15,6 +15,7 @@ public class Communicator {
 
     private FTDriver driver;
     private TextView textLog ;
+    private static final long WAIT_BUFFER = 50;
 
     public Communicator(FTDriver driver, TextView textLog) {
         this.driver = driver;
@@ -37,6 +38,11 @@ public class Communicator {
     
     public void write(byte[] data) {
         if (driver.isConnected()) {
+            try {
+                sleep(WAIT_BUFFER);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             driver.write(data);
         } else {
             textLog.append("not connected\n");
