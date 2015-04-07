@@ -105,9 +105,9 @@ public class MainActivity extends Activity {
 
 
     public void makeASquare(View v) {
-        Double dist = Double.valueOf(distance.getText().toString());
+        Integer dist = Integer.valueOf(distance.getText().toString());
         for (int i = 0; i < 4; i++) {
-            robot.drive();
+            robot.drive(dist,30);
             robot.turn(90);
         }
     }

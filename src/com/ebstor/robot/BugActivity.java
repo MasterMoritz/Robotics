@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import com.ebstor.robot.corefunctions.Location;
+import com.ebstor.robot.corefunctions.SensorCondition;
 import com.example.robot.R;
 
 /**
@@ -47,6 +48,26 @@ public class BugActivity extends MainActivity {
         Location goal = new Location(x,y);
         robot.setGoal(goal);
         robot.turnToGoal();
+    }
 
+    public void testMlineEncountered(View v) {
+        int x = Integer.valueOf(x_coordinate.getText().toString());
+        int y = Integer.valueOf(y_coordinate.getText().toString());
+        Location goal = new Location(x,y);
+        robot.setGoal(goal);
+        robot.drive(50, 30);
+        robot.turn(90);
+
+        robot.driveUntil(new SensorCondition() {
+            @Override
+            public boolean holds() {
+                return robot.mlineEncountered();
+            }
+
+            @Override
+            public void init() {
+
+            }
+        });
     }
 }

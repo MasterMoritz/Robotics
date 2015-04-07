@@ -1,6 +1,7 @@
 package com.ebstor.robot.communication;
 
 import android.widget.TextView;
+import com.ebstor.robot.controller.RobotAction;
 import jp.ksksue.driver.serial.FTDriver;
 
 import java.util.ArrayList;
@@ -16,10 +17,20 @@ public class Communicator {
     private FTDriver driver;
     private TextView textLog ;
     private static final long WAIT_BUFFER = 50;
+    private static RobotAction action = null;
+    /**
+     * system time when the last command has been send
+      */
+    private static long commandTime;
 
     public Communicator(FTDriver driver, TextView textLog) {
         this.driver = driver;
         this.textLog = textLog;
+        commandTime = System.currentTimeMillis();
+    }
+
+    private long timeSinceLastCommand() {
+        return System.currentTimeMillis() - commandTime;
     }
 
     public void connect() {
@@ -38,12 +49,36 @@ public class Communicator {
     
     public void write(byte[] data) {
         if (driver.isConnected()) {
+            long dt;
             try {
-                sleep(WAIT_BUFFER);
+                if ((dt = timeSinceLastCommand()) <= WAIT_BUFFER)
+                    sleep(WAIT_BUFFER-dt);
+
+                switch(data[0]) {
+                    case 'i':
+                        if (data[1] < 0 && data[2] > 0)
+                            action = RobotAction.TURN_LEFT;
+                        else if (data[1] > 0 && data[2] < 0)
+                            action = RobotAction.TURN_RIGHT;
+                        else if (data[1] < 0 && data[2] < 0)
+                            action = RobotAction.MOVE_BACKWARD;
+                        else if (data[1] != 0 && data[2] != 0)
+                            action = RobotAction.MOVE_FORWARD;
+                        else // this should not happen
+                            action = null;
+                        break;
+                    case 's':
+                        action = null;
+                        break;
+                    case 'w':
+                        action = RobotAction.MOVE_FORWARD;
+                        break;
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             driver.write(data);
+            commandTime = System.currentTimeMillis();
         } else {
             textLog.append("not connected\n");
         }
@@ -74,13 +109,13 @@ public class Communicator {
 
 
     public void setVelocity(byte left, byte right) {
-        readWrite(
+        write(
                 new byte[]{'i', left, right, '\r', '\n'}
         );
     }
     public void setVelocity(int left, int right) {
-        readWrite(
-                new byte[]{'i', (byte)left, (byte)right, '\r', '\n'}
+        write(
+                new byte[]{'i', (byte) left, (byte) right, '\r', '\n'}
         );
     }
 
@@ -89,6 +124,11 @@ public class Communicator {
     }
 
     public int[] getSensors() {
+        try {
+            sleep(WAIT_BUFFER);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         int[] sensors = new int[3];
         
         String[] parsed = readWrite(new byte[] { 'q', '\r', '\n' }).split("\\s+");

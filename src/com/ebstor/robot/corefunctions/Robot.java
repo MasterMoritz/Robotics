@@ -4,6 +4,7 @@ import android.widget.TextView;
 
 import com.ebstor.robot.communication.Communicator;
 
+import com.ebstor.robot.controller.OdometryUpdater;
 import jp.ksksue.driver.serial.FTDriver;
 import static java.lang.Thread.sleep;
 
@@ -59,19 +60,22 @@ public class Robot {
     /** serial communicator */
     public Communicator com;
 
+    public OdometryUpdater odometryUpdater;
+
     /** setup serial communicator and initialize locations */
     public Robot(TextView textLog, FTDriver driver) {
         this.com = new Communicator(driver,textLog);
         robotLocation = new Location(0, 0, 0);
-        goal = new Location(0, 0, 0);
         m_point = new Location(0, 0, 0);
+        odometryUpdater = new OdometryUpdater(robotLocation);
+        new Thread(odometryUpdater).start();
     }
 
     /**
      * @return time[ms] needed to drive the given distance[cm]
      */
     public static long distanceToTime(double distance_cm) {
-        return (long) Math.abs((1 / CM_PER_MILLISECOND) * distance_cm);
+        return (long)Math.abs((1 / CM_PER_MILLISECOND) * distance_cm);
     }
 
     /**
@@ -82,14 +86,14 @@ public class Robot {
     }
 
     /**
-     * @return time[ms] needed to turn the given angle[�]
+     * @return time[ms] needed to turn the given angle[°]
      */
     public static long degreesToTime(double degrees) {
         return (long) Math.abs((1/DEGREE_PER_MILLISECOND) * degrees);
     }
 
     /**
-     * @return angle[�] covered in the given time[ms]
+     * @return angle[°] covered in the given time[ms]
      */
     public static double timeToDegrees(long time_ms) {
         return time_ms*DEGREE_PER_MILLISECOND;
@@ -108,6 +112,7 @@ public class Robot {
     /**
      * drive straight a certain distance and update robot location 
      * @param distance_cm : the distance[cm] to drive
+     * @param velocity : the speed of the robot
      */
     public void drive(int distance_cm) {
     	//drive distance
@@ -121,9 +126,6 @@ public class Robot {
         com.setVelocity(VELOCITY, VELOCITY);
         sleep_h(time);
         com.stop();
-        
-        //update robot location
-        robotLocation.translate(distance_cm);
     }
 
     /**
@@ -137,13 +139,8 @@ public class Robot {
      * drives until a certain sensor condition is met (e.g. obstacle in front)
      */
     public void driveUntil(SensorCondition condition) {
-        while (!condition.holds()) {
-            drive();
-            long t0 = System.currentTimeMillis();
-            sleep_h(DRIVE_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            robotLocation.translate(timeToDistance(dt));
-        }
+        drive();
+        while (!condition.holds()) {}
         com.stop();
     }
 
@@ -151,16 +148,13 @@ public class Robot {
      * drives until a certain sensor condition is met and maximally distance_cm
      */
     public void driveUntil(SensorCondition condition, int distance_cm) {
-        long t0 = System.currentTimeMillis();
-        
+        // FIXME implement
         drive();
-        while(!condition.holds()) {}
-        
-        long dt = System.currentTimeMillis() - t0;
+        while(!condition.holds()) {
+
+        }
+
         com.stop();
-            
-        //update robot pose
-        robotLocation.translate(timeToDistance(dt));
     }
 
     public void turn(double degree) {
@@ -170,7 +164,6 @@ public class Robot {
             else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
             sleep_h(time);
             com.stop();
-            robotLocation.rotate(degree);
         }
 
     }
@@ -191,8 +184,7 @@ public class Robot {
             turnLeft();
             long t0 = System.currentTimeMillis();
             sleep_h(TURN_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            robotLocation.rotate(timeToDegrees(dt));
+
         }
         com.stop();
     }
@@ -203,10 +195,7 @@ public class Robot {
     public void turnRightUntil(SensorCondition condition)  {
         while (!condition.holds()) {
             turnRight();
-            long t0 = System.currentTimeMillis();
             sleep_h(DRIVE_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            robotLocation.rotate(-timeToDegrees(dt));
         }
         com.stop();
     }
@@ -265,14 +254,14 @@ public class Robot {
         this.goal = goal;
     }
 
-    private boolean mlineEncountered() {
-        return distanceToMline() <= 3; // (cm) this depends on how far robot travels between checks, can therefore be reduced
+    public boolean mlineEncountered() {
+        return distanceToMline() <= 15; // (cm) this depends on how far robot travels between checks, can therefore be reduced
     }
 
     /**
      * computes the shortest distance between the current robot location and the m-line
      */
-    private double distanceToMline() {
+    public double distanceToMline() {
         double x = robotLocation.getX();
         double y = robotLocation.getY();
         double normalLength = Math.sqrt(Math.pow(goal.getX(),2)+Math.pow(goal.getY(),2));

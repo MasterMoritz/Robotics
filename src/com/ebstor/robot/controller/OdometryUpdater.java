@@ -10,16 +10,20 @@ import static java.lang.Thread.sleep;
  */
 public class OdometryUpdater implements Runnable {
 
-    private static final long INTERVAL = 5;
+    private static final long INTERVAL = 10;
 
-    public RobotAction action;
-    private Location location;
+    private RobotAction action;
+    private Location robotLocation;
     public boolean isRunning;
 
     public OdometryUpdater(Location location) {
         action = null;
-        this.location = location;
+        this.robotLocation = location;
         isRunning = true;
+    }
+
+    public void setAction(RobotAction action) {
+        this.action = action;
     }
 
     @Override
@@ -29,16 +33,16 @@ public class OdometryUpdater implements Runnable {
             long dt = System.currentTimeMillis() - t0;
             switch(action) {
                 case MOVE_FORWARD:
-                    location.translate(Robot.timeToDistance(dt));
+                    robotLocation.translate(Robot.timeToDistance(dt));
                     break;
                 case MOVE_BACKWARD:
-                    location.translate(-Robot.timeToDistance(dt));
+                    robotLocation.translate(-Robot.timeToDistance(dt));
                     break;
                 case TURN_LEFT:
-                    location.rotate(Robot.timeToDegrees(dt));
+                    robotLocation.rotate(Robot.timeToDegrees(dt));
                     break;
                 case TURN_RIGHT:
-                    location.rotate(-Robot.timeToDegrees(dt));
+                    robotLocation.rotate(-Robot.timeToDegrees(dt));
                     break;
             }
             try {
