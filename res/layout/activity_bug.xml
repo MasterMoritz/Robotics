@@ -1,0 +1,52 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="com.ebstor.robot.BugActivity">
+
+
+    <EditText
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/x_coordinate" android:layout_alignParentTop="true" android:layout_centerHorizontal="true"
+            android:layout_marginTop="81dp" android:text="50" android:inputType="numberSigned" android:editable="true"/>
+    <EditText android:layout_width="100dp" android:layout_height="wrap_content" android:id="@+id/y_coordinate"
+              android:text="50"
+              android:inputType="numberSigned" android:editable="true" android:layout_below="@+id/x_coordinate" android:layout_centerHorizontal="true"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="START BUG"
+            android:id="@+id/start_bug" android:layout_centerVertical="true" android:layout_centerHorizontal="true"
+            android:onClick="startBug"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ORIGIN"
+            android:id="@+id/origin" android:layout_above="@+id/start_bug" android:layout_centerHorizontal="true"
+            android:onClick="origin"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="turn to goal"
+            android:id="@+id/turnToGoalButton" android:layout_below="@+id/start_bug" android:layout_centerHorizontal="true"
+            android:onClick="testTurnToGoal"/>
+    <TextView
+            android:id="@+id/bugTextLog"
+            android:layout_width="500dp"
+            android:layout_height="150dp"
+            android:layout_alignParentBottom="true">
+    </TextView>
+
+    <Button
+        android:id="@+id/testMLine"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/bugTextLog"
+        android:layout_centerHorizontal="true"
+        android:text="test M line"
+    	android:onClick="testMlineEncountered"/>
+
+</RelativeLayout>
+
