@@ -11,13 +11,15 @@ import static java.lang.Thread.sleep;
  * this class contains all abilities the robot has
  */
 public class Robot {
-    //private float TRANSLATION_COEFFICIENT = 12f/9f;
-    //private float ROTATION_COEFFICIENT = 34.5f/30f;
-    /** degrees turned per millisecond for velocity 30*/
-    public static double DEGREE_PER_MILLISECOND = 0.145;
+	
+	/** speed of robot */
+	public static int VELOCITY = 20;
+	
+    /** degrees turned per millisecond for velocity */
+    public static double DEGREE_PER_MILLISECOND = 0.11;
     
-    /** cm travelled per millisecond for velocity 30*/
-    public static double CM_PER_MILLISECOND = 0.0255;
+    /** cm travelled per millisecond for velocity */
+    public static double CM_PER_MILLISECOND = 0.02055;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
@@ -104,18 +106,17 @@ public class Robot {
     /**
      * drive straight a certain distance and update robot location 
      * @param distance_cm : the distance[cm] to drive
-     * @param velocity : the speed of the robot
      */
-    public void drive(int distance_cm, int velocity) {
+    public void drive(int distance_cm) {
     	//drive distance
         long time = distanceToTime(distance_cm);
         
         //drive backward if distance is negative
         if (distance_cm < 0) {
-        	velocity *= -1;
+        	VELOCITY *= -1;
         }
         
-        com.setVelocity(velocity, velocity);
+        com.setVelocity(VELOCITY, VELOCITY);
         sleep_h(time);
         com.stop();
         
@@ -124,10 +125,10 @@ public class Robot {
     }
 
     /**
-     * drive straight with 30 velocity
+     * drive straight
      */
     public void drive() {
-        com.setVelocity((byte) 30, (byte) 30);
+        com.setVelocity((byte) VELOCITY, (byte) VELOCITY);
     }
 
     /**
@@ -163,8 +164,8 @@ public class Robot {
     public void turn(double degree) {
         if (degree != 0) {
             long time = degreesToTime(degree);
-            if (degree < 0) com.setVelocity((byte)30,(byte) -30);
-            else com.setVelocity((byte)-30,(byte)30);
+            if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
+            else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
             sleep_h(time);
             com.stop();
             robotLocation.rotate(degree);
@@ -173,11 +174,11 @@ public class Robot {
     }
 
     public void turnLeft() {
-        com.setVelocity((byte) -30, (byte) 30);
+        com.setVelocity((byte) -VELOCITY, (byte) VELOCITY);
     }
 
     public void turnRight() {
-        com.setVelocity((byte) 30, (byte) -30);
+        com.setVelocity((byte) VELOCITY, (byte) -VELOCITY);
     }
 
     /**
@@ -327,7 +328,7 @@ public class Robot {
     	
     	//drive to the obstacle
     	if (distance > 0) {
-    		drive(distance, 30);
+    		drive(distance);
     	}
     	
     	//now realign
@@ -380,7 +381,7 @@ public class Robot {
             	else {
             		com.setText("Wall ended");
             		//the current wall has ended, thus turn around to continue following the obstacle
-            		drive(MINIMUM_DRIVE, 30);
+            		drive(MINIMUM_DRIVE);
             		turn(-90);
             	}
             }
