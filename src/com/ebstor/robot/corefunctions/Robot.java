@@ -297,119 +297,97 @@ public class Robot {
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
     }
 
+    private void keepDistance(int direction) {
+		int[] s_new = com.getSensors();
+		
+		int turnDirection = 2; //right sensor if turning left
+    	if (direction < 0) {
+    		turnDirection = 0; //left sensor if turning right
+    	}
+		
+		int s_old = s_new[turnDirection];
+		
+		while( (s_new[turnDirection] - s_old) < 30) {
+			if(s_new[turnDirection] > RANGE_THRESHOLD) {
+				drive(s_new[turnDirection] - RANGE_THRESHOLD - 1);
+			}
+			turn(3*turnDirection);
+			s_old = s_new[turnDirection];
+			s_new = com.getSensors();
+		}
+	}
+	
     /** the robot should realign to whatever obstacle it is facing now <br>
-     * @param direction : +1 -> turn right, -1 -> turn left
+     * @param direction : +1 -> turn left, -1 -> turn right
      */
     private void realign(int direction) {
-    	
-    	//left/right sensor now measures the distance of front, this should save time because front sensor is slow like shiet
-    	turn(ANGLE_FRONT_SIDE * direction);
-    	
-    	turn(MINIMUM_TURN);
-    	
-    	int turnDirection = 0; //left sensor if turning right
-    	if (direction < 0) {
-    		turnDirection = 2; //right sensor if turning left
-    	}
-    	
     	//sensor[0] = left
     	//sensor[1] = middle
     	//sensor[2] = right
-    	int [] sensor = com.getSensors();
+    	int[] s_new = com.getSensors();
     	
-    	//get front into soft treshold
-    	while(sensor[turnDirection] < SOFT_THRESHOLD) {
+    	int turnDirection = 2; //right sensor if turning left
+    	if (direction < 0) {
+    		turnDirection = 0; //left sensor if turning right
+    	}
+    	
+		int s_old = s_new[turnDirection];
+		
+    	//turn until end of obstacle
+    	while( (s_new[turnDirection] - s_old) < 30) {
     		turn(3 * (direction));
-    		sensor = com.getSensors();
+    		s_old = s_new[turnDirection];
+    		s_new = com.getSensors();
     	}
     	
-    	//front sensor now measures front again
-    	turn(-ANGLE_FRONT_SIDE * (-direction));
-    	
-    	//get left/right into soft threshold
-    	sensor = com.getSensors();
-    	while(sensor[turnDirection] < SOFT_THRESHOLD) {
-    		turn(3 * (direction));
-    		sensor = com.getSensors();
-    	}
+    	sleep_h(5000);
+    }
+    
+    public void driveUntilObstacle() {
+        int[] s = new int[3];
+        long t0 = System.currentTimeMillis();
+        drive();
+        while(true) {
+        	
+        	s = com.getSensors();
+        	if (s[0] <= RANGE_THRESHOLD || s[1] <= RANGE_THRESHOLD || s[2] <= RANGE_THRESHOLD) {
+        		break;
+        	}
+        }
+        
+        long dt = System.currentTimeMillis() - t0;
+        com.stop();
+            
+        //update robot pose
+        robotLocation.translate(timeToDistance(dt));
+        
+        com.getSensors();
+        com.append(robotLocation.toString());
     }
     
     /**
-     * Calculate the right corner point of the Obstacle in front of the robot <br>
-     * this method assumes that the front sensor is facing the obstacle
+     * The Roboter should change into following mode 
+     * leave following mode if it hits the m-line (closer to goal than m_point) again
+     * @param turnDirection : 1 ->turn counter-clockwise, -1 -> turn clockwise <br>
+     * 
      */
-    public Location calculateObstaclePoint() {
-    	//turn right until the left sensor can't detect the obstacle anymore
-    	int leftSensor_new = com.getSensors()[0];
-    	int leftSensor_old = leftSensor_new;
-    	final int accuracy = -1;
+    public void followObstacle(int direction) {
+    	com.setText("following obstacle");
     	
-    	while ( (leftSensor_new - leftSensor_old) < 30) { //maybe have to play with the < value, but 30 should be alright
-    		turn(accuracy);
-    		leftSensor_old = leftSensor_new;
-    		leftSensor_new = com.getSensors()[0];
-    	}
-    	
-    	//calculate the corner point which we want to pass
-    	double alpha = robotLocation.getTheta() + ANGLE_FRONT_SIDE;
-    	double hyp = leftSensor_old;
-    	double gk = Math.sin(alpha) * hyp; //difference of Robot_y and Point_y
-    	double ak = Math.cos(alpha) * hyp; //difference of Robot_x and Point_x
-    	
-    	return new Location(ak + robotLocation.getX(), gk + robotLocation.getY(), alpha);	
-    }
-    
-    /**
-     * The robot will drive to the given location ignoring any obstacles in its way
-     * after reaching the location the robot will turn according to location's theta
-     */
-    public void berserkDriveToLocation(Location point) {
-    	com.append("starting berserk drive towards point: " + point);
-    	
-    	turnToLocation(point);
-    	
-    	double hyp = euclideanDistance(robotLocation, point);
-    	com.append("calculated distance to drive: " + hyp);
-    	drive(hyp);
-    	
-    	turn(point.getTheta() - robotLocation.getTheta());
-    }
-    
-    /**
-     * The Roboter should change into obstacle mode <br>
-     * in this mode the robot will drive around the obstacle until it hits the m-line <br>
-     * note: the new m-line point has to be closer to the goal than m_point
-     */
-    public void obstacleMode() {
-    	com.setText("starting obstacle mode");
-
-    	//sensors[0] - left
-    	//sensors[1] - middle
-    	//sensors[2] - right
     	int[] sensors = com.getSensors();
+    
+    	int distance = sensors[1] - RANGE_THRESHOLD - 1;
     	
-    	//a temporary goal the robot may drive to
-    	Location temporary_goal;
-    	
-    	//only right sensor detects obstacle
-    	if (sensors[0] > RANGE_THRESHOLD && sensors[2] <= RANGE_THRESHOLD) {
-    		turn(-ANGLE_RIGHT_LEFT);
+    	//drive to the obstacle
+    	if (distance > 0) {
+    		drive(distance);
     	}
     	
-    	temporary_goal = calculateObstaclePoint();
+    	//keep distance
+		keepDistance(direction);
+		
+		//TODO watch behaviour and continue implementation
 
-    	if (temporary_goal.getY() >= robotLocation.getY()) {
-    		temporary_goal.setX(temporary_goal.getX() + RANGE_THRESHOLD);
-    	}
-    	else {
-    		temporary_goal.setX(temporary_goal.getX() - RANGE_THRESHOLD);
-    	}
-    	
-   		berserkDriveToLocation(temporary_goal);	
-   		
-   		//TODO
-   		//see if anything works, probably not though
-   		//if it works continue doeing something
     }
 
 }
