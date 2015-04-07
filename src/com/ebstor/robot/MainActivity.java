@@ -94,7 +94,7 @@ public class MainActivity extends Activity {
 
     public void travelDistance(View v) {
         Integer dist = Integer.valueOf(distance.getText().toString());
-        robot.drive(dist, 30);
+        robot.drive(dist);
 
     }
 
@@ -107,7 +107,7 @@ public class MainActivity extends Activity {
     public void makeASquare(View v) {
         Integer dist = Integer.valueOf(distance.getText().toString());
         for (int i = 0; i < 4; i++) {
-            robot.drive(dist,30);
+            robot.drive(dist);
             robot.turn(90);
         }
     }

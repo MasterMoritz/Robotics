@@ -1,6 +1,7 @@
 package com.ebstor.robot.communication;
 
 import android.widget.TextView;
+import com.ebstor.robot.controller.OdometryUpdater;
 import com.ebstor.robot.controller.RobotAction;
 import jp.ksksue.driver.serial.FTDriver;
 
@@ -17,15 +18,16 @@ public class Communicator {
     private FTDriver driver;
     private TextView textLog ;
     private static final long WAIT_BUFFER = 50;
-    private static RobotAction action = null;
+    private static OdometryUpdater odometry;
     /**
      * system time when the last command has been send
       */
     private static long commandTime;
 
-    public Communicator(FTDriver driver, TextView textLog) {
+    public Communicator(FTDriver driver, TextView textLog, OdometryUpdater odometryUpdater) {
         this.driver = driver;
         this.textLog = textLog;
+        this.odometry = odometryUpdater;
         commandTime = System.currentTimeMillis();
     }
 
@@ -57,21 +59,21 @@ public class Communicator {
                 switch(data[0]) {
                     case 'i':
                         if (data[1] < 0 && data[2] > 0)
-                            action = RobotAction.TURN_LEFT;
+                            odometry.setAction(RobotAction.TURN_LEFT);
                         else if (data[1] > 0 && data[2] < 0)
-                            action = RobotAction.TURN_RIGHT;
+                            odometry.setAction(RobotAction.TURN_RIGHT);
                         else if (data[1] < 0 && data[2] < 0)
-                            action = RobotAction.MOVE_BACKWARD;
+                            odometry.setAction(RobotAction.MOVE_BACKWARD);
                         else if (data[1] != 0 && data[2] != 0)
-                            action = RobotAction.MOVE_FORWARD;
+                            odometry.setAction(RobotAction.MOVE_FORWARD);
                         else // this should not happen
-                            action = null;
+                            odometry.setAction(null);
                         break;
                     case 's':
-                        action = null;
+                        odometry.setAction(null);
                         break;
                     case 'w':
-                        action = RobotAction.MOVE_FORWARD;
+                        odometry.setAction(RobotAction.MOVE_FORWARD);
                         break;
                 }
             } catch (InterruptedException e) {

@@ -64,10 +64,11 @@ public class Robot {
 
     /** setup serial communicator and initialize locations */
     public Robot(TextView textLog, FTDriver driver) {
-        this.com = new Communicator(driver,textLog);
         robotLocation = new Location(0, 0, 0);
-        m_point = new Location(0, 0, 0);
         odometryUpdater = new OdometryUpdater(robotLocation);
+        this.com = new Communicator(driver,textLog,odometryUpdater);
+
+        m_point = new Location(0, 0, 0);
         new Thread(odometryUpdater).start();
     }
 
@@ -105,6 +106,7 @@ public class Robot {
     public void disconnect() {
         com.disconnect();
     }
+
     public void stop() {
         com.stop();
     }
@@ -112,7 +114,6 @@ public class Robot {
     /**
      * drive straight a certain distance and update robot location 
      * @param distance_cm : the distance[cm] to drive
-     * @param velocity : the speed of the robot
      */
     public void drive(int distance_cm) {
     	//drive distance
@@ -264,7 +265,7 @@ public class Robot {
     public double distanceToMline() {
         double x = robotLocation.getX();
         double y = robotLocation.getY();
-        double normalLength = Math.sqrt(Math.pow(goal.getX(),2)+Math.pow(goal.getY(),2));
+        double normalLength = Math.sqrt(Math.pow(goal.getX(),2)+Math.pow(goal.getY(), 2));
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
     }
 

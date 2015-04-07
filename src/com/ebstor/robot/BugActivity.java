@@ -55,7 +55,7 @@ public class BugActivity extends MainActivity {
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
-        robot.drive(50, 30);
+        robot.drive(50);
         robot.turn(90);
 
         robot.driveUntil(new SensorCondition() {

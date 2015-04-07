@@ -10,7 +10,7 @@ import static java.lang.Thread.sleep;
  */
 public class OdometryUpdater implements Runnable {
 
-    private static final long INTERVAL = 10;
+    private static final long INTERVAL = 1000;
 
     private RobotAction action;
     private Location robotLocation;
@@ -31,6 +31,7 @@ public class OdometryUpdater implements Runnable {
         long t0 = System.currentTimeMillis();
         while(isRunning) {
             long dt = System.currentTimeMillis() - t0;
+            t0 = System.currentTimeMillis();
             switch(action) {
                 case MOVE_FORWARD:
                     robotLocation.translate(Robot.timeToDistance(dt));
@@ -50,7 +51,6 @@ public class OdometryUpdater implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            t0 = System.currentTimeMillis();
         }
     }
 
