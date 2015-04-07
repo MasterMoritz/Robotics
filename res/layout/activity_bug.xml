@@ -36,7 +36,17 @@
             android:id="@+id/bugTextLog"
             android:layout_width="500dp"
             android:layout_height="150dp"
-            android:layout_alignParentBottom="true" android:layout_alignParentStart="true"/>
+            android:layout_alignParentBottom="true">
+    </TextView>
+
+    <Button
+        android:id="@+id/testMLine"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/bugTextLog"
+        android:layout_centerHorizontal="true"
+        android:text="test M line"
+    	android:onClick="testMlineEncountered"/>
 
 </RelativeLayout>
 
