@@ -36,8 +36,10 @@ public class Robot {
     /** the threshold in cm at which the robot may start driving again */
     private static final int SOFT_THRESHOLD = 30;
     
-    /** the angle between the LOS of the front sensor and the side sensor */
-    private static final int ANGLE_FRONT_SIDE = 15;
+    //TODO measure the real angle between the various LOS
+    /** the angle between the left end of the LOS of the front sensor and the side sensor */
+    private static final double ANGLE_FRONT_SIDE = 20;
+    private static final double ANGLE_RIGHT_LEFT = 40;
     
     /** the minimum angle we have to turn to pass an obstacle point in front without collision */
     private static final int MINIMUM_TURN = 20;
@@ -312,6 +314,37 @@ public class Robot {
     		turn(3 * (direction));
     		sensor = com.getSensors();
     	}
+    }
+    
+    /**
+     * Calculate the right corner point of the Obstacle in front of the robot <br>
+     * this method assumes that the front sensor is facing the obstacle
+     */
+    public Location calculateObstaclePoint() {
+    	//turn right until the left sensor can't detect the obstacle anymore
+    	int leftSensor_new = com.getSensors()[0];
+    	int leftSensor_old = leftSensor_new;
+    	int rotated = 0;
+    	int accuracy = -1;
+    	
+    	while ( (leftSensor_new - leftSensor_old) < 30) { //maybe have to play with the < value, but 30 should be alright
+    		turn(accuracy);
+    		rotated += accuracy;
+    		leftSensor_old = leftSensor_new;
+    		leftSensor_new = com.getSensors()[0];
+    	}
+    	
+    	//update robot location
+    	robotLocation.rotate(rotated);
+    	
+    	//calculate the corner point which we want to pass
+    	double alpha = robotLocation.getTheta() + ANGLE_FRONT_SIDE;
+    	double hyp = leftSensor_old;
+    	double gk = Math.sin(alpha) * hyp; //difference of Robot_y and Point_y
+    	double ak = Math.cos(alpha) * hyp; //difference of Robot_x and Point_x
+    	
+    	return new Location(ak + robotLocation.getX(), gk + robotLocation.getY(), alpha);
+    	
     }
     
     /**

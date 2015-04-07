@@ -107,6 +107,16 @@ public class Communicator {
         return sensors;
     }
 
+    /**
+     *TODO implementation
+     * @param sensor : 'l' = left sensor, 'm' = middle sensor, 'r' = right sensor
+     * @return the value of the specified sensor
+     */
+    public int getSpecificSensor(char sensor){
+    	return 0;
+    }
+    
+    
     public static int hexaToDecimal(String s){
         String parsed = s.substring(2);
         return Integer.valueOf(parsed, 16);
