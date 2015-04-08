@@ -18,7 +18,7 @@ public class Robot {
 	public static int VELOCITY = 20;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.117;
+    public static double DEGREE_PER_MILLISECOND = 0.11;
     
     /** cm travelled per millisecond for velocity */
     public static double CM_PER_MILLISECOND = 0.0196;

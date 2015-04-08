@@ -89,6 +89,7 @@ public class Communicator {
     }
 
     public int[] getSensors() {
+    	try{sleep(WAIT_BUFFER);}catch(Exception e){};
         int[] sensors = new int[3];
         
         String[] parsed = readWrite(new byte[] { 'q', '\r', '\n' }).split("\\s+");
