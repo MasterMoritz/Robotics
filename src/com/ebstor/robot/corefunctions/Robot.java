@@ -29,6 +29,8 @@ public class Robot {
     /** the interval in ms after which conditions are checked and odometry is updated (when turning) */
     private long TURN_INTERVAL = 250;
     
+    private static final int ROBOT_WIDTH = 20;
+    
     /** the circumference in cm from the within which the robot assumes he has holds it */
     private static final int CIRCUMFERENCE_GOAL = 5;
     
@@ -297,7 +299,12 @@ public class Robot {
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
     }
 
-    private void keepDistance(int direction) {
+    /**
+     * keep distance to an obstacle
+     * @param direction : 1 -> turn counter-clockwise , -1 -> turn clockwise
+     * @return the last measured distance
+     */
+    private int keepDistance(int direction) {
     	com.append("keeping distance " + Integer.toString(direction));
 		int[] s_new = com.getSensors();
 		
@@ -316,6 +323,8 @@ public class Robot {
 			s_old = s_new[turnDirection];
 			s_new = com.getSensors();
 		}
+		
+		return s_old;
 	}
 	
     /** the robot should realign to whatever obstacle it is facing now <br>
@@ -388,10 +397,22 @@ public class Robot {
     	}
     	
     	//keep distance
-		keepDistance(direction);
+		int dist = keepDistance(direction);
 		
-		//TODO watch behaviour and continue implementation
-
+		//WORKING GREAT UP TO THIS POINT
+		/*
+		sleep_h(100);
+		//turn a bit for some tolerance
+		turn(10 * direction);
+		sleep_h(100);
+		//drive by obstacle hopefully
+		drive(dist + ROBOT_WIDTH);
+		sleep_h(100);
+		//turn back to obstacle
+		turn((-90) * direction);
+		sleep_h(100);
+		//keep distance again
+		dist = keepDistance((1) * direction);*/
     }
 
 }
