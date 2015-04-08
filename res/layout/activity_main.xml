@@ -68,4 +68,14 @@
             android:text="connect/disconnect"
             android:onClick="switchConnection" />
 
+    <Button
+        android:id="@+id/btSensors"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/distancebutton"
+        android:layout_alignTop="@+id/btConnect"
+        android:text="Sensors"
+        android:onClick="readSensors" />
+
 </RelativeLayout>

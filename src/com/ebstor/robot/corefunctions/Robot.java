@@ -15,13 +15,13 @@ import static java.lang.Thread.sleep;
 public class Robot {
 	
 	/** speed of robot */
-	public static int VELOCITY = 20;
+	public static int VELOCITY = 15;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.114;
+    public static double DEGREE_PER_MILLISECOND = 0.081;
     
     /** cm travelled per millisecond for velocity */
-    public static double CM_PER_MILLISECOND = 0.0192;
+    public static double CM_PER_MILLISECOND = 0.0142;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
@@ -298,7 +298,7 @@ public class Robot {
     }
 
     private void keepDistance(int direction) {
-    	com.append("keeping distance");
+    	com.append("keeping distance " + Integer.toBinaryString(direction));
 		int[] s_new = com.getSensors();
 		
 		int turnDirection = 2; //right sensor if turning left
@@ -312,7 +312,7 @@ public class Robot {
 			if(s_new[turnDirection] > RANGE_THRESHOLD) {
 				drive(s_new[turnDirection] - RANGE_THRESHOLD - 1);
 			}
-			turn(3*turnDirection);
+			turn(3*direction);
 			s_old = s_new[turnDirection];
 			s_new = com.getSensors();
 		}
@@ -366,6 +366,7 @@ public class Robot {
         com.append(robotLocation.toString());
     }
     
+    
     /**
      * The Roboter should change into following mode 
      * leave following mode if it hits the m-line (closer to goal than m_point) again
@@ -385,7 +386,7 @@ public class Robot {
     	}
     	
     	//keep distance
-		keepDistance(direction);
+		keepDistance(1);
 		
 		//TODO watch behaviour and continue implementation
 
