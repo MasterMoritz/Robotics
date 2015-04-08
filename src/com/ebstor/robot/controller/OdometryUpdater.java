@@ -32,20 +32,21 @@ public class OdometryUpdater implements Runnable {
         while(isRunning) {
             long dt = System.currentTimeMillis() - t0;
             t0 = System.currentTimeMillis();
-            switch(action) {
-                case MOVE_FORWARD:
-                    robotLocation.translate(Robot.timeToDistance(dt));
-                    break;
-                case MOVE_BACKWARD:
-                    robotLocation.translate(-Robot.timeToDistance(dt));
-                    break;
-                case TURN_LEFT:
-                    robotLocation.rotate(Robot.timeToDegrees(dt));
-                    break;
-                case TURN_RIGHT:
-                    robotLocation.rotate(-Robot.timeToDegrees(dt));
-                    break;
-            }
+            if (action != null)
+                switch(action) {
+                    case MOVE_FORWARD:
+                        robotLocation.translate(Robot.timeToDistance(dt));
+                        break;
+                    case MOVE_BACKWARD:
+                        robotLocation.translate(-Robot.timeToDistance(dt));
+                        break;
+                    case TURN_LEFT:
+                        robotLocation.rotate(Robot.timeToDegrees(dt));
+                        break;
+                    case TURN_RIGHT:
+                        robotLocation.rotate(-Robot.timeToDegrees(dt));
+                        break;
+                }
             try {
                 sleep(INTERVAL);
             } catch (InterruptedException e) {
