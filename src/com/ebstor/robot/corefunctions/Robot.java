@@ -18,7 +18,7 @@ public class Robot {
 	public static int VELOCITY = 15;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.081;
+    public static double DEGREE_PER_MILLISECOND = 0.0820;
     
     /** cm travelled per millisecond for velocity */
     public static double CM_PER_MILLISECOND = 0.0142;
@@ -125,7 +125,7 @@ public class Robot {
         }
         
         com.setVelocity(velocity, velocity);
-        sleep_h(time);
+        sleep_h(time+50);
         com.stop();
         
         //update robot location
@@ -174,7 +174,7 @@ public class Robot {
             long time = degreesToTime(degree);
             if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
             else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
-            sleep_h(time);
+            sleep_h(time+50);
             com.stop();
             robotLocation.rotate(degree);
         }
@@ -316,12 +316,61 @@ public class Robot {
 		int s_old = s_new[turnDirection];
 		
 		while( (s_new[turnDirection] - s_old) < 21) {
-			if(s_new[turnDirection] > RANGE_THRESHOLD) {
-				drive(s_new[turnDirection] - RANGE_THRESHOLD - 1);
-			}
+			drive(s_new[turnDirection] - RANGE_THRESHOLD);
 			turn(3*direction);
 			s_old = s_new[turnDirection];
 			s_new = com.getSensors();
+		}
+		Location temp = new Location(robotLocation);
+		turn(20*direction);
+		drive(s_old + ROBOT_WIDTH);
+		
+		turnToLocation(temp);
+		
+		s_new = com.getSensors();
+		s_old = s_new[turnDirection];
+		
+		while( (s_new[turnDirection] - s_old) < 21) {
+			turn(3*direction);
+			s_old = s_new[turnDirection];
+			s_new = com.getSensors();
+		}
+		
+		turn(20*direction);
+		drive(s_old + ROBOT_WIDTH);
+		
+		turnToLocation(temp);
+		
+		s_new = com.getSensors();
+		s_old = s_new[turnDirection];
+		
+		while( (s_new[turnDirection] - s_old) < 21) {
+			turn(3*direction);
+			s_old = s_new[turnDirection];
+			s_new = com.getSensors();
+		}
+		
+		turn(-3*direction);
+		drive(s_old - RANGE_THRESHOLD);
+		s_new = com.getSensors();
+		
+		//object wall ended
+		while(s_new[2] > RANGE_THRESHOLD) {
+			
+			while(s_new[turnDirection] > RANGE_THRESHOLD) {
+				turn(-3*direction);
+				s_new = com.getSensors();
+			}
+			
+			s_new = com.getSensors();
+			s_old = s_new[turnDirection];
+			
+			while( (s_new[turnDirection] - s_old) < 21) {
+				drive(s_new[turnDirection] - RANGE_THRESHOLD);
+				turn(-3*direction);
+				s_old = s_new[turnDirection];
+				s_new = com.getSensors();
+			}
 		}
 		
 		return s_old;
@@ -386,7 +435,7 @@ public class Robot {
     	com.append("following obstacle");
     	
     	//front sensor is slow like shiet
-    	sleep_h(5000);
+    	/*
     	int[] sensors = com.getSensors();
     
     	int distance = sensors[1] - RANGE_THRESHOLD - 1;
@@ -394,7 +443,7 @@ public class Robot {
     	//drive to the obstacle
     	if (distance > 0) {
     		drive(distance);
-    	}
+    	}*/
     	
     	//keep distance
 		int dist = keepDistance(direction);
