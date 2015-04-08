@@ -74,12 +74,12 @@ public class Communicator {
 
 
     public void setVelocity(byte left, byte right) {
-        readWrite(
+        write(
                 new byte[]{'i', left, right, '\r', '\n'}
         );
     }
     public void setVelocity(int left, int right) {
-        readWrite(
+        write(
                 new byte[]{'i', (byte)left, (byte)right, '\r', '\n'}
         );
     }
@@ -89,6 +89,7 @@ public class Communicator {
     }
 
     public int[] getSensors() {
+    	try{sleep(WAIT_BUFFER);}catch(Exception e){};
         int[] sensors = new int[3];
         
         String[] parsed = readWrite(new byte[] { 'q', '\r', '\n' }).split("\\s+");
@@ -127,6 +128,10 @@ public class Communicator {
     }
     
     public void setText(String text) {
-    	this.textLog.setText(text);
+    	this.textLog.setText(text + "\n");
+    }
+    
+    public void append(String text) {
+    	this.textLog.append(text + "\n");
     }
 }

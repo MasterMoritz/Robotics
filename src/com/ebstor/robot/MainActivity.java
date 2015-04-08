@@ -57,6 +57,11 @@ public class MainActivity extends Activity {
             connect();
         }
     }
+    
+    public void readSensors(View v) {
+        int[] sensor = robot.com.getSensors();
+        robot.com.setText("Left: " + Integer.toString(sensor[0]) + "| Middle: " + Integer.toString(sensor[1]) + " | Right: " + Integer.toString(sensor[2])); 
+    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -107,8 +112,8 @@ public class MainActivity extends Activity {
     public void makeASquare(View v) {
         Double dist = Double.valueOf(distance.getText().toString());
         for (int i = 0; i < 4; i++) {
-            robot.drive();
-            robot.turn(90);
+            robot.drive(dist);
+            robot.turn(-90);
         }
     }
 

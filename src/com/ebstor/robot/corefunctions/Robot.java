@@ -1,5 +1,7 @@
 package com.ebstor.robot.corefunctions;
 
+import java.util.EmptyStackException;
+
 import android.widget.TextView;
 
 import com.ebstor.robot.communication.Communicator;
@@ -13,13 +15,13 @@ import static java.lang.Thread.sleep;
 public class Robot {
 	
 	/** speed of robot */
-	public static int VELOCITY = 20;
+	public static int VELOCITY = 15;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.11;
+    public static double DEGREE_PER_MILLISECOND = 0.081;
     
     /** cm travelled per millisecond for velocity */
-    public static double CM_PER_MILLISECOND = 0.02055;
+    public static double CM_PER_MILLISECOND = 0.0142;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
@@ -27,11 +29,13 @@ public class Robot {
     /** the interval in ms after which conditions are checked and odometry is updated (when turning) */
     private long TURN_INTERVAL = 250;
     
+    private static final int ROBOT_WIDTH = 20;
+    
     /** the circumference in cm from the within which the robot assumes he has holds it */
     private static final int CIRCUMFERENCE_GOAL = 5;
     
     /** the threshold in cm where the robot starts avoiding an obstacle */
-    private static final int RANGE_THRESHOLD = 15;
+    private static final int RANGE_THRESHOLD = 20;
 
     /** the threshold in cm at which the robot may start driving again */
     private static final int SOFT_THRESHOLD = 30;
@@ -109,16 +113,18 @@ public class Robot {
      * drive straight a certain distance and update robot location 
      * @param distance_cm : the distance[cm] to drive
      */
-    public void drive(int distance_cm) {
+    public void drive(double distance_cm) {
+    	int velocity = VELOCITY;
+    	
     	//drive distance
         long time = distanceToTime(distance_cm);
         
         //drive backward if distance is negative
         if (distance_cm < 0) {
-        	VELOCITY *= -1;
+        	velocity *= -1;
         }
         
-        com.setVelocity(VELOCITY, VELOCITY);
+        com.setVelocity(velocity, velocity);
         sleep_h(time);
         com.stop();
         
@@ -230,6 +236,20 @@ public class Robot {
     	}
     }
 
+    public void turnToLocation(Location point) {
+    	try {
+	        double angle = Math.toDegrees(Math.atan2(point.getY()-robotLocation.getY(),point.getX()-robotLocation.getX()));
+            double turningAngle =  angle - robotLocation.getTheta();
+            if (turningAngle > 180) turningAngle = 360 - turningAngle;
+            if (turningAngle < -180) turningAngle = 360 + turningAngle;
+            turn(turningAngle);
+            com.setText(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
+    	} catch(Exception e) {
+    		com.setText("failed to turn towards location");
+            com.setText(e.toString());
+    	}
+    }
+    
     private double euclideanDistance(Location a, Location b) {
         return Math.sqrt(Math.pow(a.getX()-b.getX(),2) + Math.pow(a.getY() - b.getY(),2));
     }
@@ -279,84 +299,96 @@ public class Robot {
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
     }
 
+    /**
+     * keep distance to an obstacle
+     * @param direction : 1 -> turn counter-clockwise , -1 -> turn clockwise
+     * @return the last measured distance
+     */
+    private int keepDistance(int direction) {
+    	com.append("keeping distance " + Integer.toString(direction));
+		int[] s_new = com.getSensors();
+		
+		int turnDirection = 2; //right sensor if turning left
+    	if (direction < 0) {
+    		turnDirection = 0; //left sensor if turning right
+    	}
+		
+		int s_old = s_new[turnDirection];
+		
+		while( (s_new[turnDirection] - s_old) < 21) {
+			if(s_new[turnDirection] > RANGE_THRESHOLD) {
+				drive(s_new[turnDirection] - RANGE_THRESHOLD - 1);
+			}
+			turn(3*direction);
+			s_old = s_new[turnDirection];
+			s_new = com.getSensors();
+		}
+		
+		return s_old;
+	}
+	
     /** the robot should realign to whatever obstacle it is facing now <br>
-     * @param direction : +1 -> turn right, -1 -> turn left
+     * @param direction : +1 -> turn left, -1 -> turn right
      */
     private void realign(int direction) {
-    	
-    	//left/right sensor now measures the distance of front, this should save time because front sensor is slow like shiet
-    	turn(ANGLE_FRONT_SIDE * direction);
-    	
-    	turn(MINIMUM_TURN);
-    	
-    	int turnDirection = 0; //left sensor if turning right
-    	if (direction < 0) {
-    		turnDirection = 2; //right sensor if turning left
-    	}
-    	
     	//sensor[0] = left
     	//sensor[1] = middle
     	//sensor[2] = right
-    	int [] sensor = com.getSensors();
+    	int[] s_new = com.getSensors();
     	
-    	//get front into soft treshold
-    	while(sensor[turnDirection] < SOFT_THRESHOLD) {
-    		turn(3 * (direction));
-    		sensor = com.getSensors();
+    	int turnDirection = 2; //right sensor if turning left
+    	if (direction < 0) {
+    		turnDirection = 0; //left sensor if turning right
     	}
     	
-    	//front sensor now measures front again
-    	turn(-ANGLE_FRONT_SIDE * (-direction));
-    	
-    	//get left/right into soft threshold
-    	sensor = com.getSensors();
-    	while(sensor[turnDirection] < SOFT_THRESHOLD) {
+		int s_old = s_new[turnDirection];
+		
+    	//turn until end of obstacle
+    	while( (s_new[turnDirection] - s_old) < 30) {
     		turn(3 * (direction));
-    		sensor = com.getSensors();
+    		s_old = s_new[turnDirection];
+    		s_new = com.getSensors();
     	}
+    	
+    	sleep_h(5000);
     }
     
-    /**
-     * Calculate the right corner point of the Obstacle in front of the robot <br>
-     * this method assumes that the front sensor is facing the obstacle
-     */
-    public Location calculateObstaclePoint() {
-    	//turn right until the left sensor can't detect the obstacle anymore
-    	int leftSensor_new = com.getSensors()[0];
-    	int leftSensor_old = leftSensor_new;
-    	int rotated = 0;
-    	int accuracy = -1;
-    	
-    	while ( (leftSensor_new - leftSensor_old) < 30) { //maybe have to play with the < value, but 30 should be alright
-    		turn(accuracy);
-    		rotated += accuracy;
-    		leftSensor_old = leftSensor_new;
-    		leftSensor_new = com.getSensors()[0];
-    	}
-    	
-    	//update robot location
-    	robotLocation.rotate(rotated);
-    	
-    	//calculate the corner point which we want to pass
-    	double alpha = robotLocation.getTheta() + ANGLE_FRONT_SIDE;
-    	double hyp = leftSensor_old;
-    	double gk = Math.sin(alpha) * hyp; //difference of Robot_y and Point_y
-    	double ak = Math.cos(alpha) * hyp; //difference of Robot_x and Point_x
-    	
-    	return new Location(ak + robotLocation.getX(), gk + robotLocation.getY(), alpha);
-    	
+    public void driveUntilObstacle() {
+        int[] s = new int[3];
+        long t0 = System.currentTimeMillis();
+        drive();
+        while(true) {
+        	
+        	s = com.getSensors();
+        	if (s[0] <= RANGE_THRESHOLD || s[1] <= RANGE_THRESHOLD || s[2] <= RANGE_THRESHOLD) {
+        		break;
+        	}
+        }
+        
+        long dt = System.currentTimeMillis() - t0;
+        com.stop();
+            
+        //update robot pose
+        robotLocation.translate(timeToDistance(dt));
+        
+        com.getSensors();
+        com.append(robotLocation.toString());
     }
+    
     
     /**
      * The Roboter should change into following mode 
      * leave following mode if it hits the m-line (closer to goal than m_point) again
-     * @param turnDirection : 1 ->turn clockwise, -1 -> turn counterclockwise <br>
-     * note: for now always clockwise turning should be used because the param is not fully implemented
+     * @param turnDirection : 1 ->turn counter-clockwise, -1 -> turn clockwise <br>
+     * 
      */
-    public void followObstacle(int turnDirection) {
-    	com.setText("following obstacle");
-        
+    public void followObstacle(int direction) {
+    	com.append("following obstacle");
+    	
+    	//front sensor is slow like shiet
+    	sleep_h(5000);
     	int[] sensors = com.getSensors();
+    
     	int distance = sensors[1] - RANGE_THRESHOLD - 1;
     	
     	//drive to the obstacle
@@ -364,61 +396,23 @@ public class Robot {
     		drive(distance);
     	}
     	
-    	//now realign
-        realign(turnDirection);
-        
-
-        // stop if misaligned or m-line hit or wall ends
-        SensorCondition driveCondition = new SensorCondition() {
-        	public int[] sensors_old;
-        	public int[] sensors_new;
-        	
-            @Override
-            public boolean holds() {
-            	sensors_new = com.getSensors();
-
-            	if ((sensors_new[0] - sensors_old[0]) > 20 || sensors_new[0] < RANGE_THRESHOLD || sensors_new[1] < RANGE_THRESHOLD 
-            		|| mlineEncountered()) {
-            		return true;
-            	}
-            	
-            	sensors_old[0] = sensors_new[0];
-            	sensors_old[1] = sensors_new[1];
-            	sensors_old[2] = sensors_new[2];
-                return false;
-            }
-            
-            @Override
-            public void init() {
-            	sensors_old = com.getSensors();
-            	sensors_new = com.getSensors();
-            }
-        };
-
-        while(true) {
-        	driveCondition.init();
-            driveUntil(driveCondition);
-
-            //m-line hit
-            if (mlineEncountered()) {
-            	turnToGoal();
-                return;
-            }
-            //misaligned or wall ends
-            else {
-            	sensors = com.getSensors();
-            	if (sensors[0] < RANGE_THRESHOLD || sensors[1] < RANGE_THRESHOLD) {
-            		com.setText("Realign");
-            		realign(turnDirection);
-            	}
-            	else {
-            		com.setText("Wall ended");
-            		//the current wall has ended, thus turn around to continue following the obstacle
-            		drive(MINIMUM_DRIVE);
-            		turn(-90);
-            	}
-            }
-        }
-
+    	//keep distance
+		int dist = keepDistance(direction);
+		
+		//WORKING GREAT UP TO THIS POINT
+		/*
+		sleep_h(100);
+		//turn a bit for some tolerance
+		turn(10 * direction);
+		sleep_h(100);
+		//drive by obstacle hopefully
+		drive(dist + ROBOT_WIDTH);
+		sleep_h(100);
+		//turn back to obstacle
+		turn((-90) * direction);
+		sleep_h(100);
+		//keep distance again
+		dist = keepDistance((1) * direction);*/
     }
+
 }
