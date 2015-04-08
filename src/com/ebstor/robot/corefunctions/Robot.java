@@ -18,10 +18,10 @@ public class Robot {
 	public static int VELOCITY = 20;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.11;
+    public static double DEGREE_PER_MILLISECOND = 0.117;
     
     /** cm travelled per millisecond for velocity */
-    public static double CM_PER_MILLISECOND = 0.02055;
+    public static double CM_PER_MILLISECOND = 0.0196;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
