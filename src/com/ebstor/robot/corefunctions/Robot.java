@@ -298,7 +298,7 @@ public class Robot {
     }
 
     private void keepDistance(int direction) {
-    	com.append("keeping distance " + Integer.toBinaryString(direction));
+    	com.append("keeping distance " + Integer.toString(direction));
 		int[] s_new = com.getSensors();
 		
 		int turnDirection = 2; //right sensor if turning left
@@ -376,6 +376,8 @@ public class Robot {
     public void followObstacle(int direction) {
     	com.append("following obstacle");
     	
+    	//front sensor is slow like shiet
+    	sleep_h(5000);
     	int[] sensors = com.getSensors();
     
     	int distance = sensors[1] - RANGE_THRESHOLD - 1;
@@ -386,7 +388,7 @@ public class Robot {
     	}
     	
     	//keep distance
-		keepDistance(1);
+		keepDistance(direction);
 		
 		//TODO watch behaviour and continue implementation
 

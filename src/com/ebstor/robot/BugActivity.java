@@ -37,7 +37,7 @@ public class BugActivity extends MainActivity {
         Location goal = new Location(x,y);
         robot.setGoal(goal);
         
-        robot.followObstacle(1);
+        robot.followObstacle(-1);
     }
 
     public void testTurnToGoal(View v) {
