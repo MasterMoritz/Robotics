@@ -109,6 +109,7 @@ public class Robot {
 
     public void stop() {
         com.stop();
+        com.setText(robotLocation.toString());
     }
    
     /**

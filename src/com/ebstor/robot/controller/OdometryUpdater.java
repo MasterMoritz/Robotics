@@ -10,7 +10,7 @@ import static java.lang.Thread.sleep;
  */
 public class OdometryUpdater implements Runnable {
 
-    private static final long INTERVAL = 1000;
+    private static final long INTERVAL = 10;
 
     private RobotAction action;
     private Location robotLocation;
