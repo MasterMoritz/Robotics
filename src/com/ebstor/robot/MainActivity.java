@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
         Double dist = Double.valueOf(distance.getText().toString());
         for (int i = 0; i < 4; i++) {
             robot.drive(dist);
-            robot.turn(90);
+            robot.turn(-90);
         }
     }
 

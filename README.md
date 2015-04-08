@@ -7,5 +7,4 @@ Task:
 TODO:
 
  - implement bug 2 algorithm:
-think of what the sensors values should look like when the robot is aligned parallel (implement the alignedParallel SensorCondition).
-remember to give it some threshold so that the robot does not re-orientate itself by something like 0.001° after every step.
+robot can now see obstacles and turn away, need to implement circling around the obstacle now

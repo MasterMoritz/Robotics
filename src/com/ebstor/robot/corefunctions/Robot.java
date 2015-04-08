@@ -18,10 +18,10 @@ public class Robot {
 	public static int VELOCITY = 20;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.11;
+    public static double DEGREE_PER_MILLISECOND = 0.114;
     
     /** cm travelled per millisecond for velocity */
-    public static double CM_PER_MILLISECOND = 0.0196;
+    public static double CM_PER_MILLISECOND = 0.0192;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
@@ -33,7 +33,7 @@ public class Robot {
     private static final int CIRCUMFERENCE_GOAL = 5;
     
     /** the threshold in cm where the robot starts avoiding an obstacle */
-    private static final int RANGE_THRESHOLD = 15;
+    private static final int RANGE_THRESHOLD = 20;
 
     /** the threshold in cm at which the robot may start driving again */
     private static final int SOFT_THRESHOLD = 30;
@@ -298,6 +298,7 @@ public class Robot {
     }
 
     private void keepDistance(int direction) {
+    	com.append("keeping distance");
 		int[] s_new = com.getSensors();
 		
 		int turnDirection = 2; //right sensor if turning left
@@ -307,7 +308,7 @@ public class Robot {
 		
 		int s_old = s_new[turnDirection];
 		
-		while( (s_new[turnDirection] - s_old) < 30) {
+		while( (s_new[turnDirection] - s_old) < 21) {
 			if(s_new[turnDirection] > RANGE_THRESHOLD) {
 				drive(s_new[turnDirection] - RANGE_THRESHOLD - 1);
 			}
@@ -372,7 +373,7 @@ public class Robot {
      * 
      */
     public void followObstacle(int direction) {
-    	com.setText("following obstacle");
+    	com.append("following obstacle");
     	
     	int[] sensors = com.getSensors();
     
