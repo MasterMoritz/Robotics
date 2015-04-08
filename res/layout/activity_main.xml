@@ -43,8 +43,6 @@
         android:layout_centerVertical="true"
         android:text="@string/travel_distance"
         android:onClick="travelDistance" />
-    <EditText android:id="@+id/angle" android:layout_width="wrap_content" android:layout_height="wrap_content"
-              android:ems="10" android:layout_alignBottom="@+id/distance"/>
     
     <Button android:id="@+id/makeASqaure" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="@string/make_a_square" android:onClick="makeASquare"
@@ -73,5 +71,14 @@
         android:layout_toRightOf="@+id/sensor"
         android:onClick="turnAngle"
         android:text="@string/turn_angle" />
+
+    <EditText
+        android:id="@+id/angle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/distancebutton"
+        android:layout_alignLeft="@+id/distancebutton"
+        android:layout_marginLeft="18dp"
+        android:ems="10" />
 
 </RelativeLayout>

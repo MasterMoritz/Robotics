@@ -385,6 +385,40 @@ public class Robot {
             	}
             }
         }
-
     }
+    /**
+     * By using the m-line(line from starting point to goal) this implementation
+     * of an obstacle avoidance algorithm is the most efficient one in most situations.
+     * However, there are cases in which a different implementation(Bug 1) is way more
+     * efficient.
+     */
+    public void Bug2(){
+    	
+		int distToGoal = ((Double)euclideanDistance(robotLocation, goal)).intValue();
+		m_point = robotLocation;
+		int previousDistance = ((Double)euclideanDistance(m_point, goal)).intValue();
+
+		
+    	while(true){
+    		
+    		distToGoal = ((Double)euclideanDistance(robotLocation, goal)).intValue();
+    		if(previousDistance > distToGoal){
+    				
+    			followObstacle(1);
+    		}else{
+    				
+	    		turnToGoal();
+	    		driveAndStopForObstacles(distToGoal);
+	        	distToGoal = ((Double)euclideanDistance(robotLocation, goal)).intValue();
+	    		if(distToGoal < 3){
+	    			return;
+	    		}else{
+	    			m_point = robotLocation;
+	    			previousDistance = ((Double)euclideanDistance(m_point, goal)).intValue();
+	    			followObstacle(1);
+	    		}
+    		}
+    	}
+    }
+    
 }
