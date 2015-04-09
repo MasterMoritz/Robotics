@@ -30,6 +30,7 @@ public class Robot {
     private long TURN_INTERVAL = 250;
     
     private static final int ROBOT_WIDTH = 20;
+	private static final int ROBOT_LENGTH = 16;
     
     /** the circumference in cm from the within which the robot assumes he has holds it */
     private static final int CIRCUMFERENCE_GOAL = 5;
@@ -40,7 +41,6 @@ public class Robot {
     /** the threshold in cm at which the robot may start driving again */
     private static final int SOFT_THRESHOLD = 30;
     
-    //TODO measure the real angle between the various LOS
     /** the angle between the left end of the LOS of the front sensor and the side sensor */
     private static final double ANGLE_FRONT_SIDE = 20;
     private static final double ANGLE_RIGHT_LEFT = 40;
@@ -306,7 +306,8 @@ public class Robot {
      */
     private int keepDistance(int direction) {
     	com.append("keeping distance " + Integer.toString(direction));
-		int[] s_new = com.getSensors();
+		int[] s_new;
+		int s_old;
 		
 		int turnDirection = 2; //right sensor if turning left
     	if (direction < 0) {
@@ -315,62 +316,38 @@ public class Robot {
 		
 		int s_old = s_new[turnDirection];
 		
-		while( (s_new[turnDirection] - s_old) < 21) {
-			drive(s_new[turnDirection] - RANGE_THRESHOLD);
-			turn(3*direction);
-			s_old = s_new[turnDirection];
+		for (int i = 0; i < 4; i++) {
 			s_new = com.getSensors();
-		}
-		Location temp = new Location(robotLocation);
-		turn(20*direction);
-		drive(s_old + ROBOT_WIDTH);
-		
-		turnToLocation(temp);
-		
-		s_new = com.getSensors();
-		s_old = s_new[turnDirection];
-		
-		while( (s_new[turnDirection] - s_old) < 21) {
-			turn(3*direction);
 			s_old = s_new[turnDirection];
-			s_new = com.getSensors();
-		}
-		
-		turn(20*direction);
-		drive(s_old + ROBOT_WIDTH);
-		
-		turnToLocation(temp);
-		
-		s_new = com.getSensors();
-		s_old = s_new[turnDirection];
-		
-		while( (s_new[turnDirection] - s_old) < 21) {
-			turn(3*direction);
-			s_old = s_new[turnDirection];
-			s_new = com.getSensors();
-		}
-		
-		turn(-3*direction);
-		drive(s_old - RANGE_THRESHOLD);
-		s_new = com.getSensors();
-		
-		//object wall ended
-		while(s_new[2] > RANGE_THRESHOLD) {
 			
-			while(s_new[turnDirection] > RANGE_THRESHOLD) {
-				turn(-3*direction);
+			//keep distance to wall
+			while( (s_new[turnDirection] - s_old) < 21) {
+				drive(s_new[turnDirection] - RANGE_THRESHOLD);
+				turn(3*direction);
+				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
 			}
+			
+			//wall ended, drive around corner
+			Location temp = new Location(robotLocation);
+			turn(20*direction);
+			drive(s_old + ROBOT_LENGTH);
+			
+			turnToLocation(temp);
 			
 			s_new = com.getSensors();
 			s_old = s_new[turnDirection];
 			
 			while( (s_new[turnDirection] - s_old) < 21) {
-				drive(s_new[turnDirection] - RANGE_THRESHOLD);
-				turn(-3*direction);
+				turn(3*direction);
 				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
 			}
+			
+			turn(20*direction);
+			drive(s_old + ROBOT_LENGTH);
+			
+			turnToLocation(temp);
 		}
 		
 		return s_old;
