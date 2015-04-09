@@ -135,7 +135,10 @@ public class Robot {
     	int velocity = VELOCITY;
     	
     	//drive distance
-        long time = distanceToTime(distance_cm);
+        long time = distanceToTime(distance_cm) - 50;
+        if (time < 0) {
+        	time = 0;
+        }
         
         //drive backward if distance is negative
         if (distance_cm < 0) {
@@ -211,6 +214,9 @@ public class Robot {
     public void turn(double degree) {
         if (degree != 0) {
             long time = degreesToTime(degree);
+            if (time < 0) {
+            	time = 0;
+            }
             if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
             else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
             sleep_h(time-50);
