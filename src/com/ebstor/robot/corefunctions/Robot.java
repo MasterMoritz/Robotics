@@ -146,7 +146,7 @@ public class Robot {
         }
         
         com.setVelocity(velocity, velocity);
-        sleep_h(time-50);
+        sleep_h(time);
         com.stop();
         
         //update robot location
@@ -219,7 +219,7 @@ public class Robot {
             }
             if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
             else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
-            sleep_h(time-50);
+            sleep_h(time);
             com.stop();
             robotLocation.rotate(degree);
         }
