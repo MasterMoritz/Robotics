@@ -32,7 +32,7 @@ public class Robot {
     private static final int ROBOT_WIDTH = 20;
 	private static final int ROBOT_LENGTH = 16;
     
-    /** the circumference in cm from the within which the robot assumes he has holds it */
+    /** the circumference in cm from the within the robot assumes he has reached the goal*/
     private static final int CIRCUMFERENCE_GOAL = 5;
 	
     private static final int CIRCUMFERENCE_MLINE = 5;
@@ -111,6 +111,22 @@ public class Robot {
         com.stop();
     }
    
+    /**
+     * @return whether the robot has reached the goal
+     */
+    public boolean reachedGoal() {
+    	if (Math.abs(robotLocation.getX() - goal.getX()) <= CIRCUMFERENCE_GOAL
+    		&& Math.abs(robotLocation.getY() - goal.getY()) <= CIRCUMFERENCE_GOAL)
+    	{
+    		return true;
+    	}
+    	
+    	else {
+    		return false;
+    	}
+    }
+    
+    
     /**
      * drive straight a certain distance and update robot location 
      * @param distance_cm : the distance[cm] to drive
@@ -273,7 +289,7 @@ public class Robot {
     	}
     }
     
-    private double euclideanDistance(Location a, Location b) {
+    public double euclideanDistance(Location a, Location b) {
         return Math.sqrt(Math.pow(a.getX()-b.getX(),2) + Math.pow(a.getY() - b.getY(),2));
     }
 
@@ -308,22 +324,34 @@ public class Robot {
         this.goal = goal;
     }
 
-    private boolean mlineEncountered() {
+    public boolean mlineEncountered() {
         return distanceToMline() <= 3; // (cm) this depends on how far robot travels between checks, can therefore be reduced
     }
 
 	/** alternative to mlineEncountered */
-	private boolean encounteredMline() {
-			double rx = robotLocation.getX();
-			double ry = robotLocation.getY();
-			
-			double gx = goal.getX();
-			double gy = goal.getY();
-			
-			int rho = (int)(Math.atan(ry / rx));
-			int gho = (int)(Math.atan(gy / gx));
-			
-			return (Math.abs(rho - gho) <= CIRCUMFERENCE_MLINE);
+	public boolean encounteredMline() {
+		double rx = robotLocation.getX();
+		double ry = robotLocation.getY();
+		
+		double gx = goal.getX();
+		double gy = goal.getY();
+		
+		int rho = (int)(Math.atan(ry / rx));
+		int gho = (int)(Math.atan(gy / gx));
+		
+		return (Math.abs(rho - gho) <= CIRCUMFERENCE_MLINE);
+	}
+	public boolean encounteredMline(int tolerance) {
+		double rx = robotLocation.getX();
+		double ry = robotLocation.getY();
+		
+		double gx = goal.getX();
+		double gy = goal.getY();
+		
+		int rho = (int)(Math.atan(ry / rx));
+		int gho = (int)(Math.atan(gy / gx));
+		
+		return (Math.abs(rho - gho) <= tolerance);
 	}
 	
     /**
@@ -399,22 +427,57 @@ public class Robot {
     public void driveUntilObstacle() {
         int[] s = new int[3];
         
-        drive();
+        com.setVelocity(VELOCITY, VELOCITY);
         long t0 = System.currentTimeMillis();
         while(true) {
-        	
         	s = com.getSensors();
         	if (s[0] <= RANGE_THRESHOLD || s[1] <= RANGE_THRESHOLD || s[2] <= RANGE_THRESHOLD) {
         		break;
         	}
         }
         
-        
         com.stop();
         long dt = System.currentTimeMillis() - t0;
         
         //update robot pose
         robotLocation.translate(timeToDistance(dt));
+    }
+    
+    /** drive the given distance but stop after encountering an obstacle <br>
+     * @return whether an obstacle has been encountered
+     */
+    public boolean driveUntilObstacle(double distance_cm) {
+    	int velocity = (int)(VELOCITY * Math.signum(distance_cm));
+    	double currentDistance = 0;
+    	boolean encounteredObstacle = false;
+    	
+        int[] s = new int[3];
+        
+        com.setVelocity(velocity, velocity);
+        long t0 = System.currentTimeMillis();
+        
+        while(distance_cm > currentDistance) {
+        	s = com.getSensors();
+        	if (s[0] <= RANGE_THRESHOLD || s[1] <= RANGE_THRESHOLD || s[2] <= RANGE_THRESHOLD) {
+        		encounteredObstacle = true;
+        		break;
+        	}
+        	currentDistance = (timeToDistance(System.currentTimeMillis() - t0));
+        }  
+        
+        com.stop();
+        
+        //correct small distance mistakes that may occurr
+        if (!encounteredObstacle) {
+        	drive(distance_cm - currentDistance);
+        }
+        
+        long dt = System.currentTimeMillis() - t0;
+        
+        //update robot pose
+        robotLocation.translate(timeToDistance(dt));
+        
+        return encounteredObstacle;
     }
     
     
@@ -436,7 +499,7 @@ public class Robot {
 
     	//else start circling around obstacle until leaving condition is fulfilled
 		
-		int turnDirection = 2; //right sensor if turning left
+    	int turnDirection = 2; //right sensor if turning left
     	if (direction < 0) {
     		turnDirection = 0; //left sensor if turning right
     	}

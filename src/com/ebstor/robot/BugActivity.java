@@ -38,19 +38,26 @@ public class BugActivity extends MainActivity {
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
-        
-        //circle around obstacle counterclockwise and never stop
-        robot.followObstacle(-1, new SensorCondition() {
-			
-			@Override
-			public void init() {
-			}
-			
-			@Override
-			public boolean holds() {
-				return false;
-			}
-		});
+        double distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);
+       /* 
+        while (!robot.reachedGoal()){
+        	
+	        robot.turnToGoal();
+	        if(robot.driveUntilObstacle(distanceToGoal)) {*/
+		        //circle around obstacle counterclockwise and never stop
+		        robot.followObstacle(-1, new SensorCondition() {
+					
+					@Override
+					public void init() {
+					}
+					
+					@Override
+					public boolean holds() {
+						return false;
+					}
+				});
+	        /*}
+        }*/
     }
 
     public void testTurnToGoal(View v) {
