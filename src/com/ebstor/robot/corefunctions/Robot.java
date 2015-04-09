@@ -34,7 +34,9 @@ public class Robot {
     
     /** the circumference in cm from the within which the robot assumes he has holds it */
     private static final int CIRCUMFERENCE_GOAL = 5;
-    
+	
+    private static final int CIRCUMFERENCE_MLINE = 5;
+	
     /** the threshold in cm where the robot starts avoiding an obstacle */
     private static final int RANGE_THRESHOLD = 20;
 
@@ -125,7 +127,7 @@ public class Robot {
         }
         
         com.setVelocity(velocity, velocity);
-        sleep_h(time+50);
+        sleep_h(time-50);
         com.stop();
         
         //update robot location
@@ -174,7 +176,7 @@ public class Robot {
             long time = degreesToTime(degree);
             if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
             else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
-            sleep_h(time+50);
+            sleep_h(time-50);
             com.stop();
             robotLocation.rotate(degree);
         }
@@ -288,7 +290,7 @@ public class Robot {
     private boolean mlineEncountered() {
         return distanceToMline() <= 3; // (cm) this depends on how far robot travels between checks, can therefore be reduced
     }
-
+	
     /**
      * computes the shortest distance between the current robot location and the m-line
      */
@@ -346,6 +348,7 @@ public class Robot {
 			drive(s_old + ROBOT_LENGTH);
 			
 			turnToLocation(temp);
+			turn(3*direction);
 		}
 		
 		return s_old;
