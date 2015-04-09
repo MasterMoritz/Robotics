@@ -1,4 +1,4 @@
-package com.ebstor.robot.corefunctions;
+ package com.ebstor.robot.corefunctions;
 
 import java.util.EmptyStackException;
 
@@ -313,8 +313,6 @@ public class Robot {
     	if (direction < 0) {
     		turnDirection = 0; //left sensor if turning right
     	}
-		
-		int s_old = s_new[turnDirection];
 		
 		for (int i = 0; i < 4; i++) {
 			s_new = com.getSensors();
