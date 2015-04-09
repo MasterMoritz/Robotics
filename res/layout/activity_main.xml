@@ -18,19 +18,22 @@
             android:text="@string/power" />
 
     <TextView
-            android:id="@+id/textLog"
-            android:layout_width="500dp"
-            android:layout_height="150dp"
-            android:layout_alignParentBottom="true" android:layout_alignParentStart="true"/>
+        android:id="@+id/textLog"
+        android:layout_width="500dp"
+        android:layout_height="150dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
 
     <EditText
-            android:id="@+id/distance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/powah"
-            android:layout_marginTop="41dp"
-            android:layout_toLeftOf="@+id/powah"
-            android:ems="10" android:inputType="number">
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/powah"
+        android:layout_marginTop="41dp"
+        android:layout_toLeftOf="@+id/powah"
+        android:ems="10"
+        android:inputType="number"
+        android:text="21" >
 
         <requestFocus />
     </EditText>
@@ -43,9 +46,17 @@
             android:layout_centerVertical="true"
             android:text="@string/travel_distance"
             android:onClick="travelDistance" />
-    <EditText android:id="@+id/angle" android:layout_width="wrap_content" android:layout_height="wrap_content"
-              android:ems="10" android:layout_alignBottom="@+id/distance" android:layout_alignEnd="@+id/textLog"
-              android:layout_toEndOf="@+id/powah"/>
+
+    <EditText
+        android:id="@+id/angle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/distance"
+        android:layout_alignEnd="@+id/textLog"
+        android:layout_toEndOf="@+id/powah"
+        android:ems="10"
+        android:text="90" />
+
     <Button android:id="@+id/angleButton" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="@string/turn_angle" android:onClick="turnAngle"
             android:layout_alignTop="@+id/distancebutton" android:layout_alignEnd="@+id/textLog"/>

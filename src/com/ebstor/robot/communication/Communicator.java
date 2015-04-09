@@ -6,6 +6,8 @@ import jp.ksksue.driver.serial.FTDriver;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.auth.BasicUserPrincipal;
+
 import static java.lang.Thread.sleep;
 
 /**

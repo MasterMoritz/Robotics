@@ -18,10 +18,16 @@ public class Robot {
 	public static int VELOCITY = 15;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.0820;
+    public static double DEGREE_PER_MILLISECOND = 0.08;
     
     /** cm travelled per millisecond for velocity */
-    public static double CM_PER_MILLISECOND = 0.0142;
+    public static double CM_PER_MILLISECOND = 0.0136;
+    
+    /** considering the 50ms wait buffer this is the minimum angle that has to be turned */
+    private static int MINIMUM_TURN = 4;
+    
+    /** considering the 50ms wait buffer this is the minimum distance that has to be driven */
+    private static int MINIMUM_DRIVE = 1;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
@@ -38,7 +44,7 @@ public class Robot {
     private static final int CIRCUMFERENCE_MLINE = 5;
 	
     /** the threshold in cm where the robot starts avoiding an obstacle */
-    private static final int RANGE_THRESHOLD = 20;
+    private static final int RANGE_THRESHOLD = 15;
 
     /** the threshold in cm at which the robot may start driving again */
     private static final int SOFT_THRESHOLD = 30;
@@ -47,11 +53,7 @@ public class Robot {
     private static final double ANGLE_FRONT_SIDE = 20;
     private static final double ANGLE_RIGHT_LEFT = 40;
     
-    /** the minimum angle we have to turn to pass an obstacle point in front without collision */
-    private static final int MINIMUM_TURN = 20;
     
-    /** the minimum distance we have to drive after detecting a wall end, should be about the length of the robot */
-    private static final int MINIMUM_DRIVE = 20;
     
     /** holds the pose of the robot */
     public Location robotLocation;
@@ -288,10 +290,10 @@ public class Robot {
             if (turningAngle > 180) turningAngle = 360 - turningAngle;
             if (turningAngle < -180) turningAngle = 360 + turningAngle;
             turn(turningAngle);
-            com.setText(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
+            com.append(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
     	} catch(Exception e) {
-    		com.setText("failed to turn towards location");
-            com.setText(e.toString());
+    		com.append("failed to turn towards location");
+            com.append(e.toString());
     	}
     }
     
@@ -396,31 +398,54 @@ public class Robot {
      * @param direction : 1 -> turn counter-clockwise , -1 -> turn clockwise
      * @return the last measured distance
      */
-    private int keepDistance(int direction) {
+    private void keepDistance(int direction) {
     	com.append("keeping distance " + Integer.toString(direction));
 		int[] s_new;
 		int s_old = 0;
+		Location temp = null;
 		
 		int turnDirection = 2; //right sensor if turning left
+		int cturnDirection = 0;
     	if (direction < 0) {
     		turnDirection = 0; //left sensor if turning right
+    		cturnDirection = 2;
     	}
 		
-		for (int i = 0; i < 4; i++) {
+    	int itemp = cturnDirection;
+    	
+		while(true) {
 			s_new = com.getSensors();
 			s_old = s_new[turnDirection];
 			
+			//get angle
+			s_new = com.getSensors();
+			s_old = s_new[turnDirection];
+			double rtheta = robotLocation.getTheta();
+			while( (s_new[turnDirection] - s_old) < 21) {
+				turn(MINIMUM_TURN*direction);
+				s_old = s_new[turnDirection];
+				s_new = com.getSensors();
+			}
+			double dtheta = (Math.abs(rtheta-robotLocation.getTheta()));
+			drive(s_old - RANGE_THRESHOLD);
+			turn(360 - dtheta);
+			com.append(Double.toString(dtheta));
+			/*
 			//keep distance to wall
+			s_new = com.getSensors();
+			s_old = s_new[turnDirection];
 			while( (s_new[turnDirection] - s_old) < 21) {
 				drive(s_new[turnDirection] - RANGE_THRESHOLD);
-				turn(3*direction);
+				turn(MINIMUM_TURN*direction);
 				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
-			}
-			
+			}*/break;
+			/*
 			//wall ended, drive around corner
-			Location temp = new Location(robotLocation);
+			temp = new Location(robotLocation);
+
 			turn(20*direction);
+			com.append(Integer.toString(s_old));
 			drive(s_old + ROBOT_LENGTH);
 			
 			turnToLocation(temp);
@@ -429,19 +454,19 @@ public class Robot {
 			s_old = s_new[turnDirection];
 			
 			while( (s_new[turnDirection] - s_old) < 21) {
-				turn(3*direction);
+				turn(MINIMUM_TURN*direction);
 				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
 			}
 			
-			turn(20*direction);
+			turn(45*direction);
 			drive(s_old + ROBOT_LENGTH);
 			
 			turnToLocation(temp);
-			turn(3*direction);
+			turn(MINIMUM_TURN*direction);
+			*/
 		}
 		
-		return s_old;
 	}
 	
     
@@ -517,7 +542,7 @@ public class Robot {
     	if(s_new[0] == 255 && s_new[1] == 255 && s_new[2] == 255) {
     		return;
     	}
-
+/*
     	//else start circling around obstacle until leaving condition is fulfilled
 		
     	int turnDirection = 2; //right sensor if turning left
@@ -535,7 +560,7 @@ public class Robot {
 				if (leavingCondition.holds()) {
 					return;
 				}
-				turn(3*direction);
+				turn(MINIMUM_TURN*direction);
 				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
 			}
@@ -554,7 +579,7 @@ public class Robot {
 			s_old = s_new[turnDirection];
 			
 			while( (s_new[turnDirection] - s_old) < 21) {
-				turn(3*direction);
+				turn(MINIMUM_TURN*direction);
 				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
 			}
@@ -566,12 +591,14 @@ public class Robot {
 			}
 			
 			turnToLocation(temp);
-			turn(3*direction);
+			turn(MINIMUM_TURN*direction);
 		}
 		
 		//get new sensor values
 		s_new = com.getSensors();
 		s_old = s_new[turnDirection];
+		*/
+    	keepDistance(direction);
     }
 
 }

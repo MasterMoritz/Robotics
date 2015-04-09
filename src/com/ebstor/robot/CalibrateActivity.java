@@ -35,7 +35,7 @@ public class CalibrateActivity extends MainActivity {
     	if (robot != null) {
 	        robot.drive();
 	        try {
-	            sleep(CALIBRATION_DRIVE);
+	            sleep(CALIBRATION_DRIVE-50);
 	        } catch (Exception e) {}
 	        robot.stop();
     	}
@@ -44,7 +44,7 @@ public class CalibrateActivity extends MainActivity {
     public void rotationTestRun(View v) {
         robot.turnLeft();
         try {
-            sleep(CALIBRATION_TURN);
+            sleep(CALIBRATION_TURN-50);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
