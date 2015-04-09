@@ -416,7 +416,7 @@ public class Robot {
 		while(true) {
 			s_new = com.getSensors();
 			s_old = s_new[turnDirection];
-			
+			/*
 			//get angle
 			s_new = com.getSensors();
 			s_old = s_new[turnDirection];
@@ -430,7 +430,7 @@ public class Robot {
 			drive(s_old - RANGE_THRESHOLD);
 			turn(360 - dtheta);
 			com.append(Double.toString(dtheta));
-			/*
+			*/
 			//keep distance to wall
 			s_new = com.getSensors();
 			s_old = s_new[turnDirection];
@@ -439,7 +439,7 @@ public class Robot {
 				turn(MINIMUM_TURN*direction);
 				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
-			}*/break;
+			}break;
 			/*
 			//wall ended, drive around corner
 			temp = new Location(robotLocation);
