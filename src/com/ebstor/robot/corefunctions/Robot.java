@@ -364,6 +364,21 @@ public class Robot {
         return Math.abs(x*goal.getY() - y*(goal.getX()))/normalLength;
     }
 
+    /**
+     * Use At Your Own Risk (or the risk of the robot)
+     */
+    public void randomBerserkerMode() {
+    	int b = 12;
+    	int m = 0;
+    	while(m < 4) {
+    		com.setVelocity((int)(Math.random() * 255), (int)(Math.random() * 255));
+    		sleep_h((long) (Math.random() * 500 + 200));
+    		if (b > (int)(Math.random()*100)) {
+    			m += 1;
+    		}
+    	}
+    }
+    
     /** drives a certain distance and checks afterwards if condition is fulfilled */
     private boolean driveAndCheck(double distance_cm, SensorCondition condition) {
     	drive(distance_cm);
