@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import com.ebstor.robot.corefunctions.Location;
+import com.ebstor.robot.corefunctions.SensorCondition;
 import com.example.robot.R;
 
 /**
@@ -37,7 +39,18 @@ public class BugActivity extends MainActivity {
         Location goal = new Location(x,y);
         robot.setGoal(goal);
         
-        robot.followObstacle(-1);
+        //circle around obstacle counterclockwise and never stop
+        robot.followObstacle(-1, new SensorCondition() {
+			
+			@Override
+			public void init() {
+			}
+			
+			@Override
+			public boolean holds() {
+				return false;
+			}
+		});
     }
 
     public void testTurnToGoal(View v) {
