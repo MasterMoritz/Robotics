@@ -290,6 +290,20 @@ public class Robot {
     private boolean mlineEncountered() {
         return distanceToMline() <= 3; // (cm) this depends on how far robot travels between checks, can therefore be reduced
     }
+
+	/** alternative to mlineEncountered */
+	private boolean encounteredMline() {
+			double rx = robotLocation.getX();
+			double ry = robotLocation.getY();
+			
+			double gx = goal.getX();
+			double gy = goal.getY();
+			
+			int rho = (int)(Math.atan(ry / rx));
+			int gho = (int)(Math.atan(gy / gx));
+			
+			return (Math.abs(rho - gho) <= CIRCUMFERENCE_MLINE);
+	}
 	
     /**
      * computes the shortest distance between the current robot location and the m-line
