@@ -414,23 +414,37 @@ public class Robot {
     	int itemp = cturnDirection;
     	
 		while(true) {
+			sleep_h(100);
 			s_new = com.getSensors();
 			s_old = s_new[turnDirection];
-			/*
-			//get angle
-			s_new = com.getSensors();
-			s_old = s_new[turnDirection];
-			double rtheta = robotLocation.getTheta();
+			
+			int i = 0;
 			while( (s_new[turnDirection] - s_old) < 21) {
+				i++;
 				turn(MINIMUM_TURN*direction);
 				s_old = s_new[turnDirection];
 				s_new = com.getSensors();
 			}
-			double dtheta = (Math.abs(rtheta-robotLocation.getTheta()));
+			turn(2*MINIMUM_TURN*direction);
+			drive(8);
+		
+			s_new = com.getSensors();
+			s_old = s_new[turnDirection];
+			while( (s_new[turnDirection]) > 17) {
+				turn(-MINIMUM_TURN*direction);
+				s_old = s_new[turnDirection];
+				s_new = com.getSensors();
+			}
+			turn(-10*direction);
+			s_new = com.getSensors();
+			s_old = s_new[turnDirection];/*
+			while( (s_new[turnDirection] - s_old) < 21) {
+				turn(MINIMUM_TURN*direction);
+				s_old = s_new[turnDirection];
+				s_new = com.getSensors();
+			}*/
 			drive(s_old - RANGE_THRESHOLD);
-			turn(360 - dtheta);
-			com.append(Double.toString(dtheta));
-			*/
+			/*
 			//keep distance to wall
 			s_new = com.getSensors();
 			s_old = s_new[turnDirection];
@@ -542,6 +556,7 @@ public class Robot {
     	if(s_new[0] == 255 && s_new[1] == 255 && s_new[2] == 255) {
     		return;
     	}
+    	drive(s_new[0] - RANGE_THRESHOLD);
 /*
     	//else start circling around obstacle until leaving condition is fulfilled
 		
