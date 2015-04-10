@@ -119,7 +119,7 @@ public class MainActivity extends Activity {
             robot.drive(dist);
             robot.turn(-90);
         }*/
-    	robot.turnRightUntil(new SensorCondition(robot) {
+    	robot.driveUntil(21, new SensorCondition(robot) {
 			int[] s_new = robot.com.getSensors();
 			int s_old;
 			
@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
 				s_old = s_new[0];
 				s_new = robot.com.getSensors();
 				if (s_new[0] - s_old >= 20) {
-					return true;
+					return false;
 				}
 				return false;
 			}

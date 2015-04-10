@@ -181,13 +181,38 @@ public class Robot {
     }
 
     /**
-     * drives until a certain sensor condition is met and maximally distance_cm
+     * drives until a certain sensor condition is met or distance_cm
      * @return whether condition was fulfilled or not
      */
-    public boolean driveUntil(SensorCondition condition, int distance_cm) {
-    	int velocity = VELOCITY * Integer.signum(distance_cm);
+    public boolean driveUntil(double distance_cm, SensorCondition condition) {
+    	int velocity = VELOCITY * (int)(Math.signum(distance_cm));
         boolean reached = false;
-
+        double currentDistance = 0;
+        
+        long t0 = System.currentTimeMillis() - 50;
+        drive();
+    	
+        while (distance_cm > currentDistance && !condition.holds()) {
+        	currentDistance = timeToDistance(System.currentTimeMillis() - t0);
+        }
+        
+        com.stop();
+        long dt = System.currentTimeMillis() - t0;
+        currentDistance = timeToDistance(dt - t0);
+        robotLocation.translate(dt*Integer.signum(velocity));
+        
+        sleep_h(100);
+        //drive back if driven too much cause of overheads
+        if(currentDistance > distance_cm) {
+        	double diff = distance_cm - currentDistance;
+        	if (diff < MINIMUM_DRIVE) {
+        		drive(-MINIMUM_DRIVE);
+        	}
+        	else {
+        		drive(distance_cm - currentDistance);
+        	}
+        }
+        /*
         long time = distanceToTime(distance_cm);
 
         for (int i = 0; i < time/DRIVE_INTERVAL; i++) {
@@ -209,7 +234,7 @@ public class Robot {
             robotLocation.translate(timeToDistance(dt));
         }
         com.stop();
-        
+        */
         return reached;
     }
 
@@ -333,7 +358,7 @@ public class Robot {
                 return (Math.min(left,Math.min(center,right)) <= RANGE_THRESHOLD);
             }
         };
-        driveUntil(isObstacle,dist);
+        driveUntil(dist, isObstacle);
     }
 
     public void setGoal(Location goal) {
@@ -408,9 +433,7 @@ public class Robot {
      */
     private void keepDistance(int direction) {
     	com.append("keeping distance " + Integer.toString(direction));
-		int[] s_new;
-		int s_old = 0;
-		Location temp = null;
+		int[] sensor = com.getSensors();
 		
 		int turnDirection = 2; //right sensor if turning left
 		int cturnDirection = 0;
@@ -418,8 +441,6 @@ public class Robot {
     		turnDirection = 0; //left sensor if turning right
     		cturnDirection = 2;
     	}
-		
-    	int itemp = cturnDirection;
     	
     	SensorCondition endOfObstacle = new SensorCondition(this) {
 			public int[] s_new = com.getSensors();
@@ -493,9 +514,17 @@ public class Robot {
 			
 			endOfObstacle.reset();
 			this.turnRightUntil(endOfObstacle);
+			int distance = endOfObstacle.getInt();
+			System.out.println(distance - RANGE_THRESHOLD);
+			sensor = com.getSensors();
+			System.out.println(sensor[cturnDirection]);
 			
-			//turn(2*MINIMUM_TURN*direction);
-			drive(8);
+			if (sensor[cturnDirection] <= (distance)) {
+				drive(8);
+			}
+			else {
+				drive(distance);
+			}
 		
 			findObstacle.reset();
 			this.turnLeftUntil(findObstacle);
@@ -568,20 +597,116 @@ public class Robot {
      * The Roboter should change into following mode 
      * leave following mode if it hits the m-line (closer to goal than m_point) again
      * @param direction : 1 ->turn counter-clockwise, -1 -> turn clockwise <br>
+     * note that direction should always be -1 for now (because of some lazy hardcodings)
      * 
      */
     public void followObstacle(int direction, SensorCondition leavingCondition) {
     	com.append("following obstacle");
 
-    	int[] s_new = com.getSensors();
+    	int[] sensor = com.getSensors();
     	
     	//cancel if there is no obstacle to follow
-    	if(s_new[0] == 255 && s_new[1] == 255 && s_new[2] == 255) {
+    	if(sensor[0] == 255 && sensor[1] == 255 && sensor[2] == 255) {
     		return;
     	}
-    	drive(s_new[0] - RANGE_THRESHOLD);
+    	
+    	int turnDirection = 2; //right sensor if turning left
+		int cturnDirection = 0;
+    	if (direction < 0) {
+    		turnDirection = 0; //left sensor if turning right
+    		cturnDirection = 2;
+    	}
+    	
+    	drive(sensor[0] - RANGE_THRESHOLD);
 
-    	keepDistance(direction);
+    	//Keep Distance RANGE_THRESHOLD to obstacle while circling around it
+    	SensorCondition endOfObstacle = new SensorCondition(this) {
+			public int[] s_new = com.getSensors();
+			public int s_old;
+			
+			@Override
+			public boolean holds() {
+				s_old = s_new[0];
+				s_new = robot.com.getSensors();
+				if (s_new[0] - s_old >= 20) {
+					return true;
+				}
+				return false;
+			}
+
+			@Override
+			public void reset() {
+				s_new = com.getSensors();
+				s_old = s_new[0];
+			}
+
+			@Override
+			public int getInt() {
+				return s_old;
+			}
+		};
+		
+		SensorCondition findObstacle = new SensorCondition(this) {
+			public int[] s_new = robot.com.getSensors();
+			
+			private int nearestPoint;
+			private double theta;
+			private double rtheta;
+			private long t0;
+			
+			@Override
+			public boolean holds() {
+				s_new = robot.com.getSensors();
+				if (s_new[0] < nearestPoint) {
+					nearestPoint = s_new[0];
+					theta = timeToDegrees(System.currentTimeMillis() - t0);
+				}
+				rtheta = timeToDegrees(System.currentTimeMillis() - t0);
+				if (rtheta > 90 ) {
+					return true;
+				}
+				return false;
+			}
+			
+			@Override
+			public void reset() {
+				nearestPoint = 255;
+				t0 = System.currentTimeMillis();
+			};
+
+			@Override
+			public double getDouble() {
+				return (rtheta - theta);
+			}
+			
+			@Override
+			public int getInt() {
+				return nearestPoint;
+			}
+		};
+    	
+		
+		while(!leavingCondition.holds()) {
+			sleep_h(100);
+						
+			endOfObstacle.reset();
+			this.turnRightUntil(endOfObstacle);
+			int distance = endOfObstacle.getInt();
+			
+			sensor = com.getSensors();
+			if (sensor[cturnDirection] <= (distance)) {
+				drive(8);
+			}
+			else {
+				drive(distance);
+			}
+		
+			findObstacle.reset();
+			this.turnLeftUntil(findObstacle);
+			turn(direction * (findObstacle.getDouble()));
+			drive(findObstacle.getInt() - RANGE_THRESHOLD);
+		
+		}
     }
 
 }
