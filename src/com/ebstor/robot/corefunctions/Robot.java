@@ -50,7 +50,7 @@ public class Robot {
     private static final int SOFT_THRESHOLD = 30;
     
     /** the angle between the left end of the LOS of the front sensor and the side sensor */
-    private static final double ANGLE_FRONT_SIDE = 20;
+    private static final double ANGLE_FRONT_SIDE = 10;
     private static final double ANGLE_RIGHT_LEFT = 40;
     
     
@@ -240,28 +240,39 @@ public class Robot {
      * turns left until a certain sensor condition is met (e.g. obstacle parallel to object)
      */
     public void turnLeftUntil(SensorCondition condition) {
-        while (!condition.holds()) {
-            turnLeft();
-            long t0 = System.currentTimeMillis();
-            sleep_h(TURN_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            robotLocation.rotate(timeToDegrees(dt));
-        }
+    	turnLeft();
+    	long t0 = System.currentTimeMillis();
+        while (!condition.holds()) {}
+        
         com.stop();
+        long dt = System.currentTimeMillis() - t0;
+        robotLocation.rotate(timeToDegrees(dt));
+    }
+    public void turnLeftUntil(SensorCondition condition, double degree) {
+    	double currentDegree = 0;
+    	turnLeft();
+    	long t0 = System.currentTimeMillis();
+    	
+        while (!condition.holds() || currentDegree < degree) {
+        	currentDegree += (timeToDegrees(System.currentTimeMillis() - t0));
+        }
+        
+        com.stop();
+        long dt = System.currentTimeMillis() - t0;
+        robotLocation.rotate(timeToDegrees(dt));
     }
 
     /**
      * turns right until a certain sensor condition is met (e.g. obstacle parallel to object)
      */
     public void turnRightUntil(SensorCondition condition)  {
-        while (!condition.holds()) {
-            turnRight();
-            long t0 = System.currentTimeMillis();
-            sleep_h(DRIVE_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            robotLocation.rotate(-timeToDegrees(dt));
-        }
+    	turnRight();
+    	long t0 = System.currentTimeMillis();
+        while (!condition.holds()) {}
+        
         com.stop();
+        long dt = System.currentTimeMillis() - t0;
+        robotLocation.rotate(-timeToDegrees(dt));
     }
 
 
@@ -311,19 +322,16 @@ public class Robot {
     }
 
     public void driveAndStopForObstacles(Integer dist) {
-        SensorCondition isObstacle = new SensorCondition() {
+        SensorCondition isObstacle = new SensorCondition(this) {
             @Override
             public boolean holds() {
-                int[] sensors = com.getSensors();
+                int[] sensors = robot.com.getSensors();
                 int left = sensors[0];
                 int center = sensors[1];
                 int right = sensors[2];
 
                 return (Math.min(left,Math.min(center,right)) <= RANGE_THRESHOLD);
             }
-            
-            @Override
-            public void init() {}
         };
         driveUntil(isObstacle,dist);
     }
@@ -379,7 +387,7 @@ public class Robot {
     	int b = 12;
     	int m = 0;
     	while(m < 4) {
-    		com.setVelocity((int)(Math.random() * 255), (int)(Math.random() * 255));
+    		com.setVelocity((int)(Math.random() * 128), (int)(Math.random() * 128));
     		sleep_h((long) (Math.random() * 500 + 200));
     		if (b > (int)(Math.random()*100)) {
     			m += 1;
@@ -413,72 +421,87 @@ public class Robot {
 		
     	int itemp = cturnDirection;
     	
+    	SensorCondition endOfObstacle = new SensorCondition(this) {
+			public int[] s_new = com.getSensors();
+			public int s_old;
+			
+			@Override
+			public boolean holds() {
+				s_old = s_new[0];
+				s_new = robot.com.getSensors();
+				if (s_new[0] - s_old >= 20) {
+					return true;
+				}
+				return false;
+			}
+
+			@Override
+			public void reset() {
+				s_new = com.getSensors();
+				s_old = s_new[0];
+			}
+
+			@Override
+			public int getInt() {
+				return s_old;
+			}
+		};
+		
+		SensorCondition findObstacle = new SensorCondition(this) {
+			public int[] s_new = robot.com.getSensors();
+			
+			private int nearestPoint;
+			private double theta;
+			private double rtheta;
+			private long t0;
+			
+			@Override
+			public boolean holds() {
+				s_new = robot.com.getSensors();
+				if (s_new[0] < nearestPoint) {
+					nearestPoint = s_new[0];
+					theta = timeToDegrees(System.currentTimeMillis() - t0);
+				}
+				rtheta = timeToDegrees(System.currentTimeMillis() - t0);
+				if (rtheta > 90 ) {
+					return true;
+				}
+				return false;
+			}
+			
+			@Override
+			public void reset() {
+				nearestPoint = 255;
+				t0 = System.currentTimeMillis();
+			};
+
+			@Override
+			public double getDouble() {
+				return (rtheta - theta);
+			}
+			
+			@Override
+			public int getInt() {
+				return nearestPoint;
+			}
+		};
+    	
+		
 		while(true) {
 			sleep_h(100);
-			s_new = com.getSensors();
-			s_old = s_new[turnDirection];
 			
-			int i = 0;
-			while( (s_new[turnDirection] - s_old) < 21) {
-				i++;
-				turn(MINIMUM_TURN*direction);
-				s_old = s_new[turnDirection];
-				s_new = com.getSensors();
-			}
-			turn(2*MINIMUM_TURN*direction);
+			
+			endOfObstacle.reset();
+			this.turnRightUntil(endOfObstacle);
+			
+			//turn(2*MINIMUM_TURN*direction);
 			drive(8);
 		
-			s_new = com.getSensors();
-			s_old = s_new[turnDirection];
-			while( (s_new[turnDirection]) > 17) {
-				turn(-MINIMUM_TURN*direction);
-				s_old = s_new[turnDirection];
-				s_new = com.getSensors();
-			}
-			turn(-10*direction);
-			s_new = com.getSensors();
-			s_old = s_new[turnDirection];/*
-			while( (s_new[turnDirection] - s_old) < 21) {
-				turn(MINIMUM_TURN*direction);
-				s_old = s_new[turnDirection];
-				s_new = com.getSensors();
-			}*/
-			drive(s_old - RANGE_THRESHOLD);
-			/*
-			//keep distance to wall
-			s_new = com.getSensors();
-			s_old = s_new[turnDirection];
-			while( (s_new[turnDirection] - s_old) < 21) {
-				drive(s_new[turnDirection] - RANGE_THRESHOLD);
-				turn(MINIMUM_TURN*direction);
-				s_old = s_new[turnDirection];
-				s_new = com.getSensors();
-			}break;
-			/*
-			//wall ended, drive around corner
-			temp = new Location(robotLocation);
-
-			turn(20*direction);
-			com.append(Integer.toString(s_old));
-			drive(s_old + ROBOT_LENGTH);
-			
-			turnToLocation(temp);
-			
-			s_new = com.getSensors();
-			s_old = s_new[turnDirection];
-			
-			while( (s_new[turnDirection] - s_old) < 21) {
-				turn(MINIMUM_TURN*direction);
-				s_old = s_new[turnDirection];
-				s_new = com.getSensors();
-			}
-			
-			turn(45*direction);
-			drive(s_old + ROBOT_LENGTH);
-			
-			turnToLocation(temp);
-			turn(MINIMUM_TURN*direction);
-			*/
+			findObstacle.reset();
+			this.turnLeftUntil(findObstacle);
+			turn(direction * (findObstacle.getDouble()));
+			drive(findObstacle.getInt() - RANGE_THRESHOLD);
+		
 		}
 		
 	}
@@ -557,62 +580,7 @@ public class Robot {
     		return;
     	}
     	drive(s_new[0] - RANGE_THRESHOLD);
-/*
-    	//else start circling around obstacle until leaving condition is fulfilled
-		
-    	int turnDirection = 2; //right sensor if turning left
-    	if (direction < 0) {
-    		turnDirection = 0; //left sensor if turning right
-    	}
-		
-    	int s_old = s_new[turnDirection];
-    	
-		while(!leavingCondition.holds()) {
-			
-			//keep distance to wall
-			while( (s_new[turnDirection] - s_old) < 21) {
-				drive(s_new[turnDirection] - RANGE_THRESHOLD);
-				if (leavingCondition.holds()) {
-					return;
-				}
-				turn(MINIMUM_TURN*direction);
-				s_old = s_new[turnDirection];
-				s_new = com.getSensors();
-			}
-			
-			//wall ended, drive around corner
-			Location temp = new Location(robotLocation);
-			
-			turn(20*direction);
-			drive(s_old + ROBOT_LENGTH);
-			if (leavingCondition.holds()) {
-				return;
-			}
-			turnToLocation(temp);
-			
-			s_new = com.getSensors();
-			s_old = s_new[turnDirection];
-			
-			while( (s_new[turnDirection] - s_old) < 21) {
-				turn(MINIMUM_TURN*direction);
-				s_old = s_new[turnDirection];
-				s_new = com.getSensors();
-			}
-			
-			turn(20*direction);
-			drive(s_old + ROBOT_LENGTH);
-			if (leavingCondition.holds()) {
-				return;
-			}
-			
-			turnToLocation(temp);
-			turn(MINIMUM_TURN*direction);
-		}
-		
-		//get new sensor values
-		s_new = com.getSensors();
-		s_old = s_new[turnDirection];
-		*/
+
     	keepDistance(direction);
     }
 

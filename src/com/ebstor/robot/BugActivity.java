@@ -45,12 +45,8 @@ public class BugActivity extends MainActivity {
 	        robot.turnToGoal();
 	        if(robot.driveUntilObstacle(distanceToGoal)) {*/
 		        //circle around obstacle counterclockwise and never stop
-		        robot.followObstacle(-1, new SensorCondition() {
-					
-					@Override
-					public void init() {
-					}
-					
+		        robot.followObstacle(-1, new SensorCondition(robot) {
+
 					@Override
 					public boolean holds() {
 						return false;
