@@ -6,6 +6,9 @@ Task:
 
 TODO:
 
- - implement bug 2 algorithm:
-think of what the sensors values should look like when the robot is aligned parallel (implement the alignedParallel SensorCondition).
-remember to give it some threshold so that the robot does not re-orientate itself by something like 0.001° after every step.
+implement bug 2 algorithm:
+
+ - fix followObstacle method:
+	- mline encounters have to be tested yet
+	- driveUntil is unfortunately too inaccurate for whatever reasons, thus mline check is hardcoded
+	- only works if left sensor sees the obstacle at beginning atm
