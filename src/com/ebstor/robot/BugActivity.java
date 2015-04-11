@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import com.ebstor.robot.corefunctions.Location;
+import com.ebstor.robot.corefunctions.SensorCondition;
 import com.example.robot.R;
 
 /**
@@ -36,8 +38,16 @@ public class BugActivity extends MainActivity {
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
-        
-        robot.followObstacle(-1);
+        double distanceToGoal;
+       /* 
+        while (!robot.reachedGoal()){
+        	distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);
+	        robot.turnToGoal();
+	        if(robot.driveUntilObstacle(distanceToGoal)) {*/
+		        //circle around obstacle counterclockwise until mline is hit
+		        robot.followObstacle(-1);
+	        /*}
+        }*/
     }
 
     public void testTurnToGoal(View v) {
