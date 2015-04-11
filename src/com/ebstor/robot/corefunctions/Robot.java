@@ -365,32 +365,31 @@ public class Robot {
         this.goal = goal;
     }
 
+    /**
+     * @param l
+     * @return the angle[deg] from a given location to the origin
+     */
+    public double getAngle(Location l) {
+    	return Math.toDegrees(Math.atan(l.getY()/l.getX()));
+    }
+    public double getAngleRad(Location l) {
+    	return Math.atan(l.getY()/l.getX());
+    }
+    
     public boolean mlineEncountered() {
         return distanceToMline() <= 3; // (cm) this depends on how far robot travels between checks, can therefore be reduced
     }
 
 	/** alternative to mlineEncountered */
-	public boolean encounteredMline() {
-		double rx = robotLocation.getX();
-		double ry = robotLocation.getY();
-		
-		double gx = goal.getX();
-		double gy = goal.getY();
-		
-		int rho = (int)(Math.atan(ry / rx));
-		int gho = (int)(Math.atan(gy / gx));
+	public boolean encounteredMline() {		
+		int rho = (int)(getAngle(robotLocation));
+		int gho = (int)(getAngle(goal));
 		
 		return (Math.abs(rho - gho) <= CIRCUMFERENCE_MLINE);
 	}
 	public boolean encounteredMline(int tolerance) {
-		double rx = robotLocation.getX();
-		double ry = robotLocation.getY();
-		
-		double gx = goal.getX();
-		double gy = goal.getY();
-		
-		int rho = (int)(Math.atan(ry / rx));
-		int gho = (int)(Math.atan(gy / gx));
+		int rho = (int)(getAngle(robotLocation));
+		int gho = (int)(getAngle(goal));
 		
 		return (Math.abs(rho - gho) <= tolerance);
 	}
@@ -597,13 +596,15 @@ public class Robot {
      * The Roboter should change into following mode 
      * leave following mode if it hits the m-line (closer to goal than m_point) again
      * @param direction : 1 ->turn counter-clockwise, -1 -> turn clockwise <br>
-     * note that direction should always be -1 for now (because of some lazy hardcodings)
      * 
+     * note that direction should always be -1 for now (because of some lazy hardcodings) <br>
+     * note that a leavingCondition can't be used until driveUntil is as accurate as drive
      */
-    public void followObstacle(int direction, SensorCondition leavingCondition) {
+    public void followObstacle(int direction) {
     	com.append("following obstacle");
 
     	int[] sensor = com.getSensors();
+    	Location temp;
     	
     	//cancel if there is no obstacle to follow
     	if(sensor[0] == 255 && sensor[1] == 255 && sensor[2] == 255) {
@@ -685,8 +686,10 @@ public class Robot {
 			}
 		};
     	
-		
-		while(!leavingCondition.holds()) {
+		//can't use a sensorcondition until driveUntil is as accurate as drive
+		double alpha;
+		double hyp;
+		while(true) {
 			sleep_h(100);
 						
 			endOfObstacle.reset();
@@ -694,13 +697,38 @@ public class Robot {
 			int distance = endOfObstacle.getInt();
 			
 			sensor = com.getSensors();
-			if (sensor[cturnDirection] <= (distance)) {
-				drive(8);
+			if (sensor[cturnDirection] <= distance) {
+				distance = sensor[cturnDirection] - RANGE_THRESHOLD;
 			}
-			else {
-				drive(distance);
+
+			//BEGIN check for mline that may have been encountered during driving distance
+			//unfortunately driveUntil causes too much inaccuracy and can't be used yet
+			drive(distance);
+			
+			temp = new Location(robotLocation); //save current robotlocation
+			alpha = getAngleRad(robotLocation);
+			hyp = robotLocation.getY()/Math.sin(alpha);
+			//AK = x
+			//GK = y
+			for(int i = 1; i <= distance; i ++) {
+				hyp -= 1;
+				robotLocation.setX(Math.cos(alpha) * hyp);
+				robotLocation.setY(Math.sin(alpha) * hyp);
+				
+				if (encounteredMline() && euclideanDistance(robotLocation, goal) < euclideanDistance(m_point, goal)) {
+					robotLocation.setX(temp.getX());
+					robotLocation.setY(temp.getY());
+					
+					drive(-i);
+					m_point = new Location(robotLocation);
+					return;
+				}
 			}
-		
+			robotLocation.setX(temp.getX());
+			robotLocation.setY(temp.getY());
+
+			//END check for mline
+			
 			findObstacle.reset();
 			this.turnLeftUntil(findObstacle);
 			turn(direction * (findObstacle.getDouble()));
