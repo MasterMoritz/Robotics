@@ -48,4 +48,24 @@ public class Location {
         return y;
     }
 
+    public void setX(double x) {
+    	this.x = x;
+    }
+    public void setY(double y) {
+		this.y = y;
+	}
+    public void setTheta(double theta) {
+		this.theta = theta;
+	}
+    
+   
+    public Location(Location l) {
+    	this.x = l.getX();
+    	this.y = l.getY();
+    	this.theta = l.getTheta();
+    }
+    @Override
+    public String toString() {
+    	return ("x = " + x + " | y = " + y + " | theta = " + theta);
+    }
 }

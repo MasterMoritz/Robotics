@@ -2,7 +2,10 @@ package com.ebstor.robot;
 
 import android.content.Intent;
 import android.widget.*;
+
 import com.ebstor.robot.corefunctions.Robot;
+import com.ebstor.robot.corefunctions.SensorCondition;
+
 import jp.ksksue.driver.serial.FTDriver;
 
 import com.example.robot.R;
@@ -57,6 +60,11 @@ public class MainActivity extends Activity {
             connect();
         }
     }
+    
+    public void readSensors(View v) {
+        int[] sensor = robot.com.getSensors();
+        robot.com.setText("Left: " + Integer.toString(sensor[0]) + "| Middle: " + Integer.toString(sensor[1]) + " | Right: " + Integer.toString(sensor[2])); 
+    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -94,7 +102,7 @@ public class MainActivity extends Activity {
 
     public void travelDistance(View v) {
         Integer dist = Integer.valueOf(distance.getText().toString());
-        robot.drive(dist, 30);
+        robot.drive(dist);
 
     }
 
@@ -104,12 +112,33 @@ public class MainActivity extends Activity {
     }
 
 
+
+
     public void makeASquare(View v) {
+    	/*
         Double dist = Double.valueOf(distance.getText().toString());
         for (int i = 0; i < 4; i++) {
-            robot.drive();
-            robot.turn(90);
-        }
+            robot.drive(dist);
+            robot.turn(-90);
+        }*/
+    	robot.driveUntil(21, new SensorCondition(robot) {
+			int[] s_new = robot.com.getSensors();
+			int s_old;
+			
+			@Override
+			public boolean holds() {
+				s_old = s_new[0];
+				s_new = robot.com.getSensors();
+				if (s_new[0] - s_old >= 20) {
+					return false;
+				}
+				return false;
+			}
+		});
+    }
+    
+    public void berserk(View v) {
+        robot.randomBerserkerMode();
     }
 
 

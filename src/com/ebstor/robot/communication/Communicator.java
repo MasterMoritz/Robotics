@@ -6,6 +6,8 @@ import jp.ksksue.driver.serial.FTDriver;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.auth.BasicUserPrincipal;
+
 import static java.lang.Thread.sleep;
 
 /**
@@ -74,12 +76,12 @@ public class Communicator {
 
 
     public void setVelocity(byte left, byte right) {
-        readWrite(
+        write(
                 new byte[]{'i', left, right, '\r', '\n'}
         );
     }
     public void setVelocity(int left, int right) {
-        readWrite(
+        write(
                 new byte[]{'i', (byte)left, (byte)right, '\r', '\n'}
         );
     }
@@ -89,6 +91,7 @@ public class Communicator {
     }
 
     public int[] getSensors() {
+    	try{sleep(WAIT_BUFFER);}catch(Exception e){};
         int[] sensors = new int[3];
         
         String[] parsed = readWrite(new byte[] { 'q', '\r', '\n' }).split("\\s+");
@@ -107,6 +110,16 @@ public class Communicator {
         return sensors;
     }
 
+    /**
+     *TODO implementation
+     * @param sensor : 'l' = left sensor, 'm' = middle sensor, 'r' = right sensor
+     * @return the value of the specified sensor
+     */
+    public int getSpecificSensor(char sensor){
+    	return 0;
+    }
+    
+    
     public static int hexaToDecimal(String s){
         String parsed = s.substring(2);
         return Integer.valueOf(parsed, 16);
@@ -117,6 +130,10 @@ public class Communicator {
     }
     
     public void setText(String text) {
-    	this.textLog.setText(text);
+    	this.textLog.setText(text + "\n");
+    }
+    
+    public void append(String text) {
+    	this.textLog.append(text + "\n");
     }
 }
