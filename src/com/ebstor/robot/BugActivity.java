@@ -39,13 +39,14 @@ public class BugActivity extends MainActivity {
         Location goal = new Location(x,y);
         robot.setGoal(goal);
         double distanceToGoal;
+        robot.bug2();
        /* 
         while (!robot.reachedGoal()){
         	distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);
 	        robot.turnToGoal();
 	        if(robot.driveUntilObstacle(distanceToGoal)) {*/
 		        //circle around obstacle counterclockwise until mline is hit
-		        robot.followObstacle(-1);
+		        //robot.followObstacle(-1);
 	        /*}
         }*/
     }

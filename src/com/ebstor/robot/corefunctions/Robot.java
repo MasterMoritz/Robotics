@@ -346,7 +346,7 @@ public class Robot {
         }
     }
 
-    public void driveAndStopForObstacles(Integer dist) {
+    public void driveAndStopForObstacles(double dist) {
         SensorCondition isObstacle = new SensorCondition(this) {
             @Override
             public boolean holds() {
@@ -597,29 +597,24 @@ public class Robot {
      * However, there are cases in which a different implementation(Bug 1) is way more
      * efficient.
      */
-    public void Bug2(){
+    public void bug2(){
     	
-    	int distToGoal = ((Double)euclideanDistance(robotLocation, goal)).intValue();
     	m_point = robotLocation;
-    	int previousDistance = ((Double)euclideanDistance(m_point, goal)).intValue();
+    	double previousDistance = euclideanDistance(m_point, goal);
 
-    	
     	while(true){
-    		
-    		distToGoal = ((Double)euclideanDistance(robotLocation, goal)).intValue();
-    		if(previousDistance > distToGoal){
-    				
+    		double distToGoal = euclideanDistance(robotLocation, goal);
+    		if(previousDistance < distToGoal){
     			followObstacle(1);
     		}else{
-    				
         		turnToGoal();
         		driveAndStopForObstacles(distToGoal);
-            	distToGoal = ((Double)euclideanDistance(robotLocation, goal)).intValue();
+            	distToGoal = euclideanDistance(robotLocation, goal);
         		if(distToGoal < 3){
         			return;
         		}else{
         			m_point = robotLocation;
-        			previousDistance = ((Double)euclideanDistance(m_point, goal)).intValue();
+        			previousDistance = euclideanDistance(m_point, goal);
         			followObstacle(1);
         		}
     		}
