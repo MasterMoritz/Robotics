@@ -605,7 +605,7 @@ public class Robot {
     	while(true){
     		double distToGoal = euclideanDistance(robotLocation, goal);
     		if(previousDistance < distToGoal){
-    			followObstacle(1);
+    			followObstacle(-1);
     		}else{
         		turnToGoal();
         		driveAndStopForObstacles(distToGoal);
@@ -615,7 +615,7 @@ public class Robot {
         		}else{
         			m_point = robotLocation;
         			previousDistance = euclideanDistance(m_point, goal);
-        			followObstacle(1);
+        			followObstacle(-1);
         		}
     		}
     	}
