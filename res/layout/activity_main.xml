@@ -22,7 +22,8 @@
         android:layout_width="500dp"
         android:layout_height="150dp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+		android:layout_alignParentLeft="true"/>
 
     <EditText
         android:id="@+id/distance"
@@ -38,69 +39,85 @@
         <requestFocus />
     </EditText>
 
-    <Button
-            android:id="@+id/distancebutton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/textLog"
-            android:layout_centerVertical="true"
-            android:text="@string/travel_distance"
-            android:onClick="travelDistance" />
-
         <EditText
         android:id="@+id/angle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/distance"
         android:layout_alignEnd="@+id/textLog"
+        android:layout_alignRight="@+id/textLog"
         android:layout_toEndOf="@+id/powah"
+        android:layout_toRightOf="@+id/powah"
         android:ems="10"
         android:text="90" />
-        
-    <Button android:id="@+id/angleButton" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/turn_angle" android:onClick="turnAngle"
-            android:layout_alignTop="@+id/distancebutton" android:layout_alignEnd="@+id/textLog"/>
-    <Button android:id="@+id/makeASqaure" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/make_a_square" android:onClick="makeASquare"
-            android:layout_below="@+id/distancebutton" android:layout_alignParentStart="true"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/sensor" android:layout_centerHorizontal="true"/>
 
-
-
-
     <Button
-            android:id="@+id/btConnect"
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignRight="@+id/angleButton"
-            android:layout_alignTop="@+id/sensor"
-            android:layout_marginTop="15dp"
-            android:text="connect/disconnect"
-            android:onClick="switchConnection" />
-
-    <Button
-        android:id="@+id/btSensors"
+        android:id="@+id/btConnect"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/distancebutton"
-        android:layout_alignTop="@+id/btConnect"
-        android:text="Sensors"
-        android:onClick="readSensors" />
+        android:layout_alignLeft="@+id/sensor"
+        android:layout_alignTop="@+id/sensor"
+        android:layout_marginTop="15dp"
+        android:onClick="switchConnection"
+        android:text="connect/disconnect" />
+
+    <Button
+        android:id="@+id/distancebutton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/makeASqaure"
+        android:layout_alignRight="@+id/sensor"
+        android:onClick="travelDistance"
+        android:text="@string/travel_distance" />
 
     <Button
         android:id="@+id/btBerserk"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/btSensors"
+        android:layout_alignLeft="@+id/distance"
         android:layout_below="@+id/btSensors"
-        android:layout_marginTop="16dp"
-        android:text="BerserkerMode" 
-        android:onClick="berserk"/>
+        android:onClick="berserk"
+        android:text="BerserkerMode" />
+
+    <Button
+        android:id="@+id/btSensors"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/btConnect"
+        android:layout_alignBottom="@+id/btConnect"
+        android:layout_alignRight="@+id/distance"
+        android:onClick="readSensors"
+        android:text="Sensors" />
+
+    <Button
+        android:id="@+id/angleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/distancebutton"
+        android:layout_alignBottom="@+id/distancebutton"
+        android:layout_alignEnd="@+id/textLog"
+        android:layout_alignRight="@+id/textLog"
+        android:layout_toRightOf="@+id/distancebutton"
+        android:onClick="turnAngle"
+        android:text="@string/turn_angle" />
+
+    <Button
+        android:id="@+id/makeASqaure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/textLog"
+        android:layout_alignBottom="@+id/textLog"
+        android:layout_alignLeft="@+id/distancebutton"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:onClick="makeASquare"
+        android:text="@string/make_a_square" />
 
 </RelativeLayout>
