@@ -729,10 +729,11 @@ public class Robot {
 			if (sensor[cturnDirection] <= distance) {
 				distance = sensor[cturnDirection] - RANGE_THRESHOLD;
 			}
+			drive(distance);
 /*
 			//BEGIN check for mline that may have been encountered during driving distance
 			//unfortunately driveUntil causes too much inaccuracy and can't be used yet
-			drive(distance);
+			
 			
 			temp = new Location(robotLocation); //save current robotlocation
 			alpha = getAngleRad(robotLocation);
