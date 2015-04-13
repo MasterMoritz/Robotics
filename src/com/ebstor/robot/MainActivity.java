@@ -142,6 +142,8 @@ public class MainActivity extends Activity {
     }
 
 
-
-
+    public void startColorblobActivity(MenuItem item) {
+        Intent intent = new Intent(this,ColorBlobActivity.class);
+        startActivity(intent);
+    }
 }
