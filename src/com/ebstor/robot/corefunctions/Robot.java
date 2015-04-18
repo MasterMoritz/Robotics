@@ -301,7 +301,7 @@ public class Robot {
     }
 
 
-    private boolean withinCircumferenceOfGoal(Location goal) {
+    private boolean withinCircumferenceOfGoal() {
         return (euclideanDistance(robotLocation,goal) <= CIRCUMFERENCE_GOAL);
     }
 
@@ -610,7 +610,7 @@ public class Robot {
         		turnToGoal();
         		driveAndStopForObstacles(distToGoal);
             	distToGoal = euclideanDistance(robotLocation, goal);
-        		if(distToGoal < 3){
+        		if(withinCircumferenceOfGoal()){
         			return;
         		}else{
         			m_point = robotLocation;
