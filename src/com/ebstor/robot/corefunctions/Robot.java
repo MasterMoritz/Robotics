@@ -754,10 +754,10 @@ public class Robot {
 			System.out.println("goallocation: " + goal);
 			temp = new Location(robotLocation); //save current robotlocation
 			alpha = getAngleRad(robotLocation);
-			hyp = robotLocation.getY()/Math.sin(alpha);
+			hyp = Math.abs(robotLocation.getY()/Math.sin(alpha));
 			//AK = x
 			//GK = y
-			for(int i = 1; i <= distance; i ++) {
+			for(int i = 1; i <= Math.abs(distance); i ++) {
 				hyp -= 1;
 				robotLocation.setX(Math.cos(alpha) * hyp);
 				robotLocation.setY(Math.sin(alpha) * hyp);
