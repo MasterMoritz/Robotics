@@ -16,6 +16,9 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
+import com.ebstor.robot.corefunctions.ColorBlobDetector;
+import com.example.robot.R;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
