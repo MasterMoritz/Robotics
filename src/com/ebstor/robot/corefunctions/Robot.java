@@ -745,7 +745,8 @@ public class Robot {
 				distance = sensor[cturnDirection] - RANGE_THRESHOLD;
 			}
 			*/
-			drive(12);
+			distance = 12;
+			drive(distance);
 
 			//BEGIN check for mline that may have been encountered during driving distance
 			//unfortunately driveUntil causes too much inaccuracy and can't be used yet
