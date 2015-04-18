@@ -33,6 +33,7 @@
         <activity android:name="com.ebstor.robot.CalibrateActivity"/>
         <activity android:name="com.ebstor.robot.BugActivity"/>
         <activity android:name="com.ebstor.robot.TestActivity"/>
+        <activity android:name="com.ebstor.robot.ColorBlobDetectionActivity"/>
     </application>
     <uses-permission android:name="android.permission.CAMERA" />
 

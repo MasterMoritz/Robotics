@@ -1,5 +1,8 @@
 package com.ebstor.robot;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
@@ -8,13 +11,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
@@ -28,7 +25,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnTouchListener;
 
-public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
+public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "OCVSample::Activity";
 
     private boolean              mIsColorSelected = false;
@@ -177,6 +174,21 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
             Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
             mSpectrum.copyTo(spectrumLabel);
+
+            List<Point> points = new LinkedList<>();
+            for (MatOfPoint mat: contours) {
+                points.addAll(mat.toList());
+            }
+
+            Point lowestPoint = Collections.min(points, new Comparator<Point>() {
+                @Override
+                public int compare(Point lhs, Point rhs) {
+                    return Double.compare(lhs.y,rhs.y);
+                }
+            });
+
+            /* now turn the robot until the lowest point is somewhere in the middle,
+             then drive until it is far down in the image */
         }
 
         return mRgba;
