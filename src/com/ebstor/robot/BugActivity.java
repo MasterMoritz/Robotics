@@ -38,17 +38,27 @@ public class BugActivity extends MainActivity {
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
+        robot.m_point = new Location(robot.robotLocation);
         double distanceToGoal;
         //robot.bug2();
-       /* 
+       
+        System.out.println("goal coordinates: " + goal);
         while (!robot.reachedGoal()){
         	distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);
 	        robot.turnToGoal();
-	        if(robot.driveUntilObstacle(distanceToGoal)) {*/
+	        if(robot.driveUntilObstacle(distanceToGoal)) {
 		        //circle around obstacle counterclockwise until mline is hit
 		        robot.followObstacle(-1);
-	        /*}
-        }*/
+	        }
+        }
+        distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);
+        robot.turnToGoal();
+        robot.drive(distanceToGoal);
+        System.out.println("robot reached goal \n RobotLocation: " + robot.robotLocation + "\n GoalLocation" + robot.goal);
+        
+        //turn to goal theta
+        robot.turn(- (robot.robotLocation.getTheta() - robot.goal.getTheta()));
+        System.out.println("final pose: " + robot.robotLocation);
     }
 
     public void testTurnToGoal(View v) {

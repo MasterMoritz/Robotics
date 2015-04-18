@@ -39,7 +39,7 @@ public class Robot {
 	private static final int ROBOT_LENGTH = 16;
     
     /** the circumference in cm from the within the robot assumes he has reached the goal*/
-    private static final int CIRCUMFERENCE_GOAL = 5;
+    private static final int CIRCUMFERENCE_GOAL = 11;
 	
     private static final int CIRCUMFERENCE_MLINE = 5;
 	
@@ -410,8 +410,15 @@ public class Robot {
     public void randomBerserkerMode() {
     	int b = 12;
     	int m = 0;
-    	while(m < 4) {
-    		com.setVelocity((int)(Math.random() * 128), (int)(Math.random() * 128));
+    	int r = 1;
+    	while(m < 6) {
+    		if (Math.random()*100 < 20) {
+    			r = -1;
+    		}
+    		else  {
+    			r = 1;
+    		}
+    		com.setVelocity((int)(Math.random() * 81), (int)(Math.random() * 81));
     		sleep_h((long) (Math.random() * 500 + 200));
     		if (b > (int)(Math.random()*100)) {
     			m += 1;
@@ -724,17 +731,19 @@ public class Robot {
 			endOfObstacle.reset();
 			this.turnRightUntil(endOfObstacle);
 			int distance = endOfObstacle.getInt();
-			
+			/*
 			sensor = com.getSensors();
 			if (sensor[cturnDirection] <= distance) {
 				distance = sensor[cturnDirection] - RANGE_THRESHOLD;
 			}
-			drive(distance);
-/*
+			*/
+			drive(12);
+
 			//BEGIN check for mline that may have been encountered during driving distance
 			//unfortunately driveUntil causes too much inaccuracy and can't be used yet
 			
-			
+			System.out.println("robotlocation: " + (robotLocation));
+			System.out.println("goallocation: " + goal);
 			temp = new Location(robotLocation); //save current robotlocation
 			alpha = getAngleRad(robotLocation);
 			hyp = robotLocation.getY()/Math.sin(alpha);
@@ -746,6 +755,7 @@ public class Robot {
 				robotLocation.setY(Math.sin(alpha) * hyp);
 				
 				if (encounteredMline() && euclideanDistance(robotLocation, goal) < euclideanDistance(m_point, goal)) {
+					System.out.println("encountered mline on: " + robotLocation);
 					robotLocation.setX(temp.getX());
 					robotLocation.setY(temp.getY());
 					
@@ -758,7 +768,7 @@ public class Robot {
 			robotLocation.setY(temp.getY());
 
 			//END check for mline
-*/
+
 			findObstacle.reset();
 			this.turnLeftUntil(findObstacle);
 			turn(direction * (findObstacle.getDouble()));
