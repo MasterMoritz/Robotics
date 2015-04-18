@@ -42,6 +42,7 @@ public class BugActivity extends MainActivity {
         double distanceToGoal;
         //robot.bug2();
        
+        //bug 2 , alternative to robot.bug2()
         System.out.println("goal coordinates: " + goal);
         while (!robot.reachedGoal()){
         	distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);

@@ -411,6 +411,7 @@ public class Robot {
     	int b = 12;
     	int m = 0;
     	int r = 1;
+    	int r2 = 1;
     	while(m < 6) {
     		if (Math.random()*100 < 20) {
     			r = -1;
@@ -418,12 +419,20 @@ public class Robot {
     		else  {
     			r = 1;
     		}
-    		com.setVelocity((int)(Math.random() * 81), (int)(Math.random() * 81));
+    		if (Math.random()*100 < 20) {
+    			r2 = -1;
+    		}
+    		else  {
+    			r2 = 1;
+    		}
+    		com.setVelocity((int)(Math.random() * 81 * r), (int)(Math.random() * 81 * r2));
     		sleep_h((long) (Math.random() * 500 + 200));
     		if (b > (int)(Math.random()*100)) {
     			m += 1;
     		}
     	}
+    	
+    	stop();
     }
     
     /** drives a certain distance and checks afterwards if condition is fulfilled */
@@ -584,16 +593,15 @@ public class Robot {
         }  
         
         com.stop();
-        
-        //correct small distance mistakes that may occurr
-        if (!encounteredObstacle) {
-        	drive(distance_cm - currentDistance);
-        }
-        
         long dt = System.currentTimeMillis() - t0;
         
         //update robot pose
         robotLocation.translate(timeToDistance(dt));
+        
+        //correct small distance mistakes that may occurr
+        if (!encounteredObstacle && (Math.abs(distance_cm - currentDistance) >= MINIMUM_DRIVE)) {
+        	drive(distance_cm - currentDistance);
+        }
         
         return encounteredObstacle;
     }
@@ -606,7 +614,7 @@ public class Robot {
      */
     public void bug2(){
     	
-    	m_point = robotLocation;
+    	m_point = new Location(robotLocation);
     	double previousDistance = euclideanDistance(m_point, goal);
 
     	while(true){
@@ -620,7 +628,7 @@ public class Robot {
         		if(withinCircumferenceOfGoal()){
         			return;
         		}else{
-        			m_point = robotLocation;
+        			m_point = new Location(robotLocation);
         			previousDistance = euclideanDistance(m_point, goal);
         			followObstacle(-1);
         		}
