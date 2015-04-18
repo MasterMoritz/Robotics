@@ -122,19 +122,19 @@ public class MainActivity extends Activity {
             robot.turn(-90);
         }*/
     	robot.driveUntil(21, new SensorCondition(robot) {
-			int[] s_new = robot.com.getSensors();
-			int s_old;
-			
-			@Override
-			public boolean holds() {
-				s_old = s_new[0];
-				s_new = robot.com.getSensors();
-				if (s_new[0] - s_old >= 20) {
-					return false;
-				}
-				return false;
-			}
-		});
+            int[] s_new = robot.com.getSensors();
+            int s_old;
+
+            @Override
+            public boolean holds() {
+                s_old = s_new[0];
+                s_new = robot.com.getSensors();
+                if (s_new[0] - s_old >= 20) {
+                    return false;
+                }
+                return false;
+            }
+        });
     }
     
     public void berserk(View v) {
@@ -143,7 +143,7 @@ public class MainActivity extends Activity {
 
 
     public void startColorblobActivity(MenuItem item) {
-        Intent intent = new Intent(this,ColorBlobActivity.class);
+        Intent intent = new Intent(this,ColorBlobDetectionActivity.class);
         startActivity(intent);
     }
 }
