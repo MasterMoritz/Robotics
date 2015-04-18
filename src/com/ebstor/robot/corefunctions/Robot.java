@@ -301,7 +301,7 @@ public class Robot {
     }
 
 
-    private boolean withinCircumferenceOfGoal(Location goal) {
+    private boolean withinCircumferenceOfGoal() {
         return (euclideanDistance(robotLocation,goal) <= CIRCUMFERENCE_GOAL);
     }
 
@@ -610,7 +610,7 @@ public class Robot {
         		turnToGoal();
         		driveAndStopForObstacles(distToGoal);
             	distToGoal = euclideanDistance(robotLocation, goal);
-        		if(distToGoal < 3){
+        		if(withinCircumferenceOfGoal()){
         			return;
         		}else{
         			m_point = robotLocation;
@@ -729,10 +729,11 @@ public class Robot {
 			if (sensor[cturnDirection] <= distance) {
 				distance = sensor[cturnDirection] - RANGE_THRESHOLD;
 			}
-
+			drive(distance);
+/*
 			//BEGIN check for mline that may have been encountered during driving distance
 			//unfortunately driveUntil causes too much inaccuracy and can't be used yet
-			drive(distance);
+			
 			
 			temp = new Location(robotLocation); //save current robotlocation
 			alpha = getAngleRad(robotLocation);
@@ -757,7 +758,7 @@ public class Robot {
 			robotLocation.setY(temp.getY());
 
 			//END check for mline
-			
+*/
 			findObstacle.reset();
 			this.turnLeftUntil(findObstacle);
 			turn(direction * (findObstacle.getDouble()));
