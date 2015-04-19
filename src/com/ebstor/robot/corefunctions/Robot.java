@@ -18,13 +18,13 @@ public class Robot {
 	public static int VELOCITY = 15;
 	
     /** degrees turned per millisecond for velocity */
-    public static double DEGREE_PER_MILLISECOND = 0.08;
+    public static double DEGREE_PER_MILLISECOND = 0.083421337;
     
     /** cm travelled per millisecond for velocity */
     public static double CM_PER_MILLISECOND = 0.0136;
     
     /** considering the 50ms wait buffer this is the minimum angle that has to be turned */
-    private static int MINIMUM_TURN = 4;
+    private static int MINIMUM_TURN = 5;
     
     /** considering the 50ms wait buffer this is the minimum distance that has to be driven */
     private static int MINIMUM_DRIVE = 1;
@@ -44,7 +44,7 @@ public class Robot {
     private static final int CIRCUMFERENCE_MLINE = 5;
 	
     /** the threshold in cm where the robot starts avoiding an obstacle */
-    private static final int RANGE_THRESHOLD = 15;
+    private static final int RANGE_THRESHOLD = 19;
 
     /** the threshold in cm at which the robot may start driving again */
     private static final int SOFT_THRESHOLD = 30;
@@ -312,7 +312,6 @@ public class Robot {
             if (turningAngle > 180) turningAngle = 360 - turningAngle;
             if (turningAngle < -180) turningAngle = 360 + turningAngle;
             turn(turningAngle);
-            com.setText(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
     	} catch(Exception e) {
     		com.setText("failed to turn towards goal");
             com.setText(e.toString());
@@ -654,7 +653,12 @@ public class Robot {
     	if(sensor[0] == 255 && sensor[1] == 255 && sensor[2] == 255) {
     		return;
     	}
-    	
+    	int right = sensor[2];
+    	while ((sensor[0] > 50 && right < 50) && Math.abs(sensor[0] - right) >= 20) {
+    		turn(-10);
+    		sensor = com.getSensors();
+    	}
+
     	int turnDirection = 2; //right sensor if turning left
 		int cturnDirection = 0;
     	if (direction < 0) {
@@ -763,7 +767,7 @@ public class Robot {
 				robotLocation.setX(Math.cos(alpha) * hyp);
 				robotLocation.setY(Math.sin(alpha) * hyp);
 				
-				if (encounteredMline() && euclideanDistance(robotLocation, goal) < euclideanDistance(m_point, goal)) {
+				if (encounteredMline(15) && euclideanDistance(robotLocation, goal) < euclideanDistance(m_point, goal)) {
 					System.out.println("encountered mline on: " + robotLocation);
 					robotLocation.setX(temp.getX());
 					robotLocation.setY(temp.getY());

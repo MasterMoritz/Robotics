@@ -120,21 +120,10 @@ public class MainActivity extends Activity {
         for (int i = 0; i < 4; i++) {
             robot.drive(dist);
             robot.turn(-90);
-        }*/
-    	robot.driveUntil(21, new SensorCondition(robot) {
-			int[] s_new = robot.com.getSensors();
-			int s_old;
-			
-			@Override
-			public boolean holds() {
-				s_old = s_new[0];
-				s_new = robot.com.getSensors();
-				if (s_new[0] - s_old >= 20) {
-					return false;
-				}
-				return false;
-			}
-		});
+        }
+        */
+    	robot.turn(1080);
+    	
     }
     
     public void berserk(View v) {
