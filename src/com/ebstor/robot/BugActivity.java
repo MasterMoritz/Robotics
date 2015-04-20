@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.ebstor.robot.controller.LocationSpammer;
 import com.ebstor.robot.corefunctions.Location;
 import com.ebstor.robot.corefunctions.SensorCondition;
 import com.example.robot.R;
@@ -38,25 +39,26 @@ public class BugActivity extends MainActivity {
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
-        robot.m_point = new Location(robot.robotLocation);
-        double distanceToGoal;
-        //robot.bug2();
-       
-        //bug 2 , alternative to robot.bug2()
-        System.out.println("goal coordinates: " + goal);
-        while (!robot.reachedGoal()){
-        	distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);
-	        robot.turnToGoal();
-	        if(robot.driveUntilObstacle(distanceToGoal)) {
-		        //circle around obstacle counterclockwise until mline is hit
-		        robot.followObstacle(-1);
-	        }
-        }
-        distanceToGoal = robot.euclideanDistance(robot.robotLocation, robot.goal);
-        robot.turnToGoal();
-        robot.drive(distanceToGoal);
-        System.out.println("robot reached goal \n RobotLocation: " + robot.robotLocation + "\n GoalLocation" + robot.goal);
+        int[] sensor = robot.com.getSensors();
         
+        //bug 2 , alternative to robot.bug2()
+        while (!robot.reachedGoal()){
+        	
+	        robot.turnToGoal();
+	        sensor = robot.com.getSensors();
+	        if (sensor[0] >= 30 && sensor[2] >= 30) {
+	        	robot.drive(20);
+	        }
+	        else {
+	        	robot.turn(-90);
+	        }
+	        sensor = robot.com.getSensors();
+	        if (sensor[0] >= 30 && sensor[2] >= 30) {
+	        	robot.drive(20);
+	        }
+	        robot.turnToGoal();
+        }
+
         //turn to goal theta
         robot.turn(- (robot.robotLocation.getTheta() - robot.goal.getTheta()));
         System.out.println("final pose: " + robot.robotLocation);
