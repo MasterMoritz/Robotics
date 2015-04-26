@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import com.ebstor.robot.corefunctions.Location;
 import com.ebstor.robot.corefunctions.SensorCondition;
-import com.example.robot.R;
+import com.ebstor.robot.R;
 
 /**
  * Created by johannes on 3/24/15.

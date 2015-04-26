@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import com.ebstor.robot.corefunctions.Robot;
-import com.example.robot.R;
+import com.ebstor.robot.R;
 
 import static java.lang.Thread.sleep;
 

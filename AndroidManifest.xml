@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.robot"
+    package="com.ebstor.robot"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -9,6 +9,19 @@
         android:targetSdkVersion="19" />
 
     <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <supports-screens android:resizeable="true"
+                      android:smallScreens="true"
+                      android:normalScreens="true"
+                      android:largeScreens="true"
+                      android:anyDensity="true" />
+
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission
+            android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -39,19 +52,6 @@
                    android:configChanges="keyboardHidden|orientation">
     </activity>>
     </application>
-    <uses-permission android:name="android.permission.CAMERA" />
-
-    <supports-screens android:resizeable="true"
-                      android:smallScreens="true"
-                      android:normalScreens="true"
-                      android:largeScreens="true"
-                      android:anyDensity="true" />
-
-
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-permission
-            android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
 
 

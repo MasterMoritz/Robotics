@@ -8,7 +8,7 @@ import com.ebstor.robot.corefunctions.SensorCondition;
 
 import jp.ksksue.driver.serial.FTDriver;
 
-import com.example.robot.R;
+import com.ebstor.robot.R;
 
 import android.app.Activity;
 import android.hardware.usb.UsbManager;

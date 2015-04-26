@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
-import com.example.robot.R;
+import com.ebstor.robot.R;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
@@ -18,7 +18,7 @@ import org.opencv.imgproc.Imgproc;
 
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
 import com.ebstor.robot.corefunctions.Robot;
-import com.example.robot.R;
+
 
 import android.app.Activity;
 import android.os.Bundle;
