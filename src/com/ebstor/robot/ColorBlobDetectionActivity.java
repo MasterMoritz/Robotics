@@ -17,6 +17,7 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
+import com.ebstor.robot.corefunctions.Robot;
 import com.example.robot.R;
 
 import android.app.Activity;
@@ -192,6 +193,22 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
             /* now turn the robot until the lowest point is somewhere in the middle,
              then drive until it is far down in the image */
+            if(!isInMiddle(inputFrame, lowestPoint)){
+            	
+            	Mat myFrame = inputFrame.rgba();
+            	if(lowestPoint.x < (myFrame.cols()/2)){
+            		robot.turnRight();
+            	}else{
+            		robot.turnLeft();
+            	}
+            }else{
+            	robot.stop();
+            }
+            if(isInMiddle(inputFrame, lowestPoint) && !isAtBottom(inputFrame, lowestPoint)){
+            	robot.drive();
+            }else if(isInMiddle(inputFrame, lowestPoint) && isAtBottom(inputFrame, lowestPoint)){
+            	robot.stop();
+            }
         }
 
         return mRgba;
@@ -203,5 +220,18 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
 
         return new Scalar(pointMatRgba.get(0, 0));
+    }
+    
+    public Boolean isInMiddle(CvCameraViewFrame inputFrame, Point p){
+    	
+    	Mat myFrame = inputFrame.rgba();
+    	return ((myFrame.cols()/2 == p.x));
+    }
+    
+    public Boolean isAtBottom(CvCameraViewFrame inputFrame, Point p){
+    	
+    	Mat myFrame = inputFrame.rgba();
+    	int bottom = myFrame.rows();
+    	return (bottom == p.y);
     }
 }
