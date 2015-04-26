@@ -29,7 +29,8 @@ import android.view.WindowManager;
 import android.view.View.OnTouchListener;
 
 public class ColorBlobDetectionActivity extends MainActivity implements CvCameraViewListener2 {
-    private static final String  TAG              = "OCVSample::Activity";
+    private static final String  TAG              = "ColorBlobActivity";
+    private static final Scalar GREEN_BALL_RGBA = new Scalar(0,88,21,255);
 
     private Mat                  mRgba;
     private Scalar               mBlobColorRgba;
@@ -102,10 +103,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mDetector = new ColorBlobDetector();
-        mDetector.addColorBallHsv(convertScalarRgba2Hsv(new Scalar(0.0, 88.0, 21.0, 255.0)));
+        mBlobColorRgba = GREEN_BALL_RGBA;
+        mBlobColorHsv = convertScalarRgba2Hsv(mBlobColorRgba);
+        mDetector.setHsvColor(mBlobColorHsv);
         mSpectrum = new Mat();
-        mBlobColorRgba = new Scalar(255);
-        mBlobColorHsv = new Scalar(255);
         SPECTRUM_SIZE = new Size(200, 64);
         CONTOUR_COLOR = new Scalar(255,0,0,255);
     }
@@ -133,15 +134,22 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
             points.addAll(mat.toList());
         }
 
-        Point lowestPoint = Collections.min(points, new Comparator<Point>() {
-            @Override
-            public int compare(Point lhs, Point rhs) {
-                return Double.compare(lhs.y,rhs.y);
-            }
-        });
+        if (!points.isEmpty()) {
+            Log.v(TAG,"points: ");
+            for (Point p: points) Log.v(TAG, p.toString());
+            Point lowestPoint = Collections.min(points, new Comparator<Point>() {
+                @Override
+                public int compare(Point lhs, Point rhs) {
+                    return Double.compare(lhs.y,rhs.y);
+                }
+            });
 
-        /* now turn the robot until the lowest point is somewhere in the middle,
+                    /* now turn the robot until the lowest point is somewhere in the middle,
          then drive until it is far down in the image */
+        }
+
+
+
 
 
         return mRgba;
@@ -151,14 +159,13 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
         Mat pointMatRgba = new Mat();
         Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
         Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
-
         return new Scalar(pointMatRgba.get(0, 0));
     }
 
-    private Scalar convertScalarRgba2Hsv(Scalar rgbColor) {
+    private Scalar convertScalarRgba2Hsv(Scalar rgbaColor) {
         Mat pointMatHsv = new Mat();
-        Mat pointMatRgba = new Mat(1,1,CvType.CV_8UC3,rgbColor);
-        Imgproc.cvtColor(pointMatRgba,pointMatHsv,Imgproc.COLOR_RGB2HSV);
+        Mat pointMatRgba = new Mat(1,1,CvType.CV_8UC3,rgbaColor);
+        Imgproc.cvtColor(pointMatRgba, pointMatHsv, Imgproc.COLOR_RGB2HSV);
         return new Scalar(pointMatHsv.get(0,0));
     }
 
