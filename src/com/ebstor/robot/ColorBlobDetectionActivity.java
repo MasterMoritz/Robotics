@@ -28,10 +28,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnTouchListener;
 
-public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
+public class ColorBlobDetectionActivity extends MainActivity implements CvCameraViewListener2 {
     private static final String  TAG              = "OCVSample::Activity";
 
-    private boolean              mIsColorSelected = false;
     private Mat                  mRgba;
     private Scalar               mBlobColorRgba;
     private Scalar               mBlobColorHsv;
@@ -50,7 +49,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
-                    mOpenCvCameraView.setOnTouchListener(ColorBlobDetectionActivity.this);
+                    //mOpenCvCameraView.setOnTouchListener(ColorBlobDetectionActivity.this);
                 } break;
                 default:
                 {
@@ -68,8 +67,9 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
-        super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        super.onCreate(savedInstanceState);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.color_blob_detection_surface_view);
@@ -102,6 +102,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mDetector = new ColorBlobDetector();
+        mDetector.addColorBallHsv(convertScalarRgba2Hsv(new Scalar(0.0, 88.0, 21.0, 255.0)));
         mSpectrum = new Mat();
         mBlobColorRgba = new Scalar(255);
         mBlobColorHsv = new Scalar(255);
@@ -113,7 +114,56 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         mRgba.release();
     }
 
-    public boolean onTouch(View v, MotionEvent event) {
+    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+        mRgba = inputFrame.rgba();
+
+        mDetector.process(mRgba);
+        List<MatOfPoint> contours = mDetector.getContours();
+        Log.e(TAG, "Contours count: " + contours.size());
+        Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
+
+        Mat colorLabel = mRgba.submat(4, 68, 4, 68);
+        colorLabel.setTo(mBlobColorRgba);
+
+        Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
+        mSpectrum.copyTo(spectrumLabel);
+
+        List<Point> points = new LinkedList<>();
+        for (MatOfPoint mat: contours) {
+            points.addAll(mat.toList());
+        }
+
+        Point lowestPoint = Collections.min(points, new Comparator<Point>() {
+            @Override
+            public int compare(Point lhs, Point rhs) {
+                return Double.compare(lhs.y,rhs.y);
+            }
+        });
+
+        /* now turn the robot until the lowest point is somewhere in the middle,
+         then drive until it is far down in the image */
+
+
+        return mRgba;
+    }
+
+    private Scalar convertScalarHsv2Rgba(Scalar hsvColor) {
+        Mat pointMatRgba = new Mat();
+        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
+        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+
+        return new Scalar(pointMatRgba.get(0, 0));
+    }
+
+    private Scalar convertScalarRgba2Hsv(Scalar rgbColor) {
+        Mat pointMatHsv = new Mat();
+        Mat pointMatRgba = new Mat(1,1,CvType.CV_8UC3,rgbColor);
+        Imgproc.cvtColor(pointMatRgba,pointMatHsv,Imgproc.COLOR_RGB2HSV);
+        return new Scalar(pointMatHsv.get(0,0));
+    }
+
+
+   /* public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
 
@@ -161,47 +211,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         touchedRegionHsv.release();
 
         return false; // don't need subsequent touch events
-    }
+    }*/
 
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        mRgba = inputFrame.rgba();
-
-        if (mIsColorSelected) {
-            mDetector.process(mRgba);
-            List<MatOfPoint> contours = mDetector.getContours();
-            Log.e(TAG, "Contours count: " + contours.size());
-            Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
-
-            Mat colorLabel = mRgba.submat(4, 68, 4, 68);
-            colorLabel.setTo(mBlobColorRgba);
-
-            Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
-            mSpectrum.copyTo(spectrumLabel);
-
-            List<Point> points = new LinkedList<>();
-            for (MatOfPoint mat: contours) {
-                points.addAll(mat.toList());
-            }
-
-            Point lowestPoint = Collections.min(points, new Comparator<Point>() {
-                @Override
-                public int compare(Point lhs, Point rhs) {
-                    return Double.compare(lhs.y,rhs.y);
-                }
-            });
-
-            /* now turn the robot until the lowest point is somewhere in the middle,
-             then drive until it is far down in the image */
-        }
-
-        return mRgba;
-    }
-
-    private Scalar converScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
-
-        return new Scalar(pointMatRgba.get(0, 0));
-    }
 }
