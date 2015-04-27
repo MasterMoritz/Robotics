@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
-import com.ebstor.robot.R;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
@@ -16,11 +15,7 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
-import com.ebstor.robot.corefunctions.ColorBlobDetector;
-import com.ebstor.robot.corefunctions.Robot;
 
-
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -29,9 +24,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnTouchListener;
 
-public class ColorBlobDetectionActivity extends MainActivity implements CvCameraViewListener2 {
+public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "ColorBlobActivity";
-    private static final Scalar GREEN_BALL_RGBA = new Scalar(0,88,21,255);
+    private static final Scalar GREEN_BALL_RGBA = new Scalar(12,75,12,255);
 
     private Mat                  mRgba;
     private Scalar               mBlobColorRgba;
@@ -51,7 +46,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
-                    //mOpenCvCameraView.setOnTouchListener(ColorBlobDetectionActivity.this);
+                    mOpenCvCameraView.setOnTouchListener(ColorBlobDetectionActivity.this);
                 } break;
                 default:
                 {
@@ -153,16 +148,18 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
         if (!points.isEmpty()) {
             Log.v(TAG,"points: ");
             for (Point p: points) Log.v(TAG, p.toString());
-            Point lowestPoint = Collections.min(points, new Comparator<Point>() {
+            Point lowestPoint = Collections.max(points, new Comparator<Point>() {
                 @Override
                 public int compare(Point lhs, Point rhs) {
-                    return Double.compare(lhs.y,rhs.y);
+                    return Double.compare(lhs.y, rhs.y);
                 }
             });
-
+            Log.v(TAG,"lowest point: " + lowestPoint.toString());
             /* now turn the robot until the lowest point is somewhere in the middle,
              then drive until it is far down in the image */
-            if(!isInMiddle(inputFrame, lowestPoint)){
+            Log.v(TAG,"is in middle: " + Boolean.valueOf(isInMiddle(lowestPoint)));
+            Log.v(TAG,"is at bottom: " + Boolean.valueOf(isAtBottom(lowestPoint)));
+            if(!isInMiddle(lowestPoint)){
             	
             	Mat myFrame = inputFrame.rgba();
             	if(lowestPoint.x < (myFrame.cols()/2)){
@@ -173,9 +170,9 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
             }else{
             	robot.stop();
             }
-            if(isInMiddle(inputFrame, lowestPoint) && !isAtBottom(inputFrame, lowestPoint)){
+            if(isInMiddle(lowestPoint) && !isAtBottom(lowestPoint)){
             	robot.drive();
-            }else if(isInMiddle(inputFrame, lowestPoint) && isAtBottom(inputFrame, lowestPoint)){
+            }else if(isInMiddle(lowestPoint) && isAtBottom(lowestPoint)){
             	robot.stop();
             }
         }
@@ -191,22 +188,23 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
         return new Scalar(pointMatRgba.get(0, 0));
     }
     
-    public Boolean isInMiddle(CvCameraViewFrame inputFrame, Point p){
-    	int parts = 5; // odd number of partitions of the inputFrame
-    	Mat myFrame = inputFrame.rgba();
+    public Boolean isInMiddle(Point p){
+    	//double parts = 5; // odd number of partitions of the inputFrame
+
     	// is in middle partition?
-        return (p.x >= (parts/2)/parts*myFrame.cols() && p.x <= (parts/2+1)/parts*myFrame.cols());
+
+        return (p.x >= 2d/5*mRgba.cols() && p.x <= 3d/5*mRgba.cols());
     }
     
-    public Boolean isAtBottom(CvCameraViewFrame inputFrame, Point p){
-    	int parts = 7; // odd number of partitions of the inputframe
-    	Mat myFrame = inputFrame.rgba();
+    public Boolean isAtBottom(Point p){
+    	//double parts = 5; // odd number of partitions of the inputframe
+
     	// is in bottom partition?
-        return (p.y <= 1/parts*myFrame.rows());
+        return (p.y >= 4d/5*mRgba.rows());
     }
 
 
-  /* public boolean onTouch(View v, MotionEvent event) {
+  public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
 
@@ -246,13 +244,13 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
 
         mDetector.setHsvColor(mBlobColorHsv);
 
-        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+        //Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 
-        mIsColorSelected = true;
+        //mIsColorSelected = true;
 
         touchedRegionRgba.release();
         touchedRegionHsv.release();
 
         return false; // don't need subsequent touch events
-    }*/
+    }
 }
