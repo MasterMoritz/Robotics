@@ -144,7 +144,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
 
         Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
         mSpectrum.copyTo(spectrumLabel);
-
+        
         List<Point> points = new LinkedList<>();
         for (MatOfPoint mat: contours) {
             points.addAll(mat.toList());
@@ -159,7 +159,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
                     return Double.compare(lhs.y,rhs.y);
                 }
             });
-
+            System.out.println("LOWEST POINT" + lowestPoint);
             /* now turn the robot until the lowest point is somewhere in the middle,
              then drive until it is far down in the image */
             if(!isInMiddle(inputFrame, lowestPoint)){
@@ -179,7 +179,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements CvCamera
             	robot.stop();
             }
         }
-
+        
         return mRgba;
     }
 
