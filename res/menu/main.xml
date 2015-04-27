@@ -17,6 +17,6 @@
         android:id="@+id/action_colorblobdetection"
         android:orderInCategory="100"
         android:title="color-blob-detection"
-        android:onClick="startColorblobActivity"
+        android:onClick="startColorBlobActivity"
         />
 </menu>
