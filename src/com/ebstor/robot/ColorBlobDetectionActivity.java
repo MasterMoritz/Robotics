@@ -154,6 +154,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     return Double.compare(lhs.y, rhs.y);
                 }
             });
+          
             Log.v(TAG,"lowest point: " + lowestPoint.toString());
             /* now turn the robot until the lowest point is somewhere in the middle,
              then drive until it is far down in the image */
@@ -176,7 +177,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             	robot.stop();
             }
         }
-
+        
         return mRgba;
     }
 
