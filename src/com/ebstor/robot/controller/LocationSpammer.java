@@ -15,7 +15,7 @@ public class LocationSpammer implements Runnable{
 	@Override
 	public void run() {
 		while(!stop) {
-			try {Thread.sleep(50);} catch (InterruptedException e) {}
+			try {Thread.sleep(100);} catch (InterruptedException e) {}
 			System.out.println(robot.robotLocation);
 		}
 		
