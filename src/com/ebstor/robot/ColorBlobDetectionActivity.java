@@ -258,12 +258,12 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
     /** sets the last touched color as green ball value */
-    public void calibrateGreenBall(View v) {
+    public void calibrateGreenBall(MenuItem item) {
         mBlobColorsHsv.put("green",mBlobColorHsv);
     }
 
     /** sets the last touched color as red ball value */
-    public void calibrateRedBall(View v) {
+    public void calibrateRedBall(MenuItem item) {
         mBlobColorsHsv.put("red",mBlobColorHsv);
     }
 
