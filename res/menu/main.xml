@@ -1,6 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.example.robot.MainActivity" >
+    tools:context="com.ebstor.robot.MainActivity" >
 
     <item
         android:id="@+id/action_calibrate"
@@ -13,4 +13,10 @@
             android:orderInCategory="100"
             android:title="bug algorithms"
             />
+    <item
+        android:id="@+id/action_colorblobdetection"
+        android:orderInCategory="100"
+        android:title="color-blob-detection"
+        android:onClick="startColorBlobActivity"
+        />
 </menu>
