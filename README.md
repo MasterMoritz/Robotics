@@ -8,7 +8,5 @@ TODO:
 
 implement bug 2 algorithm:
 
- - fix followObstacle method:
-	- mline encounters have to be tested yet
-	- driveUntil is unfortunately too inaccurate for whatever reasons, thus mline check is hardcoded
-	- only works if left sensor sees the obstacle at beginning atm
+ - turnUntil is not accurate enough, the theta value is not correct  and hence leads to wrong x/y calculations
+ - the rest is working alright

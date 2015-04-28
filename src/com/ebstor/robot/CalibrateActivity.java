@@ -16,11 +16,11 @@ public class CalibrateActivity extends MainActivity {
     /**
      * in ms
      */
-    private final int CALIBRATION_DRIVE = 5000;
+    private final int CALIBRATION_DRIVE = 1092;
     /**
      * in ms
       */
-    private final int CALIBRATION_TURN = 5000;
+    private final int CALIBRATION_TURN = 1092;
     private EditText realValue;
 
     @Override

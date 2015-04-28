@@ -103,10 +103,15 @@ public class Communicator {
 			}
 		}
 		
-		sensors[0] = Integer.decode(hexas.get(2)); //left
-		sensors[1] = Integer.decode(hexas.get(4)); //middle
-		sensors[2] = Integer.decode(hexas.get(3)); //right
-		
+		if (hexas.size() < 5) {
+			sensors = getSensors();
+		}
+		else {
+			sensors[0] = Integer.decode(hexas.get(2)); //left
+			sensors[1] = Integer.decode(hexas.get(4)); //middle
+			sensors[2] = Integer.decode(hexas.get(3)); //right
+		}
+	
         return sensors;
     }
 
