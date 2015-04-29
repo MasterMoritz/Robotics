@@ -1,43 +1,46 @@
 package com.ebstor.robot;
 
+import android.app.Activity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.*;
+import android.view.View.OnTouchListener;
+import com.ebstor.robot.corefunctions.ColorBlobDetector;
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
 
-import android.app.Activity;
-import android.view.*;
-import com.ebstor.robot.corefunctions.ColorBlobDetector;
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
-import org.opencv.core.*;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.calib3d.*;
-
-
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View.OnTouchListener;
-
 public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "ColorBlobActivity";
-    private static final Scalar GREEN_BALL_RGBA = new Scalar(12,75,12,255);
-    private static final Scalar LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
-
+    private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
+    private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60);
+    private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
+    private static Mat           homographyMatrix;
+    private static Comparator<Point> pointComparator = new Comparator<Point>() {
+        @Override
+        public int compare(Point lhs, Point rhs) {
+            return Double.compare(lhs.y, rhs.y);
+        }
+    };
     private Mat                  mRgba;
-    /** map from all color names to values */
-    private Map<String,Scalar>   mBlobColorsRgba;
-    private Map<String,Scalar>   mBlobColorsHsv;
+    private Scalar               greenBallHsv;
+    private Scalar               redBallHsv;
     /** currently chosen blob colors */
-    private Scalar               mBlobColorRgba = new Scalar(0);
-    private Scalar               mBlobColorHsv = new Scalar(0);
+    //private Scalar               mBlobColorRgba = new Scalar(0);
+    private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
+
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
@@ -69,14 +72,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         Log.i(TAG, "called onCreate");
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         setContentView(R.layout.color_blob_detection_surface_view);
-
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
-
 
     }
 
@@ -108,10 +107,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         SPECTRUM_SIZE = new Size(200, 64);
         CONTOUR_COLOR = new Scalar(255,0,0,255);
 
-        mBlobColorsHsv = new HashMap<>();
-        mBlobColorsRgba = new HashMap<>();
-        mBlobColorsRgba.put("green", GREEN_BALL_RGBA);
-        mBlobColorsHsv.put("green", convertScalarRgba2Hsv(GREEN_BALL_RGBA));
+        greenBallHsv = convertScalarRgba2Hsv(GREEN_BALL_RGBA);
+        redBallHsv = RED_BALL_HSV;
     }
 
     public void onCameraViewStopped() {
@@ -132,82 +129,102 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         return new Scalar(pointMatHsv.get(0,0));
     }
 
-
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        List<MatOfPoint> allContours = new LinkedList<>();
-        for (Map.Entry<String,Scalar> color: mBlobColorsHsv.entrySet()) {
-            mDetector.setHsvColor(color.getValue());
+        if (homographyMatrix == null) {
+            homographyMatrix = getHomographyMatrix(mRgba);
+        } else {
+            List<MatOfPoint> greenBallContours, redBallContours;
+            Point lowestPointGreen = null, lowestPointRed = null, lowestPoint = null;
+            List<Point> points = new LinkedList<>();
+            List<MatOfPoint> lowestPointlist = new LinkedList<>();
+
+            /* detect green balls */
+            mDetector.setHsvColor(greenBallHsv);
             mDetector.process(mRgba);
-            List<MatOfPoint> contours = mDetector.getContours();
-            allContours.addAll(contours);
-            Log.e(TAG, "Contours count: " + contours.size());
-            Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
+            greenBallContours = mDetector.getContours();
+            Log.e(TAG, "green contours count: " + greenBallContours.size());
+            Imgproc.drawContours(mRgba, greenBallContours, -1, CONTOUR_COLOR);
+            for (MatOfPoint m : greenBallContours)
+                points.addAll(m.toList());
+
+            if (!points.isEmpty()) {
+                lowestPointGreen = Collections.max(points, pointComparator);
+                lowestPoint = lowestPointGreen;
+                lowestPointlist.add(new MatOfPoint(
+                        lowestPointGreen,
+                        new Point(lowestPointGreen.x - 1, lowestPointGreen.y),
+                        new Point(lowestPointGreen.x, lowestPointGreen.y + 1),
+                        new Point(lowestPointGreen.x + 1, lowestPointGreen.y),
+                        new Point(lowestPointGreen.x, lowestPointGreen.y - 1)));
+                Imgproc.drawContours(mRgba, lowestPointlist, -1, LOWEST_POINT_RGBA);
+            }
+
+            /* detect red balls*/
+
+            mDetector.setHsvColor(redBallHsv);
+            mDetector.process(mRgba);
+            redBallContours = mDetector.getContours();
+            Log.e(TAG, "red contours count: " + redBallContours.size());
+            Imgproc.drawContours(mRgba, redBallContours, -1, CONTOUR_COLOR);
+
+            points.clear();
+            for (MatOfPoint m : redBallContours)
+                points.addAll(m.toList());
+
+            if (!points.isEmpty()) {
+                lowestPointRed = Collections.max(points, pointComparator);
+
+                lowestPointlist.clear();
+                lowestPointlist.add(new MatOfPoint(
+                        lowestPointRed,
+                        new Point(lowestPointRed.x - 1, lowestPointRed.y),
+                        new Point(lowestPointRed.x + 1, lowestPointRed.y),
+                        new Point(lowestPointRed.x, lowestPointRed.y - 1)));
+                Imgproc.drawContours(mRgba, lowestPointlist, -1, LOWEST_POINT_RGBA);
+            }
+
+
+            /* detect currently set color for calibration */
+            if (mBlobColorHsv != null) {
+                mDetector.setHsvColor(mBlobColorHsv);
+                mDetector.process(mRgba);
+                Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
+            }
+
+            lowestPoint = getLowestPoint(lowestPointGreen, lowestPointRed);
+            if (lowestPoint != null) {
+                Log.v(TAG, "lowest point on image: " + lowestPoint.toString());
+                Log.v(TAG, "lowest point in egocentric coordinates: " + imageCoordToRealWorldCoord(lowestPoint).toString());
+            }
+
         }
 
-
-        /*Mat colorLabel = mRgba.submat(4, 68, 4, 68);
+      /*Mat colorLabel = mRgba.submat(4, 68, 4, 68);
         colorLabel.setTo(mBlobColorsRgba);
 
         Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
         mSpectrum.copyTo(spectrumLabel);*/
-
-        List<Point> points = new LinkedList<>();
-        for (MatOfPoint mat: allContours) {
-            points.addAll(mat.toList());
-        }
-
-        if (!points.isEmpty()) {
-            Log.v(TAG,"points: ");
-            for (Point p: points) Log.v(TAG, p.toString());
-            Point lowestPoint = Collections.max(points, new Comparator<Point>() {
-                @Override
-                public int compare(Point lhs, Point rhs) {
-                    return Double.compare(lhs.y, rhs.y);
-                }
-            });
-
-            List<MatOfPoint> lowestPointlist = new LinkedList<>();
-            lowestPointlist.add(new MatOfPoint(
-                    lowestPoint,
-                    new Point(lowestPoint.x-1,lowestPoint.y),
-                    new Point(lowestPoint.x,lowestPoint.y+1),
-                    new Point(lowestPoint.x+1,lowestPoint.y),
-                    new Point(lowestPoint.x,lowestPoint.y-1)));
-            Imgproc.drawContours(mRgba,lowestPointlist,-1,LOWEST_POINT_RGBA);
-
-            Log.v(TAG,"lowest point: " + lowestPoint.toString());
-            /* now turn the robot until the lowest point is somewhere in the middle,
-             then drive until it is far down in the image */
-            Log.v(TAG,"is in middle: " + isInMiddle(lowestPoint));
-            Log.v(TAG,"is at bottom: " + isAtBottom(lowestPoint));
-            /*if(!isInMiddle(lowestPoint)){
-            	
-            	Mat myFrame = inputFrame.rgba();
-            	if(lowestPoint.x < (myFrame.cols()/2)){
-            		robot.turnRight();
-            	}else{
-            		robot.turnLeft();
-            	}
-            }else{
-            	robot.stop();
-            }
-            if(isInMiddle(lowestPoint) && !isAtBottom(lowestPoint)){
-            	robot.drive();
-            }else if(isInMiddle(lowestPoint) && isAtBottom(lowestPoint)){
-            	robot.stop();
-            }*/
-        }
         return mRgba;
     }
-    
-    private Scalar converScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
 
-        return new Scalar(pointMatRgba.get(0, 0));
+    /**
+     *
+     * @return the point that is the nearest to the robot or null if both p1 and p2 are null
+     */
+    private Point getLowestPoint(Point p1, Point p2) {
+        if (p1 == null)
+            if (p2 == null)
+                return null;
+            else
+                return p2;
+        else if (p2 == null)
+            return p1;
+        else if (pointComparator.compare(p1,p2) <= 0)
+            return p2;
+        else return p1;
     }
+
     public Boolean isInMiddle(Point p){
         return (p.x >= 2d/5*mRgba.cols() && p.x <= 3d/5*mRgba.cols());
     }
@@ -216,25 +233,15 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         return (p.y >= 4d/5*mRgba.rows());
     }
 
-    public void pointCoordinates(View v){
-    	
-        Thread t = new Thread(){
-        	public void run(){
-                Mat frame = mRgba;
-                Mat homography = getHomographyMatrix(frame);
-                Point mp = new Point(frame.cols()/2, frame.rows()/2);
-    	        while(homography.rows() <= 0 && homography.cols() <= 0){
-    	        	homography = getHomographyMatrix(frame);
-    	        }
-    	        Mat src =  new Mat(1, 1, CvType.CV_32FC2);
-    	        Mat dest = new Mat(1, 1, CvType.CV_32FC2);
-    	        src.put(0, 0, new double[] { mp.x, mp.y }); // ps is a point in image coordinates
-    	        Core.perspectiveTransform(src, dest, homography); //homography is your homography matrix
-    	        Point dest_point = new Point(dest.get(0, 0)[0], dest.get(0, 0)[1]);
-    	        Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
-            }
-        };
-        t.start();
+
+    public Point imageCoordToRealWorldCoord(Point imgPoint) {
+        Mat src =  new Mat(1, 1, CvType.CV_32FC2);
+        Mat dest = new Mat(1, 1, CvType.CV_32FC2);
+        src.put(0, 0, imgPoint.x, imgPoint.y);
+        Core.perspectiveTransform(src, dest, homographyMatrix);
+        Point dest_point = new Point(dest.get(0, 0)[0], dest.get(0, 0)[1]);
+        Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
+        return dest_point;
     }
 
     public static Mat getHomographyMatrix(Mat mRgba) {
@@ -265,9 +272,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     	  // Calculate homography:
     	  if (mPatternWasFound){
     	    Calib3d.drawChessboardCorners(mRgba, mPatternSize, mCorners, mPatternWasFound); //for visualization
-    	    return Calib3d.findHomography(mCorners, RealWorldC);
+    	    Log.i(TAG,"homography was found");
+              return Calib3d.findHomography(mCorners, RealWorldC);
     	  }else{
-    	    return new Mat();
+    	    return null;
     	  }
     	}
 
@@ -304,11 +312,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         for (int i = 0; i < mBlobColorHsv.val.length; i++)
             mBlobColorHsv.val[i] /= pointCount;
 
-        mBlobColorsHsv.put("current",mBlobColorHsv);
-        mBlobColorRgba = convertScalarHsv2Rgba(mBlobColorHsv);
+        /*mBlobColorRgba = convertScalarHsv2Rgba(mBlobColorHsv);
 
         Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
-                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
+                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");*/
 
 
         //Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
@@ -321,12 +328,18 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
     /** sets the last touched color as green ball value */
     public void calibrateGreenBall(MenuItem item) {
-        mBlobColorsHsv.put("green",mBlobColorHsv);
+        if (mBlobColorHsv != null) {
+            greenBallHsv = mBlobColorHsv;
+            mBlobColorHsv = null;
+        }
     }
 
     /** sets the last touched color as red ball value */
     public void calibrateRedBall(MenuItem item) {
-        mBlobColorsHsv.put("red",mBlobColorHsv);
+        if (mBlobColorHsv != null) {
+            redBallHsv = mBlobColorHsv;
+            mBlobColorHsv = null;
+        }
     }
 
     @Override
