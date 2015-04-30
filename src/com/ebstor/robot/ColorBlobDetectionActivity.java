@@ -33,14 +33,17 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Mat                  mRgba;
     private Scalar               greenBallHsv;
     private Scalar               redBallHsv;
-    /** currently chosen blob colors */
+    /** currently chosen blob color */
     //private Scalar               mBlobColorRgba = new Scalar(0);
     private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
-
+    /**
+     * egocentric coordinates of nearest ball, null if no ball detected
+     */
+    public Point nearestBall = null;
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
@@ -135,7 +138,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
             homographyMatrix = getHomographyMatrix(mRgba);
         } else {
             List<MatOfPoint> greenBallContours, redBallContours;
-            Point lowestPointGreen = null, lowestPointRed = null, lowestPoint = null;
+            Point lowestPointGreen = null, lowestPointRed = null;
             List<Point> points = new LinkedList<>();
             List<MatOfPoint> lowestPointlist = new LinkedList<>();
 
@@ -150,7 +153,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
             if (!points.isEmpty()) {
                 lowestPointGreen = Collections.max(points, pointComparator);
-                lowestPoint = lowestPointGreen;
+                nearestBall = lowestPointGreen;
                 lowestPointlist.add(new MatOfPoint(
                         lowestPointGreen,
                         new Point(lowestPointGreen.x - 1, lowestPointGreen.y),
@@ -192,10 +195,9 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
             }
 
-            lowestPoint = getLowestPoint(lowestPointGreen, lowestPointRed);
-            if (lowestPoint != null) {
-                Log.v(TAG, "lowest point on image: " + lowestPoint.toString());
-                Log.v(TAG, "lowest point in egocentric coordinates: " + imageCoordToRealWorldCoord(lowestPoint).toString());
+            nearestBall = imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
+            if (nearestBall != null) {
+                Log.v(TAG, "lowest point in egocentric coordinates: " + imageCoordToEgoCoord(nearestBall).toString());
             }
 
         }
@@ -206,6 +208,14 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
         mSpectrum.copyTo(spectrumLabel);*/
         return mRgba;
+    }
+
+    /**
+     *
+     * @return if the current frame(s) contain(s) a ball that can be targeted
+     */
+    public boolean ballDetected() {
+        return nearestBall != null;
     }
 
     /**
@@ -234,12 +244,18 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     }
 
 
-    public Point imageCoordToRealWorldCoord(Point imgPoint) {
+    /**
+     *
+     * @param imgPoint the point on the image
+     * @return the egocentric coordinates in cm
+     */
+    public Point imageCoordToEgoCoord(Point imgPoint) {
+        if (homographyMatrix == null) throw new RuntimeException("we don't even have a homography matrix yet!");
         Mat src =  new Mat(1, 1, CvType.CV_32FC2);
         Mat dest = new Mat(1, 1, CvType.CV_32FC2);
         src.put(0, 0, imgPoint.x, imgPoint.y);
         Core.perspectiveTransform(src, dest, homographyMatrix);
-        Point dest_point = new Point(dest.get(0, 0)[0], dest.get(0, 0)[1]);
+        Point dest_point = new Point(dest.get(0, 0)[0]/10, dest.get(0, 0)[1]/10);
         Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
         return dest_point;
     }
