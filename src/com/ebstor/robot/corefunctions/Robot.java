@@ -17,7 +17,9 @@ import static java.lang.Thread.sleep;
  */
 public class Robot {
 	
-	/** speed of robot */
+	private static String TAG = "Robot";
+
+    /** speed of robot */
 	public static int VELOCITY = 15;
 	
     /** degrees turned per millisecond for velocity */
@@ -71,11 +73,10 @@ public class Robot {
     public Communicator com;
 
     /** setup serial communicator and initialize locations */
-    public Robot(TextView textLog, FTDriver driver) {
-        this.com = new Communicator(driver,textLog);
+    public Robot(FTDriver driver) {
         robotLocation = new Location(0, 0, 0);
         goal = new Location(0, 0, 0);
-        m_point = new Location(0, 0, 0);
+        this.com = new Communicator(driver);
     }
 
     /**
@@ -317,8 +318,7 @@ public class Robot {
             if (turningAngle < -180) turningAngle = 360 + turningAngle;
             turn(turningAngle);
     	} catch(Exception e) {
-    		com.setText("failed to turn towards goal");
-            com.setText(e.toString());
+    		Log.e(TAG,"failed to turn towards goal");
     	}
     }
 
@@ -329,10 +329,9 @@ public class Robot {
             if (turningAngle > 180) turningAngle = 360 - turningAngle;
             if (turningAngle < -180) turningAngle = 360 + turningAngle;
             turn(turningAngle);
-            com.append(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
+            Log.v(TAG,angle + " | " + turningAngle + " | " + robotLocation.getTheta());
     	} catch(Exception e) {
-    		com.append("failed to turn towards location");
-            com.append(e.toString());
+    		Log.e(TAG,"failed to turn towards location");
     	}
     }
 
@@ -480,7 +479,7 @@ public class Robot {
      * @return the last measured distance
      */
     private void keepDistance(int direction) {
-    	com.append("keeping distance " + Integer.toString(direction));
+    	Log.v(TAG,"keeping distance " + Integer.toString(direction));
 		int[] sensor = com.getSensors();
 		
 		int turnDirection = 2; //right sensor if turning left
@@ -678,7 +677,7 @@ public class Robot {
      * note that a leavingCondition can't be used until driveUntil is as accurate as drive
      */
     public void followObstacle(int direction) {
-    	com.append("following obstacle");
+    	Log.i(TAG,"following obstacle");
 
     	int[] sensor = com.getSensors();
     	Location temp;

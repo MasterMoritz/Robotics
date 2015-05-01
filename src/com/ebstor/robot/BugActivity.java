@@ -26,7 +26,6 @@ public class BugActivity extends MainActivity {
         x_coordinate = (EditText) findViewById(R.id.x_coordinate);
         y_coordinate = (EditText) findViewById(R.id.y_coordinate);
         textLog = (TextView) findViewById(R.id.bugTextLog);
-        robot.com.setTextLog(textLog);
         robot.connect();
     }
 

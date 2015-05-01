@@ -1,6 +1,7 @@
 package com.ebstor.robot;
 
 import android.content.Intent;
+import android.util.Log;
 import android.widget.*;
 
 import com.ebstor.robot.corefunctions.Robot;
@@ -24,13 +25,14 @@ public class MainActivity extends Activity {
 	private EditText distance;
     private EditText angle;
     public static Robot robot = null;
+    private static final String TAG = "MainActivity";
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button powah = (Button) findViewById(R.id.powah);
-        robot = new Robot((TextView) findViewById(R.id.textLog),new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
+        robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
         powah.setOnTouchListener(new OnTouchListener() {
 
             @Override
@@ -63,7 +65,7 @@ public class MainActivity extends Activity {
     
     public void readSensors(View v) {
         int[] sensor = robot.com.getSensors();
-        robot.com.setText("Left: " + Integer.toString(sensor[0]) + "| Middle: " + Integer.toString(sensor[1]) + " | Right: " + Integer.toString(sensor[2])); 
+        Log.v(TAG, "Left: " + Integer.toString(sensor[0]) + "| Middle: " + Integer.toString(sensor[1]) + " | Right: " + Integer.toString(sensor[2]));
     }
 
 	@Override

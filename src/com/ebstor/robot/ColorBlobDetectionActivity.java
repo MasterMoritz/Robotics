@@ -1,16 +1,16 @@
 package com.ebstor.robot;
 
+import android.app.Activity;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
-import android.widget.TextView;
-
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
 import com.ebstor.robot.corefunctions.Location;
 import com.ebstor.robot.corefunctions.Robot;
-
+import jp.ksksue.driver.serial.FTDriver;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -25,7 +25,10 @@ import java.util.*;
 
 import static java.lang.Thread.sleep;
 
-public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
+public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
+
+    private Robot robot = null;
+
     private static final String  TAG              = "ColorBlobActivity";
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
@@ -47,7 +50,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
-    public TextView textlog;
     /**
      * egocentric coordinates of nearest ball, null if no ball detected
      * this is updated by onCameraFrame ->
@@ -93,19 +95,17 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	
         Log.i(TAG, "called onCreate");
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
+        robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
+        robot.connect();
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.color_blob_detection_surface_view);
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
 
         mOpenCvCameraView.setCvCameraViewListener(this);
-        textlog = (TextView) findViewById(R.id.textView1);
-        robot.com.setTextLog(textlog);
-        robot.connect();
-        
 
     }
 
@@ -113,6 +113,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void onPause()
     {
         super.onPause();
+        robot.disconnect();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
     }
@@ -121,6 +122,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void onResume()
     {
         super.onResume();
+        robot.connect();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
     }
 
@@ -209,7 +211,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
             }
 
-            nearestBall = imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
+            nearestBall = null;//imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
             if (nearestBall != null) {
                 ballLocationUpdated = true;
                 Log.v(TAG, "lowest point in egocentric coordinates: " + nearestBall.toString());
@@ -253,7 +255,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     public boolean turnLookCage(){
         for(int i = 0; i < 8; i++){
-    		robot.turn(45.0);
+    		robot.turn(45);
     		if(ballDetected()){
     			System.out.println("Detected ball");
                 // now wait until the ball location has been updated again
@@ -488,8 +490,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
     public void startExam2(View view) {
-    	System.out.println(robot.com.isConnected());
-    	///robot.com.setVelocity((byte)10,(byte) -10); test if turning works
+        Log.v(TAG,"startExam2 called");
         EditText x = (EditText) findViewById(R.id.target_x);
         EditText y = (EditText) findViewById(R.id.target_y);
         
