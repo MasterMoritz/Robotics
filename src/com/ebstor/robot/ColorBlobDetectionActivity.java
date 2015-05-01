@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
+import com.ebstor.robot.corefunctions.Location;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -18,7 +19,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
 
-public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
+public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "ColorBlobActivity";
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60);
@@ -44,6 +45,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
      * egocentric coordinates of nearest ball, null if no ball detected
      */
     public Point nearestBall = null;
+    public Location target = null;
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
@@ -217,6 +219,104 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     public boolean ballDetected() {
         return nearestBall != null;
     }
+    
+    /**
+     * when a ball is detected the robot heads straight for the ball and cages it
+     * with it's arm
+     */
+    public void driveAndCageBall(){
+    	robot.drive(imageCoordToEgoCoord(nearestBall).x);
+    	robot.com.lowerBar();
+    }
+    
+    /**
+     * The robot will turn 45 degrees 8 times (for 360 degrees in total) and check if
+     * the ball is in sight. If so, the robot will head for it and cage it.
+     * 
+     * @return true when the ball is caged, false otherwise
+     */
+    public boolean turnLookCage(){
+    	boolean caged = false;
+    	for(int i = 0; i < 8; i++){
+    		robot.turn(45.0);
+    		if(ballDetected()){	
+	    		robot.turnToBall(imageCoordToEgoCoord(nearestBall));
+	    		driveAndCageBall();
+	    		caged = true;
+    		return caged;
+    		}
+    	}
+    	return caged;
+    }
+    
+    /**
+     * after caging the ball the robot will take the ball to the target and
+     * raise the bar again
+     */
+    public void ballToTarget(){
+    	
+    	robot.turnToLocation(target);
+    	robot.drive();
+    	robot.com.raiseBar();
+    }
+    
+    /**
+     * after the ball's release the robot returns to the starting point
+     */
+    public void returnToStart(){
+    	
+    	Location start = new Location(0,0);
+    	robot.turnToLocation(start);
+    	robot.drive();
+    }
+    
+    /**
+     * algorithm for finding a green/red ball in the workspace
+     */
+    public void searchEnvironment(){
+
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.turnLeft();
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.turnLeft();
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.turnLeft();
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.turnLeft();
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.drive(100.0);
+    	if(turnLookCage()){
+    		return;
+    	}
+    	robot.turnLeft();
+    	robot.drive(100.0);
+    }
 
     /**
      *
@@ -243,6 +343,14 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         return (p.y >= 4d/5*mRgba.rows());
     }
 
+    /**
+     * whole procedure required to pass the second examination
+     */
+    public void secondExamination(){
+    	searchEnvironment();
+    	ballToTarget();
+    	returnToStart();
+    }
 
     /**
      *

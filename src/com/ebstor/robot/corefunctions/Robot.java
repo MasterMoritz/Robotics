@@ -1,6 +1,7 @@
  package com.ebstor.robot.corefunctions;
 
 import java.util.EmptyStackException;
+import org.opencv.core.*;
 
 import android.widget.TextView;
 
@@ -328,6 +329,20 @@ public class Robot {
             com.append(angle + " | " + turningAngle + " | " + robotLocation.getTheta());
     	} catch(Exception e) {
     		com.append("failed to turn towards location");
+            com.append(e.toString());
+    	}
+    }
+    
+    public void turnToBall(Point point){
+    	try {
+	        double angle = Math.toDegrees(Math.atan2(point.y-0.0,point.x-0.0));
+            double turningAngle =  angle - 0.0;
+            if (turningAngle > 180) turningAngle = 360 - turningAngle;
+            if (turningAngle < -180) turningAngle = 360 + turningAngle;
+            turn(turningAngle);
+            com.append(angle + " | " + turningAngle + " | " + 0.0);
+    	} catch(Exception e) {
+    		com.append("failed to turn towards ball");
             com.append(e.toString());
     	}
     }

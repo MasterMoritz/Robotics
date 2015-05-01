@@ -86,6 +86,18 @@ public class Communicator {
         );
     }
 
+    public void lowerBar(){
+    	write(
+    			new byte[] {'-', '\r', '\n'}
+    	);
+    }
+    
+    public void raiseBar(){
+    	write(
+    			new byte[] {'+', '\r', '\n'}
+    	);
+    }
+    
     public void stop() {
         write(new byte[]{'s', '\r', '\n'});
     }
