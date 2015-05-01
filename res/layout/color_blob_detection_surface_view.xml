@@ -17,14 +17,21 @@
             android:layout_gravity="start|top" android:onClick="startExam2" android:clickable="true"/>
 
     <EditText
-            android:layout_width="94dp"
-            android:layout_height="wrap_content"
-            android:text="x"
-            android:id="@+id/target_x" android:layout_gravity="center_horizontal|top" android:enabled="false"
-            android:inputType="numberDecimal" android:clickable="true"/>
-    <EditText android:layout_width="94dp" android:layout_height="wrap_content" android:text="y"
-              android:id="@+id/target_y" android:layout_gravity="end|top" android:enabled="false"
-              android:inputType="numberDecimal" android:clickable="true"/>
+        android:id="@+id/target_x"
+        android:layout_width="94dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top"
+        android:clickable="true"
+        android:inputType="numberDecimal"
+        android:text="x" />
 
+    <EditText
+        android:id="@+id/target_y"
+        android:layout_width="94dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:clickable="true"
+        android:inputType="numberDecimal"
+        android:text="y" />
 
 </FrameLayout>

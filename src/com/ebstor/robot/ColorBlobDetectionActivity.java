@@ -476,11 +476,33 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void startExam2(View view) {
         EditText x = (EditText) findViewById(R.id.target_x);
         EditText y = (EditText) findViewById(R.id.target_y);
-        if (x.getText().toString().isEmpty() || y.getText().toString().isEmpty()) {
+        
+        String sx = x.toString();
+        String sy = y.toString();
+        
+        Double dx;
+        Double dy;
+        
+       
+        if (x.getText().toString().equals("x") || y.getText().toString().equals("y")) {
             Log.e(TAG,"no target specified");
             return;
         }
-        target = new Location(Double.parseDouble(x.getText().toString()),Double.parseDouble(y.getText().toString()));
+        
+        // x20 should be parsed same as only 20
+        try {
+        	dx = Double.parseDouble(sx);
+        } catch(Exception e) {
+        	dx = Double.parseDouble(sx.substring(1));
+        }
+        // y20 should be parsed same as only 20
+        try {
+        	dy = Double.parseDouble(sy);
+        } catch(Exception e) {
+        	dy = Double.parseDouble(sy.substring(1));
+        }
+        
+        target = new Location(dx,dy);
 
         new Thread() {
             @Override
