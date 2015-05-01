@@ -243,7 +243,7 @@ public class Robot {
 
     public void turn(double degree) {
         if (degree != 0) {
-            long time = degreesToTime(degree - 50);
+            long time = degreesToTime(degree) - 50;
             if (time < 0) {
             	time = 0;
             }
