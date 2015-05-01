@@ -89,6 +89,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	robot.com.connect();
+    	
         Log.i(TAG, "called onCreate");
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
@@ -246,6 +248,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         for(int i = 0; i < 8; i++){
     		robot.turn(45.0);
     		if(ballDetected()){
+    			System.out.println("Detected ball");
                 // now wait until the ball location has been updated again
                 long timeSinceDetected = 0;
                 boolean ballIsLost = false;
@@ -264,6 +267,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 if (ballIsLost) continue;
 
                 Point targetEgo = nearestBall;
+                System.out.println("nearest point is = " + targetEgo.x + " | " + targetEgo.y);
                 robot.turn(Robot.degreesToBall(targetEgo));
 	    		driveAndCageBall(Robot.distanceToBall(targetEgo));
 	    		return true;
@@ -315,8 +319,11 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * whole procedure required to pass the second examination
      */
     public void secondExamination(){
+    	System.out.println("searching envorionment");
     	searchEnvironment();
+    	System.out.println("get ball to target");
     	ballToTarget();
+    	System.out.println("return to start");
     	returnToStart();
     }
 
@@ -503,10 +510,11 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
         
         target = new Location(dx,dy);
-
+        System.out.println("starting thread");
         new Thread() {
             @Override
             public void run() {
+            	System.out.println("start thread");
                 while(homographyMatrix == null) {
                     try {
                         sleep(1000);
@@ -514,6 +522,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         e.printStackTrace();
                     }
                 }
+                System.out.println("start examination");
                 secondExamination();
             }
         }.start();
