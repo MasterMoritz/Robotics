@@ -1,12 +1,13 @@
 package com.ebstor.robot;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
+import android.widget.EditText;
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
 import com.ebstor.robot.corefunctions.Location;
+import com.ebstor.robot.corefunctions.Robot;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -19,10 +20,12 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
 
+import static java.lang.Thread.sleep;
+
 public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "ColorBlobActivity";
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
-    private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60);
+    private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
     private static Mat           homographyMatrix;
     private static Comparator<Point> pointComparator = new Comparator<Point>() {
@@ -43,8 +46,20 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private Scalar               CONTOUR_COLOR;
     /**
      * egocentric coordinates of nearest ball, null if no ball detected
+     * this is updated by onCameraFrame ->
+     * every frame that does not contain any blobs results in this variable being null
      */
     public Point nearestBall = null;
+    /**
+     * everytime we get a new location for the ball, this is set to true
+     * everytime we call ballDetected() it is set to false
+     * then as we proceed to calculate where the ball is at the moment, we wait for it to be set true again
+     * this way we can be quite sure that we have the correct location
+     */
+    private boolean ballLocationUpdated = false;
+    /**
+     * where the robot should take the ball
+     */
     public Location target = null;
 
     private CameraBridgeViewBase mOpenCvCameraView;
@@ -80,6 +95,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.color_blob_detection_surface_view);
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
+
         mOpenCvCameraView.setCvCameraViewListener(this);
 
     }
@@ -120,19 +136,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         mRgba.release();
     }
 
-    private Scalar convertScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
-        return new Scalar(pointMatRgba.get(0, 0));
-    }
-
-    private Scalar convertScalarRgba2Hsv(Scalar rgbaColor) {
-        Mat pointMatHsv = new Mat();
-        Mat pointMatRgba = new Mat(1,1,CvType.CV_8UC3,rgbaColor);
-        Imgproc.cvtColor(pointMatRgba, pointMatHsv, Imgproc.COLOR_RGB2HSV);
-        return new Scalar(pointMatHsv.get(0,0));
-    }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
@@ -144,7 +147,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             List<Point> points = new LinkedList<>();
             List<MatOfPoint> lowestPointlist = new LinkedList<>();
 
-            /* detect green balls */
+        /* detect green balls */
             mDetector.setHsvColor(greenBallHsv);
             mDetector.process(mRgba);
             greenBallContours = mDetector.getContours();
@@ -165,7 +168,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 Imgproc.drawContours(mRgba, lowestPointlist, -1, LOWEST_POINT_RGBA);
             }
 
-            /* detect red balls*/
+        /* detect red balls*/
 
             mDetector.setHsvColor(redBallHsv);
             mDetector.process(mRgba);
@@ -190,7 +193,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             }
 
 
-            /* detect currently set color for calibration */
+        /* detect currently set color for calibration */
             if (mBlobColorHsv != null) {
                 mDetector.setHsvColor(mBlobColorHsv);
                 mDetector.process(mRgba);
@@ -199,34 +202,38 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
             nearestBall = imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
             if (nearestBall != null) {
-                Log.v(TAG, "lowest point in egocentric coordinates: " + imageCoordToEgoCoord(nearestBall).toString());
+                ballLocationUpdated = true;
+                Log.v(TAG, "lowest point in egocentric coordinates: " + nearestBall.toString());
             }
-
-        }
 
       /*Mat colorLabel = mRgba.submat(4, 68, 4, 68);
         colorLabel.setTo(mBlobColorsRgba);
 
         Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
         mSpectrum.copyTo(spectrumLabel);*/
+        }
+
         return mRgba;
     }
 
     /**
-     *
-     * @return if the current frame(s) contain(s) a ball that can be targeted
+     * when this method is called, ballLocationUpdated is set to false again
+     * @return if the last frame contains a ball that can be targeted
      */
     public boolean ballDetected() {
+        ballLocationUpdated = false;
         return nearestBall != null;
     }
     
     /**
-     * when a ball is detected the robot heads straight for the ball and cages it
+     * heads straight for the ball and cages it
      * with it's arm
+     *
+     * @param distanceToBall the distance from the middle of the axis to the ball
      */
-    public void driveAndCageBall(){
-    	robot.drive(imageCoordToEgoCoord(nearestBall).x);
-    	robot.com.lowerBar();
+    public void driveAndCageBall(double distanceToBall){
+    	robot.drive(distanceToBall-15);
+        robot.closeCage();
     }
     
     /**
@@ -236,17 +243,33 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * @return true when the ball is caged, false otherwise
      */
     public boolean turnLookCage(){
-    	boolean caged = false;
-    	for(int i = 0; i < 8; i++){
+        for(int i = 0; i < 8; i++){
     		robot.turn(45.0);
-    		if(ballDetected()){	
-	    		robot.turnToBall(imageCoordToEgoCoord(nearestBall));
-	    		driveAndCageBall();
-	    		caged = true;
-    		return caged;
+    		if(ballDetected()){
+                // now wait until the ball location has been updated again
+                long timeSinceDetected = 0;
+                boolean ballIsLost = false;
+                while(!ballLocationUpdated) {
+                    try {
+                        sleep(500);
+                        timeSinceDetected += 500;
+                        if (timeSinceDetected >= 3000) {
+                            ballIsLost = true;
+                            break;
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (ballIsLost) continue;
+
+                Point targetEgo = nearestBall;
+                robot.turn(Robot.degreesToBall(targetEgo));
+	    		driveAndCageBall(Robot.distanceToBall(targetEgo));
+	    		return true;
     		}
     	}
-    	return caged;
+    	return false;
     }
     
     /**
@@ -254,20 +277,19 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * raise the bar again
      */
     public void ballToTarget(){
-    	
     	robot.turnToLocation(target);
-    	robot.drive();
-    	robot.com.raiseBar();
+    	robot.drive(Robot.euclideanDistance(robot.robotLocation, target) - 15);
+    	robot.openCage();
     }
     
     /**
      * after the ball's release the robot returns to the starting point
      */
     public void returnToStart(){
-    	
     	Location start = new Location(0,0);
     	robot.turnToLocation(start);
-    	robot.drive();
+    	robot.drive(Math.sqrt(Robot.euclideanDistance(start, robot.robotLocation)));
+        robot.turn(-robot.robotLocation.getTheta());
     }
     
     /**
@@ -278,69 +300,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     	if(turnLookCage()){
     		return;
     	}
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.turnLeft();
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.turnLeft();
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.turnLeft();
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.turnLeft();
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.drive(100.0);
-    	if(turnLookCage()){
-    		return;
-    	}
-    	robot.turnLeft();
-    	robot.drive(100.0);
-    }
+    	robot.drive(100);
 
-    /**
-     *
-     * @return the point that is the nearest to the robot or null if both p1 and p2 are null
-     */
-    private Point getLowestPoint(Point p1, Point p2) {
-        if (p1 == null)
-            if (p2 == null)
-                return null;
-            else
-                return p2;
-        else if (p2 == null)
-            return p1;
-        else if (pointComparator.compare(p1,p2) <= 0)
-            return p2;
-        else return p1;
-    }
-
-    public Boolean isInMiddle(Point p){
-        return (p.x >= 2d/5*mRgba.cols() && p.x <= 3d/5*mRgba.cols());
-    }
-    
-    public Boolean isAtBottom(Point p){
-        return (p.y >= 4d/5*mRgba.rows());
+        while(true) {
+            if(turnLookCage()){
+                return;
+            }
+            robot.turn(90);
+            robot.drive(100);
+        }
     }
 
     /**
@@ -355,15 +323,16 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /**
      *
      * @param imgPoint the point on the image
-     * @return the egocentric coordinates in cm
+     * @return the egocentric coordinates in cm, x heads to the front y heads to the left
      */
     public Point imageCoordToEgoCoord(Point imgPoint) {
         if (homographyMatrix == null) throw new RuntimeException("we don't even have a homography matrix yet!");
+        if (imgPoint == null) return null;
         Mat src =  new Mat(1, 1, CvType.CV_32FC2);
         Mat dest = new Mat(1, 1, CvType.CV_32FC2);
         src.put(0, 0, imgPoint.x, imgPoint.y);
         Core.perspectiveTransform(src, dest, homographyMatrix);
-        Point dest_point = new Point(dest.get(0, 0)[0]/10, dest.get(0, 0)[1]/10);
+        Point dest_point = new Point(dest.get(0, 0)[1]/10, dest.get(0, 0)[0]/10);
         Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
         return dest_point;
     }
@@ -397,13 +366,30 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     	  if (mPatternWasFound){
     	    Calib3d.drawChessboardCorners(mRgba, mPatternSize, mCorners, mPatternWasFound); //for visualization
     	    Log.i(TAG,"homography was found");
-              return Calib3d.findHomography(mCorners, RealWorldC);
+            return Calib3d.findHomography(mCorners, RealWorldC);
     	  }else{
     	    return null;
     	  }
     	}
 
-  public boolean onTouch(View v, MotionEvent event) {
+
+    /**
+     * @return the point that is the nearest to the robot or null if both p1 and p2 are null
+     */
+    private Point getLowestPoint(Point p1, Point p2) {
+        if (p1 == null)
+            if (p2 == null)
+                return null;
+            else
+                return p2;
+        else if (p2 == null)
+            return p1;
+        else if (pointComparator.compare(p1,p2) <= 0)
+            return p2;
+        else return p1;
+    }
+
+    public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
 
@@ -471,5 +457,43 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.camera_menu, menu);
         return true;
+    }
+
+    private Scalar convertScalarHsv2Rgba(Scalar hsvColor) {
+        Mat pointMatRgba = new Mat();
+        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
+        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
+        return new Scalar(pointMatRgba.get(0, 0));
+    }
+
+    private Scalar convertScalarRgba2Hsv(Scalar rgbaColor) {
+        Mat pointMatHsv = new Mat();
+        Mat pointMatRgba = new Mat(1,1,CvType.CV_8UC3,rgbaColor);
+        Imgproc.cvtColor(pointMatRgba, pointMatHsv, Imgproc.COLOR_RGB2HSV);
+        return new Scalar(pointMatHsv.get(0,0));
+    }
+
+    public void startExam2(View view) {
+        EditText x = (EditText) findViewById(R.id.target_x);
+        EditText y = (EditText) findViewById(R.id.target_y);
+        if (x.getText().toString().isEmpty() || y.getText().toString().isEmpty()) {
+            Log.e(TAG,"no target specified");
+            return;
+        }
+        target = new Location(Double.parseDouble(x.getText().toString()),Double.parseDouble(y.getText().toString()));
+
+        new Thread() {
+            @Override
+            public void run() {
+                while(homographyMatrix == null) {
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                secondExamination();
+            }
+        }.start();
     }
 }

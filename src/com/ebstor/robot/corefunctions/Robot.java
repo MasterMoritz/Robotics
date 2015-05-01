@@ -1,6 +1,8 @@
  package com.ebstor.robot.corefunctions;
 
 import java.util.EmptyStackException;
+
+import android.util.Log;
 import org.opencv.core.*;
 
 import android.widget.TextView;
@@ -332,22 +334,30 @@ public class Robot {
             com.append(e.toString());
     	}
     }
-    
-    public void turnToBall(Point point){
-    	try {
-	        double angle = Math.toDegrees(Math.atan2(point.y-0.0,point.x-0.0));
-            double turningAngle =  angle - 0.0;
-            if (turningAngle > 180) turningAngle = 360 - turningAngle;
-            if (turningAngle < -180) turningAngle = 360 + turningAngle;
-            turn(turningAngle);
-            com.append(angle + " | " + turningAngle + " | " + 0.0);
-    	} catch(Exception e) {
-    		com.append("failed to turn towards ball");
-            com.append(e.toString());
-    	}
+
+    /**
+     *
+     * @param egoBall egocentric ball coordinates
+     * @return degrees to turn to the robert
+     */
+    public static double degreesToBall(Point egoBall){
+        double turningAngle = Math.toDegrees(Math.atan2(egoBall.y,egoBall.x));
+        if (turningAngle > 180) turningAngle = 360 - turningAngle;
+        if (turningAngle < -180) turningAngle = 360 + turningAngle;
+        Log.v("Robot", "turning angle to ball: " + turningAngle);
+        return turningAngle;
+    }
+
+    /**
+     *
+     * @param egoBall egocentric ball coordinates
+     * @return distance in cm to the ball
+     */
+    public static double distanceToBall(Point egoBall) {
+        return Math.sqrt(Math.pow(egoBall.x,2) + Math.pow(egoBall.y,2));
     }
     
-    public double euclideanDistance(Location a, Location b) {
+    public static double euclideanDistance(Location a, Location b) {
         return Math.sqrt(Math.pow(a.getX()-b.getX(),2) + Math.pow(a.getY() - b.getY(),2));
     }
 
@@ -387,7 +397,7 @@ public class Robot {
     	return Math.toDegrees(Math.atan(l.getY()/l.getX()));
     }
     public double getAngleRad(Location l) {
-    	return Math.atan(l.getY()/l.getX());
+    	return Math.atan(l.getY() / l.getX());
     }
     
     public boolean mlineEncountered() {
@@ -447,6 +457,14 @@ public class Robot {
     	}
     	
     	stop();
+    }
+
+    public void openCage() {
+        com.raiseBar();
+    }
+
+    public void closeCage() {
+        com.lowerBar();
     }
     
     /** drives a certain distance and checks afterwards if condition is fulfilled */
