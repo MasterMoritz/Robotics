@@ -274,8 +274,8 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     }
                 }
                 if (ballIsLost) continue;
-
-                Point targetEgo = nearestBall;
+		// necessary so that turn and drive have the same target
+                Point targetEgo = new Point(nearestBall.x,nearestBall.y);
                 System.out.println("nearest point is = " + targetEgo.x + " | " + targetEgo.y);
                 robot.turn(Robot.degreesToBall(targetEgo));
 	    		driveAndCageBall(Robot.distanceToBall(targetEgo));
