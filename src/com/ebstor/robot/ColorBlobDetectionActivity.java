@@ -525,14 +525,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         new Thread() {
             @Override
             public void run() {
-            	System.out.println("start thread");
-                while(homographyMatrix == null) {
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
                 System.out.println("start examination");
                 secondExamination();
             }
