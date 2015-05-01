@@ -484,8 +484,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         EditText x = (EditText) findViewById(R.id.target_x);
         EditText y = (EditText) findViewById(R.id.target_y);
         
-        String sx = x.toString();
-        String sy = y.toString();
+        String sx = x.getText().toString();
+        String sy = y.getText().toString();
         
         Double dx;
         Double dy;
@@ -495,20 +495,21 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             Log.e(TAG,"no target specified");
             return;
         }
-        
+        System.out.println("parsing x and y of " + sx + " " + sy);
         // x20 should be parsed same as only 20
         try {
         	dx = Double.parseDouble(sx);
         } catch(Exception e) {
         	dx = Double.parseDouble(sx.substring(1));
         }
+        System.out.println("parsed x");
         // y20 should be parsed same as only 20
         try {
         	dy = Double.parseDouble(sy);
         } catch(Exception e) {
         	dy = Double.parseDouble(sy.substring(1));
         }
-        
+        System.out.println("parsed y");
         target = new Location(dx,dy);
         System.out.println("starting thread");
         new Thread() {
