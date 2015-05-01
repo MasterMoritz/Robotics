@@ -242,8 +242,9 @@ public class Robot {
     }
 
     public void turn(double degree) {
+    	System.out.println("now turning");
         if (degree != 0) {
-            long time = degreesToTime(degree - 50);
+            long time = degreesToTime(degree) - 50;
             if (time < 0) {
             	time = 0;
             }

@@ -5,9 +5,12 @@ import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
+import android.widget.TextView;
+
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
 import com.ebstor.robot.corefunctions.Location;
 import com.ebstor.robot.corefunctions.Robot;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -44,6 +47,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
+    public TextView textlog;
     /**
      * egocentric coordinates of nearest ball, null if no ball detected
      * this is updated by onCameraFrame ->
@@ -89,7 +93,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	robot.com.connect();
     	
         Log.i(TAG, "called onCreate");
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -99,6 +102,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
 
         mOpenCvCameraView.setCvCameraViewListener(this);
+        textlog = (TextView) findViewById(R.id.textView1);
+        robot.com.setTextLog(textlog);
+        robot.connect();
+        
 
     }
 
@@ -481,6 +488,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
     public void startExam2(View view) {
+    	System.out.println(robot.com.isConnected());
+    	///robot.com.setVelocity((byte)10,(byte) -10); test if turning works
         EditText x = (EditText) findViewById(R.id.target_x);
         EditText y = (EditText) findViewById(R.id.target_y);
         
