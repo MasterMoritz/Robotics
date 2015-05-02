@@ -108,10 +108,10 @@ public class Robot {
     }
 
     public void connect() {
-        com.connect();
+        if (!com.isConnected()) com.connect();
     }
     public void disconnect() {
-        com.disconnect();
+        if (com.isConnected()) com.disconnect();
     }
     public void stop() {
         com.stop();

@@ -40,5 +40,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TextView" />
+    <Button style="?android:attr/buttonStyleSmall" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="STOP" android:id="@+id/stop_button"
+            android:layout_gravity="left|bottom" android:onClick="stopExam2" android:clickable="true"/>
 
 </FrameLayout>

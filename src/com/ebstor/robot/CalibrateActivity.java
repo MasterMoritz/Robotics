@@ -52,12 +52,12 @@ public class CalibrateActivity extends MainActivity {
     }
 
     public void calibrateTranslation(View v) {
-        Integer actual = Integer.parseInt(realValue.getText().toString());
+        Double actual = Double.parseDouble(realValue.getText().toString());
         Robot.CM_PER_MILLISECOND = actual/CALIBRATION_DRIVE;
     }
 
     public void calibrateRotation(View v) {
-        Integer actual = Integer.parseInt(realValue.getText().toString());
+        Double actual = Double.parseDouble(realValue.getText().toString());
         Robot.DEGREE_PER_MILLISECOND = actual/CALIBRATION_TURN;
     }
 }

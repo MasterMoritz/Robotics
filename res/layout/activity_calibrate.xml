@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/realvalue"
             android:layout_marginTop="48dp"
-            android:text="enter real value" android:inputType="number" android:layout_below="@+id/calibrate_rotation"
+            android:inputType="number" android:layout_below="@+id/calibrate_rotation"
             android:layout_centerHorizontal="true"/>
     <Button
             android:layout_width="wrap_content"

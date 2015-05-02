@@ -25,9 +25,7 @@ import java.util.*;
 
 import static java.lang.Thread.sleep;
 
-public class ColorBlobDetectionActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
-
-    private Robot robot = null;
+public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
 
     private static final String  TAG              = "ColorBlobActivity";
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
@@ -44,12 +42,12 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
     private Scalar               greenBallHsv;
     private Scalar               redBallHsv;
     /** currently chosen blob color */
-    //private Scalar               mBlobColorRgba = new Scalar(0);
     private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
+    private Thread               procedureThread;
     /**
      * egocentric coordinates of nearest ball, null if no ball detected
      * this is updated by onCameraFrame ->
@@ -98,7 +96,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         Log.i(TAG, "called onCreate");
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
-        robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
+        //robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
         robot.connect();
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -169,7 +167,6 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
 
             if (!points.isEmpty()) {
                 lowestPointGreen = Collections.max(points, pointComparator);
-                nearestBall = lowestPointGreen;
                 lowestPointlist.add(new MatOfPoint(
                         lowestPointGreen,
                         new Point(lowestPointGreen.x - 1, lowestPointGreen.y),
@@ -211,17 +208,11 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                 Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
             }
 
-            nearestBall = null;//imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
+            nearestBall = imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
             if (nearestBall != null) {
                 ballLocationUpdated = true;
                 Log.v(TAG, "lowest point in egocentric coordinates: " + nearestBall.toString());
             }
-
-      /*Mat colorLabel = mRgba.submat(4, 68, 4, 68);
-        colorLabel.setTo(mBlobColorsRgba);
-
-        Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
-        mSpectrum.copyTo(spectrumLabel);*/
         }
 
         return mRgba;
@@ -274,9 +265,10 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
                     }
                 }
                 if (ballIsLost) continue;
-		// necessary so that turn and drive have the same target
+
+		        // necessary so that turn and drive have the same target
                 Point targetEgo = new Point(nearestBall.x,nearestBall.y);
-                System.out.println("nearest point is = " + targetEgo.x + " | " + targetEgo.y);
+                Log.i(TAG, "nearest point is = " + targetEgo.x + " | " + targetEgo.y);
                 robot.turn(Robot.degreesToBall(targetEgo));
 	    		driveAndCageBall(Robot.distanceToBall(targetEgo));
 	    		return true;
@@ -328,7 +320,7 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
      * whole procedure required to pass the second examination
      */
     public void secondExamination(){
-    	System.out.println("searching envorionment");
+    	System.out.println("searching environment");
     	searchEnvironment();
     	System.out.println("get ball to target");
     	ballToTarget();
@@ -522,12 +514,18 @@ public class ColorBlobDetectionActivity extends Activity implements OnTouchListe
         System.out.println("parsed y");
         target = new Location(dx,dy);
         System.out.println("starting thread");
-        new Thread() {
+        procedureThread = new Thread() {
             @Override
             public void run() {
                 System.out.println("start examination");
                 secondExamination();
             }
-        }.start();
+        };
+        procedureThread.start();
+    }
+
+    public void stopExam2(View view) {
+        procedureThread.stop();
+        robot.stop();
     }
 }

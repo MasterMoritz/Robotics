@@ -32,7 +32,8 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button powah = (Button) findViewById(R.id.powah);
-        robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
+        if (robot == null) robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
+        //robot.connect();
         powah.setOnTouchListener(new OnTouchListener() {
 
             @Override
@@ -117,26 +118,12 @@ public class MainActivity extends Activity {
 
 
     public void makeASquare(View v) {
-    	/*
+
         Double dist = Double.valueOf(distance.getText().toString());
         for (int i = 0; i < 4; i++) {
             robot.drive(dist);
             robot.turn(-90);
-        }*/
-    	robot.driveUntil(21, new SensorCondition(robot) {
-            int[] s_new = robot.com.getSensors();
-            int s_old;
-
-            @Override
-            public boolean holds() {
-                s_old = s_new[0];
-                s_new = robot.com.getSensors();
-                if (s_new[0] - s_old >= 20) {
-                    return false;
-                }
-                return false;
-            }
-        });
+        }
     }
     
     public void berserk(View v) {
