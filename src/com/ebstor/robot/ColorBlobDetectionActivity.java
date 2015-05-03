@@ -247,7 +247,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public boolean turnLookCage(){
         for(int i = 0; i < 8; i++){
     		robot.turn(45);
-    		if(ballDetected()){
+    		// maybe put a sleep in here to give the detector time
+            if(ballDetected()){
     			System.out.println("Detected ball");
                 // now wait until the ball location has been updated again
                 long timeSinceDetected = 0;

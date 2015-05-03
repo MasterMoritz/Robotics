@@ -119,5 +119,18 @@
         android:layout_alignParentLeft="true"
         android:onClick="makeASquare"
         android:text="@string/make_a_square" />
+    <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="lower bar"
+            android:id="@+id/testbutton"
+            android:layout_alignTop="@+id/makeASqaure" android:layout_alignRight="@+id/btConnect"
+            android:layout_alignEnd="@+id/btConnect"
+            android:onClick="lowerBar"/>
+    <Button style="?android:attr/buttonStyleSmall" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="raise bar" android:id="@+id/button2"
+            android:onClick="raiseBar" android:layout_below="@+id/distancebutton"
+            android:layout_alignLeft="@+id/btSensors" android:layout_alignStart="@+id/btSensors"/>
 
 </RelativeLayout>

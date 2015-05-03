@@ -135,4 +135,13 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this,ColorBlobDetectionActivity.class);
         startActivity(intent);
     }
+
+
+    public void raiseBar(View view) {
+        robot.openCage();
+    }
+
+    public void lowerBar(View view) {
+        robot.closeCage();
+    }
 }

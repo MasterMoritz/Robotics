@@ -75,6 +75,18 @@ public class Communicator {
         return read();
     }
 
+    public void setBar(byte value) {
+        write(new byte[] { 'o', value, '\r', '\n' });
+    }
+
+    public void setBarDown() {
+        setBar((byte)0);
+        for (int i = 0; i < 10; i++) lowerBar();
+    }
+
+    public void setBarUp() {
+        setBar((byte)255);
+    }
 
     public void setVelocity(byte left, byte right) {
         write(

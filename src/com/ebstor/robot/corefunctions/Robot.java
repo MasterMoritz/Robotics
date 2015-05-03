@@ -460,11 +460,23 @@ public class Robot {
     }
 
     public void openCage() {
-        com.raiseBar();
+        com.setBarUp();
+        // just to be sure :P
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void closeCage() {
-        com.lowerBar();
+        com.setBarDown();
+        // just to be sure :P
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
     
     /** drives a certain distance and checks afterwards if condition is fulfilled */
