@@ -321,7 +321,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * whole procedure required to pass the second examination
      */
     public void secondExamination(){
-    	System.out.println("searching environment");
+    	robot.robotLocation = new Location(0,0);
+        System.out.println("searching environment");
     	searchEnvironment();
     	System.out.println("get ball to target");
     	ballToTarget();
