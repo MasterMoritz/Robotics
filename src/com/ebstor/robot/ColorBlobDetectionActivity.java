@@ -294,7 +294,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void returnToStart(){
     	Location start = new Location(0,0);
     	robot.turnToLocation(start);
-    	robot.drive(Math.sqrt(Robot.euclideanDistance(start, robot.robotLocation)));
+    	robot.drive(Robot.euclideanDistance(start, robot.robotLocation));
         robot.turn(-robot.robotLocation.getTheta());
     }
     
