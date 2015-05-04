@@ -178,7 +178,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
         /* detect red balls*/
 
-            mDetector.setHsvColor(redBallHsv);
+          /*  mDetector.setHsvColor(redBallHsv);
             mDetector.process(mRgba);
             redBallContours = mDetector.getContours();
             Log.e(TAG, "red contours count: " + redBallContours.size());
@@ -198,7 +198,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         new Point(lowestPointRed.x + 1, lowestPointRed.y),
                         new Point(lowestPointRed.x, lowestPointRed.y - 1)));
                 Imgproc.drawContours(mRgba, lowestPointlist, -1, LOWEST_POINT_RGBA);
-            }
+            }*/
 
 
         /* detect currently set color for calibration */
@@ -208,7 +208,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
             }
 
-            nearestBall = imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
+            //nearestBall = imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
+            nearestBall = imageCoordToEgoCoord(lowestPointGreen);
             if (nearestBall != null) {
                 ballLocationUpdated = true;
                 Log.v(TAG, "lowest point in egocentric coordinates: " + nearestBall.toString());
