@@ -203,7 +203,7 @@ public class Robot {
         com.stop();
         long dt = System.currentTimeMillis() - t0;
         currentDistance = timeToDistance(dt - t0);
-        robotLocation.translate(dt*Integer.signum(velocity));
+        robotLocation.translate(dt * Integer.signum(velocity));
         
         sleep_h(100);
         //drive back if driven too much cause of overheads
@@ -244,17 +244,32 @@ public class Robot {
 
     public void turn(double degree) {
     	System.out.println("now turning");
-        if (degree != 0) {
-            long time = degreesToTime(degree) - 50;
+        for (int i = 0; i < Math.abs(degree/45); i++) {
+            if (degree != 0) {
+                long time = degreesToTime(45) - 50;
+                if (time < 0) {
+                    time = 0;
+                }
+                if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
+                else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
+                sleep_h(time);
+                com.stop();
+                robotLocation.rotate(Math.signum(degree) * 45);
+            }
+        }
+        if (degree%45 != 0) {
+            long time = degreesToTime(degree%45) - 50;
             if (time < 0) {
-            	time = 0;
+                time = 0;
             }
             if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
             else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
             sleep_h(time);
             com.stop();
-            robotLocation.rotate(degree);
+            robotLocation.rotate(Math.signum(degree)*(degree%45));
         }
+
+
 
     }
 

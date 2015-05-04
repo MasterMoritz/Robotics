@@ -24,7 +24,7 @@
         android:layout_gravity="center_horizontal|top"
         android:clickable="true"
         android:inputType="numberDecimal"
-        android:text="x100" />
+        android:text="x0" />
 
     <EditText
         android:id="@+id/target_y"
@@ -33,7 +33,7 @@
         android:layout_gravity="end|top"
         android:clickable="true"
         android:inputType="numberDecimal"
-        android:text="y100" />
+        android:text="y0" />
 
     <TextView
         android:id="@+id/textView1"

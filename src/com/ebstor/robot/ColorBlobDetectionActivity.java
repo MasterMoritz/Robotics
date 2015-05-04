@@ -247,10 +247,14 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     public boolean turnLookCage(){
         for(int i = 0; i < 8; i++){
-    		robot.turn(45);
-    		// maybe put a sleep in here to give the detector time
             if(ballDetected()){
-    			System.out.println("Detected ball");
+                Log.v(TAG,"ball detected");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Detected ball");
                 // now wait until the ball location has been updated again
                 long timeSinceDetected = 0;
                 boolean ballIsLost = false;
@@ -267,14 +271,23 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     }
                 }
                 if (ballIsLost) continue;
-
-		        // necessary so that turn and drive have the same target
                 Point targetEgo = new Point(nearestBall.x,nearestBall.y);
+                // necessary so that turn and drive have the same target
                 Log.i(TAG, "nearest point is = " + targetEgo.x + " | " + targetEgo.y);
+                Log.v(TAG, "turning degrees: " + Robot.degreesToBall(targetEgo));
                 robot.turn(Robot.degreesToBall(targetEgo));
-	    		driveAndCageBall(Robot.distanceToBall(targetEgo));
-	    		return true;
-    		}
+                robot.turn(-7);
+                driveAndCageBall(Robot.distanceToBall(targetEgo));
+                return true;
+
+    		} else {
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                robot.turn(45);
+            }
     	}
     	return false;
     }
@@ -343,7 +356,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Mat dest = new Mat(1, 1, CvType.CV_32FC2);
         src.put(0, 0, imgPoint.x, imgPoint.y);
         Core.perspectiveTransform(src, dest, homographyMatrix);
-        Point dest_point = new Point(dest.get(0, 0)[1]/10, dest.get(0, 0)[0]/10);
+        Point dest_point = new Point(dest.get(0, 0)[1]/10, -dest.get(0, 0)[0]/10);
         Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
         return dest_point;
     }
