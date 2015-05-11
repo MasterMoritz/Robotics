@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
+import com.ebstor.robot.corefunctions.Beacon;
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
 import com.ebstor.robot.corefunctions.Location;
 import com.ebstor.robot.corefunctions.Robot;
@@ -176,30 +177,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 Imgproc.drawContours(mRgba, lowestPointlist, -1, LOWEST_POINT_RGBA);
             }
 
-        /* detect red balls*/
-
-          /*  mDetector.setHsvColor(redBallHsv);
-            mDetector.process(mRgba);
-            redBallContours = mDetector.getContours();
-            Log.e(TAG, "red contours count: " + redBallContours.size());
-            Imgproc.drawContours(mRgba, redBallContours, -1, CONTOUR_COLOR);
-
-            points.clear();
-            for (MatOfPoint m : redBallContours)
-                points.addAll(m.toList());
-
-            if (!points.isEmpty()) {
-                lowestPointRed = Collections.max(points, pointComparator);
-
-                lowestPointlist.clear();
-                lowestPointlist.add(new MatOfPoint(
-                        lowestPointRed,
-                        new Point(lowestPointRed.x - 1, lowestPointRed.y),
-                        new Point(lowestPointRed.x + 1, lowestPointRed.y),
-                        new Point(lowestPointRed.x, lowestPointRed.y - 1)));
-                Imgproc.drawContours(mRgba, lowestPointlist, -1, LOWEST_POINT_RGBA);
-            }*/
-
 
         /* detect currently set color for calibration */
             if (mBlobColorHsv != null) {
@@ -208,7 +185,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
             }
 
-            //nearestBall = imageCoordToEgoCoord(getLowestPoint(lowestPointGreen, lowestPointRed));
             nearestBall = imageCoordToEgoCoord(lowestPointGreen);
             if (nearestBall != null) {
                 ballLocationUpdated = true;
@@ -217,6 +193,71 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
 
         return mRgba;
+    }
+
+
+    private List<Point> getTriple(MatOfPoint contour) {
+        List<Point> points = contour.toList();
+        Point lowest, rightest, leftest;
+        lowest = points.get(0);
+        rightest = points.get(0);
+        leftest = points.get(0);
+        for (Point p: points) {
+            if (p.y > lowest.y) lowest = p;
+            if (p.x > rightest.x) rightest = p;
+            if (p.x < leftest.x) leftest = p;
+        }
+        List<Point> result = new ArrayList<>();
+        result.add(lowest);
+        result.add(leftest);
+        result.add(rightest);
+        return result;
+    }
+
+    /**
+     *
+     * @return -1 if triple2 is above triple1, 1 if triple2 is below triple1, 0 if contours do not belong to same beacon
+     */
+    private int compareContours(List<Point> triple1, List<Point> triple2) {
+        double areaX = Math.abs(triple1.get(1).x - triple1.get(2).x) + 10;
+        double x = Math.abs(triple2.get(1).x - triple2.get(2).x)/2 + triple2.get(1).x;
+        if(x > (triple1.get(1).x - areaX) && x < (triple1.get(1).x + 2 * areaX)){
+            return (int)(Math.signum(triple1.get(0).y - triple2.get(0).y));
+        }
+        return 0;
+    }
+
+    public void relocate() {
+
+    }
+    /**
+     *
+     * @param beacon the beacon to be detected
+     * @return egocentric coordinates of beacon or null if not present
+     */
+    public Point findBeacon(Beacon beacon) {
+        List<MatOfPoint> contours;
+        switch (beacon) {
+            case BLUE_RED:
+                /* red */
+                mDetector.setHsvColor(beacon.hsvColor[1]);
+                break;
+            case RED_BLACK:
+                break;
+            case PURPLE_RED:
+                break;
+            case BLACK_RED:
+                break;
+            case RED_BLUE:
+                break;
+            case BLACK_BLUE:
+                break;
+            case PURPLE_BLUE:
+                break;
+            case BLUE_BLACK:
+                break;
+        }
+        return null;
     }
 
     /**
