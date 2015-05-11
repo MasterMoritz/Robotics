@@ -288,6 +288,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     public boolean turnLookCage(){
         for(int i = 0; i < 8; i++){
+        	
+        	//detected ball
             if(ballDetected()){
                 Log.v(TAG,"ball detected");
                 try {
@@ -321,6 +323,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 driveAndCageBall(Robot.distanceToBall(targetEgo));
                 return true;
 
+            //no ball detected, so turn 45 deg and try again
     		} else {
                 try {
                     sleep(1000);
@@ -561,20 +564,19 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         } catch(Exception e) {
         	dx = Double.parseDouble(sx.substring(1));
         }
-        System.out.println("parsed x");
+
         // y20 should be parsed same as only 20
         try {
         	dy = Double.parseDouble(sy);
         } catch(Exception e) {
         	dy = Double.parseDouble(sy.substring(1));
         }
-        System.out.println("parsed y");
+
         target = new Location(dx,dy);
-        System.out.println("starting thread");
+
         procedureThread = new Thread() {
             @Override
             public void run() {
-                System.out.println("start examination");
                 secondExamination();
             }
         };

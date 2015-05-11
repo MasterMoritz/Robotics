@@ -3,6 +3,7 @@
 import java.util.EmptyStackException;
 
 import android.util.Log;
+
 import org.opencv.core.*;
 
 import android.widget.TextView;
@@ -28,11 +29,13 @@ public class Robot {
     /** cm travelled per millisecond for velocity */
     public static double CM_PER_MILLISECOND = 0.0136;
     
-    /** considering the 50ms wait buffer this is the minimum angle that has to be turned */
-    private static int MINIMUM_TURN = 5;
+    /** considering the 50ms wait buffer this is the minimum angle that has to be turned <br>
+     * is set in constructor */
+    private static double MINIMUM_TURN ;
     
-    /** considering the 50ms wait buffer this is the minimum distance that has to be driven */
-    private static int MINIMUM_DRIVE = 1;
+    /** considering the 50ms wait buffer this is the minimum distance that has to be driven <br>
+     * is set in constructor */
+    private static double MINIMUM_DRIVE;
     
     /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
     private long DRIVE_INTERVAL = 500;
@@ -77,6 +80,9 @@ public class Robot {
         robotLocation = new Location(0, 0, 0);
         goal = new Location(0, 0, 0);
         this.com = new Communicator(driver);
+        
+        MINIMUM_TURN = DEGREE_PER_MILLISECOND * 50;
+        MINIMUM_DRIVE = CM_PER_MILLISECOND * 50;
     }
 
     /**
@@ -243,30 +249,37 @@ public class Robot {
     }
 
     public void turn(double degree) {
-    	System.out.println("now turning");
-        for (int i = 0; i < Math.abs(degree/45); i++) {
+    	if (Math.abs(degree) < MINIMUM_TURN) {
+    		Log.i("Robot", "can't turn " + degree + " because it is too small");
+    		return;
+    	}
+    	
+    	int velocity = (int)(Math.signum(degree))*VELOCITY;
+    	
+    	Log.i("Robot", "Turn " + degree + " degrees");
+        for (int i = 0; i < Math.abs((int)(degree)/45); i++) {
             if (degree != 0) {
                 long time = degreesToTime(45) - 50;
                 if (time < 0) {
                     time = 0;
                 }
-                if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
-                else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
+                com.setVelocity((byte)-velocity,(byte)velocity);
                 sleep_h(time);
                 com.stop();
                 robotLocation.rotate(Math.signum(degree) * 45);
             }
         }
-        if (degree%45 != 0) {
-            long time = degreesToTime(degree%45) - 50;
+        
+        double remainder = degree % 45;
+        if (Math.abs(remainder) > MINIMUM_TURN) {
+            long time = degreesToTime(remainder) - 50;
             if (time < 0) {
                 time = 0;
             }
-            if (degree < 0) com.setVelocity((byte)VELOCITY,(byte) -VELOCITY);
-            else com.setVelocity((byte)-VELOCITY,(byte)VELOCITY);
+            com.setVelocity((byte)-velocity,(byte)velocity);
             sleep_h(time);
             com.stop();
-            robotLocation.rotate(Math.signum(degree)*(degree%45));
+            robotLocation.rotate(Math.signum(degree)*remainder);
         }
 
 
