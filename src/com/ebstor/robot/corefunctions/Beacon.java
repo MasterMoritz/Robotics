@@ -31,10 +31,10 @@ public enum Beacon {
         PURPLE_BLUE.coordinates = new Point(-125,0);
         BLUE_BLACK.coordinates = new Point(-125,125);
 
-        Scalar red = new Scalar(2,255,140);
-        Scalar blue = new Scalar(138,255,95);
-        Scalar purple = new Scalar(215,144,95);
-        Scalar black = new Scalar(45,255,0);
+        Scalar red = BeaconColor.RED.hsvColor;
+        Scalar blue = BeaconColor.BLUE.hsvColor;
+        Scalar purple = BeaconColor.PURPLE.hsvColor;
+        Scalar black = BeaconColor.BLACK.hsvColor;
 
         BLUE_RED.hsvColor = new Scalar[]{blue, red};
         RED_BLACK.hsvColor = new Scalar[]{red, black};

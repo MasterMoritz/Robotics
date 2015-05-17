@@ -7,10 +7,7 @@ import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
-import com.ebstor.robot.corefunctions.Beacon;
-import com.ebstor.robot.corefunctions.ColorBlobDetector;
-import com.ebstor.robot.corefunctions.Location;
-import com.ebstor.robot.corefunctions.Robot;
+import com.ebstor.robot.corefunctions.*;
 import jp.ksksue.driver.serial.FTDriver;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -232,32 +229,22 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
     /**
      *
-     * @param beacon the beacon to be detected
+     * @param beaconColor the beacon to be detected
      * @return egocentric coordinates of beacon or null if not present
      */
-    public Point findBeacon(Beacon beacon) {
-        List<MatOfPoint> contours;
-        switch (beacon) {
-            case BLUE_RED:
-                /* red */
-                mDetector.setHsvColor(beacon.hsvColor[1]);
+    public List<Beacon> findBeacon(BeaconColor beaconColor) {
+        List<Beacon> result = new ArrayList<>();
+        switch (beaconColor) {
+            case RED:
                 break;
-            case RED_BLACK:
+            case BLUE:
                 break;
-            case PURPLE_RED:
+            case PURPLE:
                 break;
-            case BLACK_RED:
-                break;
-            case RED_BLUE:
-                break;
-            case BLACK_BLUE:
-                break;
-            case PURPLE_BLUE:
-                break;
-            case BLUE_BLACK:
+            case BLACK:
                 break;
         }
-        return null;
+        return result;
     }
 
     /**
