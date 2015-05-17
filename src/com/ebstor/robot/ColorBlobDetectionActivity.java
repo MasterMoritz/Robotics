@@ -42,6 +42,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /** currently chosen blob color */
     private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
+    private BeaconDetector       beaconDetector;
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
@@ -131,6 +132,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mDetector = new ColorBlobDetector();
+        beaconDetector = new BeaconDetector(mDetector);
         mSpectrum = new Mat();
         SPECTRUM_SIZE = new Size(200, 64);
         CONTOUR_COLOR = new Scalar(255,0,0,255);
@@ -192,59 +194,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         return mRgba;
     }
 
-
-    private List<Point> getTriple(MatOfPoint contour) {
-        List<Point> points = contour.toList();
-        Point lowest, rightest, leftest;
-        lowest = points.get(0);
-        rightest = points.get(0);
-        leftest = points.get(0);
-        for (Point p: points) {
-            if (p.y > lowest.y) lowest = p;
-            if (p.x > rightest.x) rightest = p;
-            if (p.x < leftest.x) leftest = p;
-        }
-        List<Point> result = new ArrayList<>();
-        result.add(lowest);
-        result.add(leftest);
-        result.add(rightest);
-        return result;
-    }
-
-    /**
-     *
-     * @return -1 if triple2 is above triple1, 1 if triple2 is below triple1, 0 if contours do not belong to same beacon
-     */
-    private int compareContours(List<Point> triple1, List<Point> triple2) {
-        double areaX = Math.abs(triple1.get(1).x - triple1.get(2).x) + 10;
-        double x = Math.abs(triple2.get(1).x - triple2.get(2).x)/2 + triple2.get(1).x;
-        if(x > (triple1.get(1).x - areaX) && x < (triple1.get(1).x + 2 * areaX)){
-            return (int)(Math.signum(triple1.get(0).y - triple2.get(0).y));
-        }
-        return 0;
-    }
-
     public void relocate() {
-
-    }
-    /**
-     *
-     * @param beaconColor the beacon to be detected
-     * @return egocentric coordinates of beacon or null if not present
-     */
-    public List<Beacon> findBeacon(BeaconColor beaconColor) {
-        List<Beacon> result = new ArrayList<>();
-        switch (beaconColor) {
-            case RED:
-                break;
-            case BLUE:
-                break;
-            case PURPLE:
-                break;
-            case BLACK:
-                break;
-        }
-        return result;
+        // TODO implement
+        beaconDetector.process(mRgba);
+        List<Beacon> beacons = beaconDetector.getBeacons();
     }
 
     /**
