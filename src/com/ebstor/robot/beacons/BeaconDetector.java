@@ -176,7 +176,7 @@ public class BeaconDetector {
      * @return -1 if triple2 is above triple1, 1 if triple2 is below triple1, 0 if contours do not belong to same beacon
      */
     private int compareContours(Point[] triple1, Point[] triple2) {
-        double areaX = Math.abs(triple1[1].x - triple1[2].x) + 10;
+        double areaX = Math.abs(triple1[1].x - triple1[2].x)/2;
         double x = Math.abs(triple2[1].x - triple2[2].x)/2 + triple2[1].x;
         if (x > (triple1[1].x - areaX) && x < (triple1[1].x + 2 * areaX))
             return (int)(Math.signum(triple1[0].y - triple2[0].y));
