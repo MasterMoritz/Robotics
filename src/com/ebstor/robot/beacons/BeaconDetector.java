@@ -58,33 +58,42 @@ public class BeaconDetector {
             for (MatOfPoint contour: contours)
                 beaconContours.add(new BeaconContour(contour));
         }
-        /* compare every contour with every (differently colored) contour */
-        for (int i = 0; i < values.length - 1; i++) {
-            for (BeaconContour beaconContour: beaconContours.get(values[i])) {
-                for (BeaconContour beaconContour2: beaconContours.get(values[i+1])) {
-                    int comp = compareContours(beaconContour.getTriple(),beaconContour2.getTriple());
-                    if (comp != 0)
-                        // every beacon has red or blue in it
-                        switch(values[i]) {
-                            case RED:
-                            	Beacon beaconRed = findRedBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
-                            	if(beaconRed != null){
-                                    beaconsDetected.add(beaconRed);
-                            	}
-                                break;
-                            case BLUE:
-                            	Beacon beaconBlue = findBlueBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
-                            	if(beaconBlue != null){
-                            		beaconsDetected.add(beaconBlue);
-                            	}
-                                break;
+        /* compare every red contour with every (differently colored) contour */
+        List<BeaconContour> redContours = beaconContours.get(BeaconColor.RED);
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != BeaconColor.RED) {
+                for (BeaconContour beaconContour2 : beaconContours.get(values[i])) {
+                    for (BeaconContour beaconContour: redContours) {
+                        int comp = compareContours(beaconContour.getTriple(), beaconContour2.getTriple());
+                        if (comp != 0) {
+                            Beacon beaconRed = findRedBeacons(comp, values[i], beaconContour.getTriple(), beaconContour2.getTriple());
+                            if (beaconRed != null) {
+                                beaconsDetected.add(beaconRed);
+                            }
                         }
+                    }
+                }
+            }
+        }
+        /* compare every blue contour with every (differently colored) contour */
+        List <BeaconContour> blueContours = beaconContours.get(BeaconColor.BLUE);
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != BeaconColor.BLUE) {
+                for (BeaconContour beaconContour2 : beaconContours.get(values[i])) {
+                    for (BeaconContour beaconContour: blueContours) {
+                        int comp = compareContours(beaconContour.getTriple(), beaconContour2.getTriple());
+                        if (comp != 0) {
+                            Beacon beaconBlue = findBlueBeacons(comp, values[i], beaconContour.getTriple(), beaconContour2.getTriple());
+                            if (beaconBlue != null) {
+                                beaconsDetected.add(beaconBlue);
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    /* there are separate methods for all different colors */
 
     private Beacon findRedBeacons(int comp, BeaconColor color, Point[] redTriple, Point[] triple2) {
         // if comp < 0 then color is above red, triple2 is above triple1
