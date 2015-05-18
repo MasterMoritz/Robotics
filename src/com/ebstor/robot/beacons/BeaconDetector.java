@@ -17,7 +17,6 @@ import java.util.*;
 public class BeaconDetector {
 
     private List<Beacon> beaconsDetected;
-    private Pair<Beacon,Beacon> significantBeacons;
     private ColorBlobDetector blobDetector;
     private Map<BeaconColor,List<BeaconContour>> beaconContours;
 
@@ -29,6 +28,7 @@ public class BeaconDetector {
     public Pair<Beacon, Beacon> getBeacons() {
         // enums are ordered by their ordinals, this works as long as they are ordered correctly in the declaration
         Collections.sort(beaconsDetected);
+        Pair<Beacon, Beacon> significantBeacons;
         try {
             significantBeacons = new Pair<>(beaconsDetected.get(0),beaconsDetected.get(1));
         } catch (IndexOutOfBoundsException e) {
