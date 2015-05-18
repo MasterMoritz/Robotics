@@ -42,17 +42,23 @@ public class BeaconDetector {
                 beaconContours.add(new BeaconContour(contour));
         }
         /* compare every contour with every (differently colored) contour */
-        for (int i = 0; i < values.length-1; i++) {
+        for (int i = 0; i < values.length - 1; i++) {
             for (BeaconContour beaconContour: beaconContours.get(values[i])) {
                 for (BeaconContour beaconContour2: beaconContours.get(values[i+1])) {
                     int comp = compareContours(beaconContour.getTriple(),beaconContour2.getTriple());
                     if (comp != 0)
                         switch(values[i]) {
                             case RED:
-                                findRedBeacons(comp, values[i + 1]);
+                            	Beacon beaconRed = findRedBeacons(comp, values[i + 1]);
+                            	if(beaconRed != null){
+                            		beaconsDetected.add(beaconRed);
+                            	}
                                 break;
                             case BLUE:
-                                findBlueBeacons(comp, values[i + 1]);
+                            	Beacon beaconBlue = findBlueBeacons(comp, values[i + 1]);
+                            	if(beaconBlue != null){
+                            		beaconsDetected.add(beaconBlue);
+                            	}
                                 break;
                         }
                 }
