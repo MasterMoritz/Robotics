@@ -16,15 +16,20 @@ import java.util.*;
  */
 public class BeaconDetector {
 
-    private Pair<Beacon,Beacon> beaconsDetected;
+    private List<Beacon> beaconsDetected;
+    private Pair<Beacon,Beacon> significantBeacons;
     private ColorBlobDetector blobDetector;
     private Map<BeaconColor,List<BeaconContour>> beaconContours;
 
     public Pair<Beacon, Beacon> getBeacons() {
-        return beaconsDetected;
+        // enums are ordered by their ordinals, this works as long as they are ordered correctly in the declaration
+        Collections.sort(beaconsDetected);
+        significantBeacons = new Pair<>(beaconsDetected.get(0),beaconsDetected.get(1));
+        return significantBeacons;
     }
 
     public BeaconDetector(ColorBlobDetector blobDetector) {
+        this.beaconsDetected = new LinkedList<>();
         this.blobDetector = blobDetector;
         this.beaconContours = new EnumMap<>(BeaconColor.class);
         for (BeaconColor color: BeaconColor.values())
@@ -33,6 +38,7 @@ public class BeaconDetector {
 
 
     public void process(Mat rgbaImage) {
+        beaconsDetected.clear();
         BeaconColor[] values = BeaconColor.values();
         for (BeaconColor beaconColor: values) {
             Scalar hsvColor = beaconColor.hsvColor;
@@ -54,13 +60,13 @@ public class BeaconDetector {
                             case RED:
                             	Beacon beaconRed = findRedBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
                             	if(beaconRed != null){
-                                    //beaconsDetected.add(beaconRed);
+                                    beaconsDetected.add(beaconRed);
                             	}
                                 break;
                             case BLUE:
                             	Beacon beaconBlue = findBlueBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
                             	if(beaconBlue != null){
-                            		//beaconsDetected.add(beaconBlue);
+                            		beaconsDetected.add(beaconBlue);
                             	}
                                 break;
                         }
@@ -78,27 +84,27 @@ public class BeaconDetector {
             case BLUE:
                 if (comp < 0) {
                     result = Beacon.BLUE_RED;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
                 }
                 else {
                    result = Beacon.RED_BLUE;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
                 }
                 break;
             case PURPLE:
                 if (comp < 0 ) {
                     result = Beacon.PURPLE_RED;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
                 }
                 break;
             case BLACK:
                 if (comp < 0) {
                     result = Beacon.BLACK_RED;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
                 }
                 else {
                     result = Beacon.RED_BLACK;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
                 }
                 break;
             default:
@@ -116,17 +122,17 @@ public class BeaconDetector {
             case BLACK:
                 if (comp < 0) {
                     result = Beacon.BLACK_BLUE;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(blueTriple[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(blueTriple[0]);
                 }
                 else {
                     result = Beacon.BLUE_BLACK;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
                 }
                 break;
             case PURPLE:
                 if (comp < 0) {
                     result = Beacon.PURPLE_BLUE;
-                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
                 }
                 break;
             default:
