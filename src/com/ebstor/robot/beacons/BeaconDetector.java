@@ -1,5 +1,6 @@
 package com.ebstor.robot.beacons;
 
+import android.util.Pair;
 import com.ebstor.robot.ColorBlobDetectionActivity;
 import com.ebstor.robot.corefunctions.ColorBlobDetector;
 import org.opencv.core.Mat;
@@ -15,16 +16,15 @@ import java.util.*;
  */
 public class BeaconDetector {
 
-    private List<Beacon> beaconsDetected;
+    private Pair<Beacon,Beacon> beaconsDetected;
     private ColorBlobDetector blobDetector;
     private Map<BeaconColor,List<BeaconContour>> beaconContours;
 
-    public List<Beacon> getBeacons() {
+    public Pair<Beacon, Beacon> getBeacons() {
         return beaconsDetected;
     }
 
     public BeaconDetector(ColorBlobDetector blobDetector) {
-        this.beaconsDetected = new ArrayList<>();
         this.blobDetector = blobDetector;
         this.beaconContours = new EnumMap<>(BeaconColor.class);
         for (BeaconColor color: BeaconColor.values())
@@ -33,7 +33,6 @@ public class BeaconDetector {
 
 
     public void process(Mat rgbaImage) {
-        beaconsDetected.clear();
         BeaconColor[] values = BeaconColor.values();
         for (BeaconColor beaconColor: values) {
             Scalar hsvColor = beaconColor.hsvColor;
@@ -55,13 +54,13 @@ public class BeaconDetector {
                             case RED:
                             	Beacon beaconRed = findRedBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
                             	if(beaconRed != null){
-                                    beaconsDetected.add(beaconRed);
+                                    //beaconsDetected.add(beaconRed);
                             	}
                                 break;
                             case BLUE:
                             	Beacon beaconBlue = findBlueBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
                             	if(beaconBlue != null){
-                            		beaconsDetected.add(beaconBlue);
+                            		//beaconsDetected.add(beaconBlue);
                             	}
                                 break;
                         }

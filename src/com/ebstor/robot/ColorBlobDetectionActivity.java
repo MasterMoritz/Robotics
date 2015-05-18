@@ -2,6 +2,7 @@ package com.ebstor.robot;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
@@ -196,7 +197,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void relocate() {
         // TODO implement
         beaconDetector.process(mRgba);
-        List<Beacon> beacons = beaconDetector.getBeacons();
+        Pair<Beacon,Beacon> beacons = beaconDetector.getBeacons();
     }
 
     /**
