@@ -1,4 +1,4 @@
-package com.ebstor.robot.corefunctions;
+package com.ebstor.robot.beacons;
 
 import org.opencv.core.Scalar;
 

@@ -1,5 +1,7 @@
-package com.ebstor.robot.corefunctions;
+package com.ebstor.robot.beacons;
 
+import com.ebstor.robot.ColorBlobDetectionActivity;
+import com.ebstor.robot.corefunctions.ColorBlobDetector;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -9,6 +11,7 @@ import java.util.*;
 
 /**
  * Created by johannes on 5/17/15.
+ * process an rgba frame and store the detected beacons
  */
 public class BeaconDetector {
 
@@ -47,15 +50,16 @@ public class BeaconDetector {
                 for (BeaconContour beaconContour2: beaconContours.get(values[i+1])) {
                     int comp = compareContours(beaconContour.getTriple(),beaconContour2.getTriple());
                     if (comp != 0)
+                        // every beacon has red or blue in it
                         switch(values[i]) {
                             case RED:
-                            	Beacon beaconRed = findRedBeacons(comp, values[i + 1]);
+                            	Beacon beaconRed = findRedBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
                             	if(beaconRed != null){
-                            		beaconsDetected.add(beaconRed);
+                                    beaconsDetected.add(beaconRed);
                             	}
                                 break;
                             case BLUE:
-                            	Beacon beaconBlue = findBlueBeacons(comp, values[i + 1]);
+                            	Beacon beaconBlue = findBlueBeacons(comp, values[i + 1],beaconContour.getTriple(),beaconContour2.getTriple());
                             	if(beaconBlue != null){
                             		beaconsDetected.add(beaconBlue);
                             	}
@@ -68,40 +72,68 @@ public class BeaconDetector {
 
     /* there are separate methods for all different colors */
 
-    private Beacon findRedBeacons(int comp, BeaconColor color) {
-        /* if comp < 0 then color is above red */
+    private Beacon findRedBeacons(int comp, BeaconColor color, Point[] redTriple, Point[] triple2) {
+        // if comp < 0 then color is above red, triple2 is above triple1
+        Beacon result = null;
         switch(color) {
             case BLUE:
-                if (comp < 0) return Beacon.BLUE_RED;
-                else return Beacon.RED_BLUE;
+                if (comp < 0) {
+                    result = Beacon.BLUE_RED;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
+                }
+                else {
+                   result = Beacon.RED_BLUE;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                }
+                break;
             case PURPLE:
-                if (comp < 0 ) return Beacon.PURPLE_RED;
-                else return null;
+                if (comp < 0 ) {
+                    result = Beacon.PURPLE_RED;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
+                }
+                break;
             case BLACK:
-                if (comp < 0) return Beacon.BLACK_RED;
-                else return Beacon.RED_BLACK;
+                if (comp < 0) {
+                    result = Beacon.BLACK_RED;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(redTriple[0]);
+                }
+                else {
+                    result = Beacon.RED_BLACK;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                }
+                break;
             default:
                 return null;
         }
+        return result;
     }
 
-    private Beacon findBlueBeacons(int comp, BeaconColor color) {
-         /* if comp < 0 then color is above blue
+    private Beacon findBlueBeacons(int comp, BeaconColor color, Point[] blueTriple, Point[] triple2) {
+         /* if comp < 0 then color is above blue,  triple2 is above triple1
             red has already been detected
           */
+        Beacon result = null;
         switch (color) {
-            /*case RED:
-                if (comp < 0 ) return Beacon.RED_BLUE;
-                else return Beacon.BLUE_RED;*/
             case BLACK:
-                if (comp < 0) return Beacon.BLACK_BLUE;
-                else return Beacon.BLUE_BLACK;
+                if (comp < 0) {
+                    result = Beacon.BLACK_BLUE;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(blueTriple[0]);
+                }
+                else {
+                    result = Beacon.BLUE_BLACK;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                }
+                break;
             case PURPLE:
-                if (comp < 0) return Beacon.PURPLE_BLUE;
-                else return null;
+                if (comp < 0) {
+                    result = Beacon.PURPLE_BLUE;
+                    result.coordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(triple2[0]);
+                }
+                break;
             default:
                 return null;
         }
+        return result;
     }
 
     /*private Beacon findPurpleBeacons(int comp, BeaconColor color) {

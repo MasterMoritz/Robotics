@@ -1,14 +1,13 @@
 package com.ebstor.robot;
 
-import android.app.Activity;
-import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
+import com.ebstor.robot.beacons.Beacon;
+import com.ebstor.robot.beacons.BeaconDetector;
 import com.ebstor.robot.corefunctions.*;
-import jp.ksksue.driver.serial.FTDriver;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -42,7 +41,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /** currently chosen blob color */
     private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
-    private BeaconDetector       beaconDetector;
+    private BeaconDetector beaconDetector;
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
@@ -333,7 +332,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * @param imgPoint the point on the image
      * @return the egocentric coordinates in cm, x heads to the front y heads to the left
      */
-    public Point imageCoordToEgoCoord(Point imgPoint) {
+    public static Point imageCoordToEgoCoord(Point imgPoint) {
         if (homographyMatrix == null) throw new RuntimeException("we don't even have a homography matrix yet!");
         if (imgPoint == null) return null;
         Mat src =  new Mat(1, 1, CvType.CV_32FC2);

@@ -1,4 +1,4 @@
-package com.ebstor.robot.corefunctions;
+package com.ebstor.robot.beacons;
 
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -19,6 +19,10 @@ public class BeaconContour {
         this.contour = contour;
     }
 
+    /**
+     *
+     * @return [0]: lowest point, [1]: leftest point, [2]: rightest point
+     */
     public Point[] getTriple() {
         if (triple == null) {
             List<Point> points = contour.toList();
