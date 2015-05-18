@@ -19,6 +19,7 @@ public enum Beacon {
     BLUE_BLACK;
 
     public Point coordinates;
+    public Point egocentricCoordinates;
     public Scalar[] hsvColor;
 
     static {
