@@ -50,7 +50,7 @@ public class BeaconDetector {
         beaconsDetected.clear();
         BeaconColor[] values = BeaconColor.values();
         for (BeaconColor beaconColor: values) {
-            Scalar hsvColor = beaconColor.hsvColor;
+            Scalar hsvColor = beaconColor.hsvColor();
             blobDetector.setHsvColor(hsvColor);
             blobDetector.process(rgbaImage);
             List<MatOfPoint> contours = blobDetector.getContours();

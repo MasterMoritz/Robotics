@@ -7,6 +7,7 @@ import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
 import com.ebstor.robot.beacons.Beacon;
+import com.ebstor.robot.beacons.BeaconColor;
 import com.ebstor.robot.beacons.BeaconDetector;
 import com.ebstor.robot.corefunctions.*;
 import org.opencv.android.BaseLoaderCallback;
@@ -456,6 +457,34 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibrateRedBall(MenuItem item) {
         if (mBlobColorHsv != null) {
             redBallHsv = mBlobColorHsv;
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibrateRedBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.RED.setHsvColor(mBlobColorHsv);
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibrateBlueBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.BLUE.setHsvColor(mBlobColorHsv);
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibratePurpleBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.PURPLE.setHsvColor(mBlobColorHsv);
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibrateBlackBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.BLACK.setHsvColor(mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
