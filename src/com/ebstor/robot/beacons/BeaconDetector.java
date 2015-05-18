@@ -21,10 +21,19 @@ public class BeaconDetector {
     private ColorBlobDetector blobDetector;
     private Map<BeaconColor,List<BeaconContour>> beaconContours;
 
+
+    /**
+     *
+     * @return 2 neighboring beacons or null if there are not enough beacons seen
+     */
     public Pair<Beacon, Beacon> getBeacons() {
         // enums are ordered by their ordinals, this works as long as they are ordered correctly in the declaration
         Collections.sort(beaconsDetected);
-        significantBeacons = new Pair<>(beaconsDetected.get(0),beaconsDetected.get(1));
+        try {
+            significantBeacons = new Pair<>(beaconsDetected.get(0),beaconsDetected.get(1));
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
         return significantBeacons;
     }
 
