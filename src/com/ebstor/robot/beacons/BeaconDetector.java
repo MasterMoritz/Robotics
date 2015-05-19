@@ -197,7 +197,7 @@ public class BeaconDetector {
         double areaX = Math.abs(triple1[1].x - triple1[2].x)/2;
         double x = Math.abs(triple2[1].x - triple2[2].x)/2 + triple2[1].x;
         if (x > (triple1[1].x - areaX) && x < (triple1[1].x + 2 * areaX))
-            return (int)(Math.signum(triple1[0].y - triple2[0].y));
+            return Double.compare(triple1[0].y,triple2[0].y);
         else
             return 0;
     }
