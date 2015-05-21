@@ -3,7 +3,6 @@ package com.ebstor.robot.beacons;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,7 +12,7 @@ public class BeaconContour {
 
     private MatOfPoint contour;
     /** rightest leftest and lowest point */
-    private Point[] triple = null;
+    private Point[] fourTuple = null;
 
     public BeaconContour(MatOfPoint contour) {
         this.contour = contour;
@@ -21,25 +20,29 @@ public class BeaconContour {
 
     /**
      *
-     * @return [0]: lowest point, [1]: leftest point, [2]: rightest point
+     * @return [0]: lowest point, [1]: leftest point, [2]: rightest point, [3]: top point
      */
-    public Point[] getTriple() {
-        if (triple == null) {
+    public Point[] get4Tuple() {
+        if (fourTuple == null) {
             List<Point> points = contour.toList();
-            Point lowest, rightest, leftest;
+            Point lowest, rightest, leftest, top;
             lowest = points.get(0);
             rightest = points.get(0);
             leftest = points.get(0);
+            top = points.get(0);
+
             for (Point p: points) {
                 if (p.y > lowest.y) lowest = p;
                 if (p.x > rightest.x) rightest = p;
                 if (p.x < leftest.x) leftest = p;
+                if (p.y < top.y) top = p;
             }
-            triple = new Point[3];
-            triple[0] = lowest;
-            triple[1] = leftest;
-            triple[2] = rightest;
+            fourTuple = new Point[4];
+            fourTuple[0] = lowest;
+            fourTuple[1] = leftest;
+            fourTuple[2] = rightest;
+            fourTuple[3] = top;
         }
-        return triple;
+        return fourTuple;
     }
 }
