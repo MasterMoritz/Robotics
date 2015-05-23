@@ -195,9 +195,75 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
     public void relocate() {
-        // TODO implement
         beaconDetector.process(mRgba);
         Pair<Beacon,Beacon> beacons = beaconDetector.getBeacons();
+        double d, x, y, r1, r2;
+        Point lowestPoint1 = beacons.first.egocentricCoordinates;
+        Point lowestPoint2 = beacons.second.egocentricCoordinates;
+        r1 = lowestPoint1.y/Math.sin(Math.atan(lowestPoint1.y/lowestPoint1.x));
+        r2 = lowestPoint2.y/Math.sin(Math.atan(lowestPoint2.y/lowestPoint2.x));
+        d = 125.0;
+        x = (Math.pow(d, 2) - Math.pow(r2, 2) + Math.pow(r1, 2))/(2*d);
+        y = 1/(2*d) * Math.sqrt((-d + r2 - r1)*(-d - r2 + r1)*(-d + r2 + r1)*(d + r2 + r1));
+        Beacon cornerBeacon;
+        boolean isLeft = false;
+        double robotX = 0.0;
+        double robotY = 0.0;
+        double robotTheta = Math.acos(r1/y);
+        if(beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0){
+        	cornerBeacon = beacons.first;
+        	isLeft = true;
+        }else{
+        	cornerBeacon = beacons.second;
+        }
+        switch(cornerBeacon){
+        
+        case RED_BLACK:	//beacon in upper right
+        	if(isLeft){
+        		robotX = cornerBeacon.coordinates.x - y;
+        		robotY = cornerBeacon.coordinates.y - x;
+        	}else{
+        		robotX = cornerBeacon.coordinates.x - x;
+        		robotY = cornerBeacon.coordinates.y - y;
+        		robotTheta += 90.0;
+        	}
+        	break;
+        case BLACK_RED: //beacon in lower right
+        	if(isLeft){
+        		robotX = cornerBeacon.coordinates.x - x;
+        		robotY = cornerBeacon.coordinates.y + y;
+        		robotTheta += 270.0;
+        	}else{
+        		robotX = cornerBeacon.coordinates.x - y;
+        		robotY = cornerBeacon.coordinates.y + x;
+        	}
+        	break;
+        case BLACK_BLUE: //beacon in lower left
+        	if(isLeft){
+        		robotX = cornerBeacon.coordinates.x + y;
+        		robotY = cornerBeacon.coordinates.y + x;
+        		robotTheta += 180.0;
+        	}else{
+        		robotX = cornerBeacon.coordinates.x + x;
+        		robotY = cornerBeacon.coordinates.y + y;
+        		robotTheta += 270.0;
+        	}
+        	break;
+        case BLUE_BLACK: //beacon in upper left
+        	if(isLeft){
+        		robotX = cornerBeacon.coordinates.x + x;
+        		robotY = cornerBeacon.coordinates.y - y;
+        		robotTheta += 90.0;
+        	}else{
+        		robotX = cornerBeacon.coordinates.y + x;
+        		robotY = cornerBeacon.coordinates.x - y;
+        		robotTheta += 180.0;
+        	}
+        	break;
+        }
+        robot.robotLocation.setX(robotX);
+        robot.robotLocation.setY(robotY);
+        robot.robotLocation.setTheta(robotTheta);
     }
 
     /**

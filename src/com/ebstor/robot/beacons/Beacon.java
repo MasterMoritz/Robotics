@@ -10,13 +10,13 @@ import org.opencv.core.Scalar;
 public enum Beacon {
 
     BLUE_RED,
-    RED_BLACK,
+    RED_BLACK, //upper right
     PURPLE_RED,
-    BLACK_RED,
+    BLACK_RED, //lower right
     RED_BLUE,
-    BLACK_BLUE,
+    BLACK_BLUE, //lower left
     PURPLE_BLUE,
-    BLUE_BLACK;
+    BLUE_BLACK; //upper left
 
     public Point coordinates;
     public Point egocentricCoordinates;
