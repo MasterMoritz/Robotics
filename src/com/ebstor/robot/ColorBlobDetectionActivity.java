@@ -7,6 +7,7 @@ import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
 import com.ebstor.robot.beacons.Beacon;
+import com.ebstor.robot.beacons.BeaconColor;
 import com.ebstor.robot.beacons.BeaconDetector;
 import com.ebstor.robot.corefunctions.*;
 import org.opencv.android.BaseLoaderCallback;
@@ -29,6 +30,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
+    private static final boolean testmode = true;
     private static Mat           homographyMatrix;
     private static Comparator<Point> pointComparator = new Comparator<Point>() {
         @Override
@@ -148,9 +150,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        if (homographyMatrix == null) {
+        if (!testmode && homographyMatrix == null) {
             homographyMatrix = getHomographyMatrix(mRgba);
         } else {
+            if (testmode) relocate();
             List<MatOfPoint> greenBallContours, redBallContours;
             Point lowestPointGreen = null, lowestPointRed = null;
             List<Point> points = new LinkedList<>();
@@ -400,6 +403,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * @return the egocentric coordinates in cm, x heads to the front y heads to the left
      */
     public static Point imageCoordToEgoCoord(Point imgPoint) {
+        if (testmode) return imgPoint;
         if (homographyMatrix == null) throw new RuntimeException("we don't even have a homography matrix yet!");
         if (imgPoint == null) return null;
         Mat src =  new Mat(1, 1, CvType.CV_32FC2);
@@ -522,6 +526,34 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibrateRedBall(MenuItem item) {
         if (mBlobColorHsv != null) {
             redBallHsv = mBlobColorHsv;
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibrateRedBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.RED.setHsvColor(mBlobColorHsv);
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibrateBlueBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.BLUE.setHsvColor(mBlobColorHsv);
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibratePurpleBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.PURPLE.setHsvColor(mBlobColorHsv);
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibrateBlackBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.BLACK.setHsvColor(mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }

@@ -2,6 +2,9 @@ package com.ebstor.robot.beacons;
 
 import org.opencv.core.Scalar;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 /**
  * Created by johannes on 5/15/15.
  */
@@ -11,12 +14,20 @@ public enum BeaconColor {
     PURPLE,
     BLACK;
 
-    public Scalar hsvColor;
+    public static Map<BeaconColor,Scalar> hsvColors = new EnumMap<>(BeaconColor.class);
 
     static {
-        RED.hsvColor = new Scalar(2,255,140);
-        BLUE.hsvColor = new Scalar(138,255,95);
-        PURPLE.hsvColor = new Scalar(215,144,95);
-        BLACK.hsvColor = new Scalar(45,255,0);
+        hsvColors.put(RED, new Scalar(2,255,140));
+        hsvColors.put(BLUE, new Scalar(138,255,95));
+        hsvColors.put(PURPLE, new Scalar(215,144,95));
+        hsvColors.put(BLACK, new Scalar(45,255,0));
+    }
+
+    public Scalar hsvColor() {
+        return hsvColors.get(this);
+    }
+
+    public void setHsvColor(Scalar hsvColor) {
+        hsvColors.put(this,hsvColor);
     }
 }

@@ -15,6 +15,29 @@
         android:title="calibrate green ball"
         android:onClick="calibrateGreenBall"/>
 
+    <item
+            android:id="@+id/calibrate_red_beacon"
+            android:orderInCategory="100"
+            android:title="calibrate red beacon"
+            android:onClick="calibrateRedBeacon"/>
+    <item
+            android:id="@+id/calibrate_blue_beacon"
+            android:orderInCategory="100"
+            android:title="calibrate blue beacon"
+            android:onClick="calibrateBlueBeacon"/>
+
+    <item
+            android:id="@+id/calibrate_purple_beacon"
+            android:orderInCategory="100"
+            android:title="calibrate purple beacon"
+            android:onClick="calibratePurpleBeacon"/>
+
+    <item
+            android:id="@+id/calibrate_black_beacon"
+            android:orderInCategory="100"
+            android:title="calibrate black beacon"
+            android:onClick="calibrateBlackBeacon"/>
+
 
 
 </menu>
