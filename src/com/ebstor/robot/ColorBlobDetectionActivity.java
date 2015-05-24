@@ -267,6 +267,12 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
         robot.robotLocation.setTheta(robotTheta);
+        
+        //this should probably be the right theta, if not we have to use 3 beacons which is a chore
+        double egoTheta = Math.atan(beacons.first.egocentricCoordinates.y / beacons.first.egocentricCoordinates.x);
+        double absTheta = Math.atan(beacons.first.coordinates.y / beacons.first.coordinates.x);
+        
+        robot.robotLocation.setTheta(Math.abs(absTheta) - Math.abs(egoTheta));
     }
 
     /**
