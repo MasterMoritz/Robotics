@@ -197,13 +197,59 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         return mRgba;
     }
 
+    /**
+     * execute the tasks corresponding to the current state, then go into the next state and repeat
+     */
+    private void stateMachine() {
+        State state = State.LOCALIZE; // starting state
+        for(;;)
+            switch (state) {
+                case LOCALIZE:
+                    // TODO maybe turn around and stuff to find beacons
+                    relocate();
+                    state = State.SEARCH_BALL;
+                    break;
+                case TRY_LOCALIZE:
+                    // TODO look around etc
+                    // if found relocate()
+                    state = State.SEARCH_BALL;
+                    break;
+                case SEARCH_BALL:
+                    // TODO algorithm to search space
+                    state = State.GOTO_BALL;
+                    break;
+                case GOTO_BALL:
+                    // TODO place all the shit we already implemented here (and improve it by recalculating path)
+                    // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
+                    state = State.CAGE_BALL;
+                    break;
+                case CAGE_BALL:
+                    robot.closeCage();
+                    state = State.BALL_TO_TARGET;
+                    break;
+                case BALL_TO_TARGET:
+                    // TODO place shit here
+                    state = State.DROP_BALL;
+                    break;
+                case DROP_BALL:
+                    robot.openCage();
+                    state = State.TRY_LOCALIZE;
+                    break;
+                case FIN:
+                    return;
+        }
+    }
+
+
     public void relocate() {
         beaconDetector.process(mRgba);
         Pair<Beacon,Beacon> beacons = beaconDetector.getBeacons();
         double d, x, y, r1, r2;
         Point lowestPoint1 = beacons.first.egocentricCoordinates;
         Point lowestPoint2 = beacons.second.egocentricCoordinates;
+        // distance to left beacon
         r1 = lowestPoint1.y/Math.sin(Math.atan(lowestPoint1.y/lowestPoint1.x));
+        // distance to right beacon
         r2 = lowestPoint2.y/Math.sin(Math.atan(lowestPoint2.y/lowestPoint2.x));
         d = 125.0;
         x = (Math.pow(d, 2) - Math.pow(r2, 2) + Math.pow(r1, 2))/(2*d);
