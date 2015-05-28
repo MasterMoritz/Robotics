@@ -61,7 +61,8 @@ public class Robot {
     private static final double ANGLE_FRONT_SIDE = 10;
     private static final double ANGLE_RIGHT_LEFT = 40;
     
-    
+    /** number of balls already caged */
+    public int balls_in_cage = 0;
     
     /** holds the pose of the robot */
     public Location robotLocation;

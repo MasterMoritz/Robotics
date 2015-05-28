@@ -204,11 +204,36 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         State state = State.LOCALIZE; // starting state
         for(;;)
             switch (state) {
+            
+            	//turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
-                    // TODO maybe turn around and stuff to find beacons
-                    relocate();
-                    state = State.SEARCH_BALL;
+                	int i = 0;
+                    for (i = 0; i < 8; i++) {
+	                	beaconDetector.process(mRgba);
+	                	if (beaconDetector.getBeacons() != null) {
+	                		relocate();
+	                		break;
+	                	}
+	                	else {
+	                		robot.turn(45);
+	                	}
+                    }
+                    // couldn't find enough beacons to relocate
+                    if (i == 8) {
+                    	//hope that robot finds enough beacons next time, because we can't drive around without knowing our location
+                    	continue;
+                    }
+                    
+                    // only attempt to cage 1 ball for now before returning to goal
+                    if (robot.balls_in_cage > 0) {
+                    	state = State.BALL_TO_TARGET;
+                    }
+                    // search for a ball
+                    else {
+                    	state = State.SEARCH_BALL;
+                    }
                     break;
+                    
                 case TRY_LOCALIZE:
                     // TODO look around etc
                     // if found relocate()
@@ -242,7 +267,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
 
     public void relocate() {
-        beaconDetector.process(mRgba);
         Pair<Beacon,Beacon> beacons = beaconDetector.getBeacons();
         double d, x, y, r1, r2;
         Point lowestPoint1 = beacons.first.egocentricCoordinates;
