@@ -212,7 +212,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         boolean isLeft = false;
         double robotX = 0.0;
         double robotY = 0.0;
-        double robotTheta = Math.acos(r1/y);
+        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/Math.abs(beacons.second.egocentricCoordinates.y));
+        robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(r2, 2) - Math.pow(r1, 2))/(2 * 125.0 * r1)); //law of cosines
         if(beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0){
         	cornerBeacon = beacons.first;
         	isLeft = true;
@@ -225,54 +226,54 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x - y;
         		robotY = cornerBeacon.coordinates.y - x;
+        		robotTheta += 270.0;
         	}else{
         		robotX = cornerBeacon.coordinates.x - x;
         		robotY = cornerBeacon.coordinates.y - y;
-        		robotTheta += 90.0;
         	}
         	break;
         case BLACK_RED: //beacon in lower right
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x - x;
         		robotY = cornerBeacon.coordinates.y + y;
-        		robotTheta += 270.0;
+        		robotTheta += 180.0;
         	}else{
         		robotX = cornerBeacon.coordinates.x - y;
         		robotY = cornerBeacon.coordinates.y + x;
+        		robotTheta += 270.0;
         	}
         	break;
         case BLACK_BLUE: //beacon in lower left
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x + y;
         		robotY = cornerBeacon.coordinates.y + x;
-        		robotTheta += 180.0;
+        		robotTheta += 90.0;
         	}else{
         		robotX = cornerBeacon.coordinates.x + x;
         		robotY = cornerBeacon.coordinates.y + y;
-        		robotTheta += 270.0;
+        		robotTheta += 180.0;
         	}
         	break;
         case BLUE_BLACK: //beacon in upper left
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x + x;
         		robotY = cornerBeacon.coordinates.y - y;
-        		robotTheta += 90.0;
         	}else{
         		robotX = cornerBeacon.coordinates.y + x;
         		robotY = cornerBeacon.coordinates.x - y;
-        		robotTheta += 180.0;
+        		robotTheta += 90.0;
         	}
         	break;
         }
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
-        robot.robotLocation.setTheta(robotTheta);
+        robot.robotLocation.setTheta(robotTheta);	//this should be the right theta now
         
         //this should probably be the right theta, if not we have to use 3 beacons which is a chore
-        double egoTheta = Math.atan(beacons.first.egocentricCoordinates.y / beacons.first.egocentricCoordinates.x);
+        /*double egoTheta = Math.atan(beacons.first.egocentricCoordinates.y / beacons.first.egocentricCoordinates.x);
         double absTheta = Math.atan(beacons.first.coordinates.y - robotY / beacons.first.coordinates.x - robotX);
         
-        robot.robotLocation.setTheta(Math.abs(absTheta) - Math.abs(egoTheta));
+        robot.robotLocation.setTheta(Math.abs(absTheta) - Math.abs(egoTheta));*/
     }
 
     /**
