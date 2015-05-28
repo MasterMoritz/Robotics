@@ -203,7 +203,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private void stateMachine() {
         State state = State.LOCALIZE; // starting state
         int ball_count = 10; // number of balls in the field
-        Point ball = new Point();
+        Location ball = new Location();
         
         for(;;)
             switch (state) {
@@ -245,6 +245,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     break;
                     
                 //search environment for a ball
+                // TODO: TODO and eliminate unneccesary sleeps after confirming working algorithm because we gotta be fast
                 case SEARCH_BALL:
                 	
                     for(int i = 0; i < 8; i++){
@@ -274,7 +275,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                                 }
                             }
                             if (ballIsLost) continue;
-                            ball = new Point(nearestBall.x, nearestBall.y);
+                            ball = new Location(nearestBall.x, nearestBall.y);
                             break;
                         } 
                         //no ball in sight, turn 45 degrees and try again
@@ -286,6 +287,11 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 		                            e.printStackTrace();
 		                    }
 		                    robot.turn(45);
+		                    
+		                    //already made a 360 by now
+		                    if (i == 7) {
+		                    	//TODO something to find a ball that is not within cam range
+		                    }
 	                    }        
                     }
                     
@@ -295,7 +301,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 case GOTO_BALL:
                     // TODO place all the shit we already implemented here (and improve it by recalculating path)
                     // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
-                    state = State.CAGE_BALL;
+                	//^not sure how ´tis intended
+                	robot.turnToLocation(ball);
+                	robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
+                	
+                	if (ballDetected()) {
+                		state = State.CAGE_BALL;
+                	} else {
+                		state = State.SEARCH_BALL;
+                	}
                     break;
                 
                 // cage ball
