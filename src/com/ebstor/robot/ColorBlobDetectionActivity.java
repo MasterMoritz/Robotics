@@ -263,7 +263,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     
                 // drive robot to target and drop it there
                 case BALL_TO_TARGET:
-                    // TODO place shit here
+                    robot.turnToGoal();
+                    robot.drive(Robot.euclideanDistance(robot.robotLocation, robot.goal));
                     state = State.DROP_BALL;
                     break;
                     
