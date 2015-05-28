@@ -148,55 +148,44 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
 
+    /** do something every frame */
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        if (!testmode && homographyMatrix == null) {
+        if (homographyMatrix == null) {
             homographyMatrix = getHomographyMatrix(mRgba);
         } else {
-            if (testmode) relocate();
-            List<MatOfPoint> greenBallContours, redBallContours;
-            Point lowestPointGreen = null, lowestPointRed = null;
-            List<Point> points = new LinkedList<>();
-            List<MatOfPoint> lowestPointlist = new LinkedList<>();
-
-        /* detect green balls */
-            mDetector.setHsvColor(greenBallHsv);
-            mDetector.process(mRgba);
-            greenBallContours = mDetector.getContours();
-            Log.e(TAG, "green contours count: " + greenBallContours.size());
-            Imgproc.drawContours(mRgba, greenBallContours, -1, CONTOUR_COLOR);
-            for (MatOfPoint m : greenBallContours)
-                points.addAll(m.toList());
-
-            if (!points.isEmpty()) {
-                lowestPointGreen = Collections.max(points, pointComparator);
-                lowestPointlist.add(new MatOfPoint(
-                        lowestPointGreen,
-                        new Point(lowestPointGreen.x - 1, lowestPointGreen.y),
-                        new Point(lowestPointGreen.x, lowestPointGreen.y + 1),
-                        new Point(lowestPointGreen.x + 1, lowestPointGreen.y),
-                        new Point(lowestPointGreen.x, lowestPointGreen.y - 1)));
-                Imgproc.drawContours(mRgba, lowestPointlist, -1, LOWEST_POINT_RGBA);
-            }
-
-
-        /* detect currently set color for calibration */
-            if (mBlobColorHsv != null) {
-                mDetector.setHsvColor(mBlobColorHsv);
-                mDetector.process(mRgba);
-                Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
-            }
-
-            nearestBall = imageCoordToEgoCoord(lowestPointGreen);
-            if (nearestBall != null) {
-                ballLocationUpdated = true;
-                Log.v(TAG, "lowest point in egocentric coordinates: " + nearestBall.toString());
-            }
+        	
         }
 
         return mRgba;
     }
 
+    /**
+     * find the nearest ball in the given color
+     * @param ballColorHSV
+     */
+    public void findBall (Scalar ballColorHSV) {
+    	mDetector.setHsvColor(ballColorHSV);
+        mDetector.process(mRgba);
+        
+        List<MatOfPoint> contours = mDetector.getContours();
+        List<Point> points = new ArrayList<>();
+        
+        Log.v(TAG, "ball contour count: " + contours.size());
+        Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
+        for (MatOfPoint m : contours)
+            points.addAll(m.toList());
+
+        if (!points.isEmpty()) {
+            nearestBall = imageCoordToEgoCoord(Collections.max(points, pointComparator));
+        }
+        else {
+        	nearestBall = null;
+        }
+        
+        ballLocationUpdated = true;
+    }
+    
     /**
      * execute the tasks corresponding to the current state, then go into the next state and repeat
      */
@@ -249,32 +238,24 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 case SEARCH_BALL:
                 	
                     for(int i = 0; i < 8; i++){
-                    	 // give cam some time to detect ball
-                    	 try {
-                             Thread.sleep(1000);
-                         } catch (InterruptedException e) {
-                             e.printStackTrace();
-                         }
-                    	 
+                    	 findBall(greenBallHsv);
+                    	    	 
                     	//detected ball
                         if(ballDetected()){
-                            Log.v(TAG,"ball detected");                     
-                            // now wait until the ball location has been updated again
-                            long timeSinceDetected = 0;
-                            boolean ballIsLost = false;
-                            while(!ballLocationUpdated) {
-                                try {
-                                    sleep(500);
-                                    timeSinceDetected += 500;
-                                    if (timeSinceDetected >= 3000) {
-                                        ballIsLost = true;
-                                        break;
-                                    }
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                        	Log.v(TAG, "detected ball");
+                        	try {
+                        		sleep(100);
+   		                 	} catch (InterruptedException e) {
+   		                 		e.printStackTrace();
+   		                 	}
+                        	findBall(greenBallHsv);
+                        	//ball magically teleported away
+                            if (!ballDetected()) {
+                            	Log.v(TAG, "lost sight of ball");
+                            	i -= 1;
+                            	continue;
                             }
-                            if (ballIsLost) continue;
+                            //ball is still there
                             ball = new Location(nearestBall.x, nearestBall.y);
                             break;
                         } 
@@ -305,6 +286,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 	robot.turnToLocation(ball);
                 	robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
                 	
+                	findBall(greenBallHsv);
                 	if (ballDetected()) {
                 		state = State.CAGE_BALL;
                 	} else {
