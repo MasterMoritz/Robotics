@@ -202,6 +202,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     private void stateMachine() {
         State state = State.LOCALIZE; // starting state
+        int ball_count = 10; // number of balls in the field
+        
         for(;;)
             switch (state) {
             
@@ -248,18 +250,38 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
                     state = State.CAGE_BALL;
                     break;
+                
+                // cage ball
                 case CAGE_BALL:
+                	if (!robot.cageOpen) {
+                		robot.openCage();
+                	}
                     robot.closeCage();
-                    state = State.BALL_TO_TARGET;
+                    robot.balls_in_cage += 1;
+                    state = State.LOCALIZE;
                     break;
+                    
+                // drive robot to target and drop it there
                 case BALL_TO_TARGET:
                     // TODO place shit here
                     state = State.DROP_BALL;
                     break;
+                    
+                // drop all balls in cage and search for new balls if existant
                 case DROP_BALL:
                     robot.openCage();
-                    state = State.TRY_LOCALIZE;
+                    ball_count -= robot.balls_in_cage;
+                    robot.balls_in_cage = 0;
+                    
+                    if (ball_count == 0) {
+                    	state = State.FIN;
+                    }
+                    else {
+                    	state = State.SEARCH_BALL;
+                    }
                     break;
+                    
+                // robot finished task
                 case FIN:
                     return;
         }

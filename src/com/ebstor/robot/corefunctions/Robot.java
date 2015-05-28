@@ -63,6 +63,9 @@ public class Robot {
     
     /** number of balls already caged */
     public int balls_in_cage = 0;
+   
+    /** if cage is currently lowered or not */
+    public boolean cageOpen = true;
     
     /** holds the pose of the robot */
     public Location robotLocation;
@@ -496,6 +499,7 @@ public class Robot {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        cageOpen = true;
     }
 
     public void closeCage() {
@@ -506,6 +510,7 @@ public class Robot {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        cageOpen = false;
     }
     
     /** drives a certain distance and checks afterwards if condition is fulfilled */
