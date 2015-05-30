@@ -35,13 +35,15 @@
         android:inputType="numberDecimal"
         android:text="y0" />
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView" />
     <Button style="?android:attr/buttonStyleSmall" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:text="STOP" android:id="@+id/stop_button"
-            android:layout_gravity="left|bottom" android:onClick="stopExam2" android:clickable="true"/>
+            android:layout_gravity="left|bottom" android:onClick="stopWorkerThread" android:clickable="true"/>
+    <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TEST"
+            android:id="@+id/test"
+            android:layout_gravity="left|center_vertical" android:onClick="test" android:clickable="true"/>
 
 </FrameLayout>

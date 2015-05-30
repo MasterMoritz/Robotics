@@ -208,7 +208,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 case LOCALIZE:
                     if (testmode) {
                         beaconDetector.process(mRgba);
-                        beaconDetector.getBeacons();
+                        relocate();
+
                     }
                     /*int z = 0;
                     for (z = 0; z < 8; z++) {
@@ -345,6 +346,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
     public void relocate() {
         Pair<Beacon,Beacon> beacons = beaconDetector.getBeacons();
+        if (beacons == null) {
+            Log.i(TAG, "Not enough beacons detected");
+            return;
+        }
         double d, x, y, r1, r2;
         Point lowestPoint1 = beacons.first.egocentricCoordinates;
         Point lowestPoint2 = beacons.second.egocentricCoordinates;
@@ -360,7 +365,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         double robotX = 0.0;
         double robotY = 0.0;
         /* orientation */
-        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/Math.abs(beacons.second.egocentricCoordinates.y));
+        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/(-beacons.second.egocentricCoordinates.y));
         robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(r2, 2) - Math.pow(r1, 2))/(2 * 125.0 * r1)); //law of cosines
         if(beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0){
         	cornerBeacon = beacons.first;
@@ -416,6 +421,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
         robot.robotLocation.setTheta(robotTheta);
+        Log.i(TAG,"New Location: " + robot.robotLocation);
     }
 
     /**
@@ -771,12 +777,13 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         procedureThread.start();
     }
 
-    public void stopExam2(View view) {
-        procedureThread.stop();
+    public void stopWorkerThread(View view) {
+        stateMachineRunning = false;
         robot.stop();
     }
 
     public void startExam3(View view) {
+        if (stateMachineRunning) return;
         stateMachineRunning = true;
         new Thread(){
             @Override
@@ -791,5 +798,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 stateMachine();
             }
         }.start();
+    }
+
+    public void test(View view) {
+        beaconDetector.process(mRgba);
+        relocate();
     }
 }
