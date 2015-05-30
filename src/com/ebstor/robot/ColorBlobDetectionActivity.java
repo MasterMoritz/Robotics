@@ -282,7 +282,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 case GOTO_BALL:
                     // TODO place all the shit we already implemented here (and improve it by recalculating path)
                     // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
-                	//^not sure how ´tis intended
+                	//^not sure how ï¿½tis intended
                 	robot.turnToLocation(ball);
                 	robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
                 	
@@ -349,7 +349,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         boolean isLeft = false;
         double robotX = 0.0;
         double robotY = 0.0;
-        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/Math.abs(beacons.second.egocentricCoordinates.y));
+        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/(-(beacons.second.egocentricCoordinates.y)));
         robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(r2, 2) - Math.pow(r1, 2))/(2 * 125.0 * r1)); //law of cosines
         if(beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0){
         	cornerBeacon = beacons.first;
