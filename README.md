@@ -1,6 +1,9 @@
 # Robotics
 
-![alt tag](http://postimg.org/image/89lwre35h/
+![alt tag](http://postimg.org/image/wvxp5kgwh/)
 
-let yellow = black
-let white = purple
+(compared to original: 
+let yellow = green
+let white = purple) 
+
+

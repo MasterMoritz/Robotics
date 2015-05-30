@@ -11,27 +11,29 @@ import java.util.List;
 public class BeaconContour {
 
     private MatOfPoint contour;
-    /** rightest leftest and lowest point */
+    /**
+     * rightest leftest and lowest point
+     */
     private Point[] fourTuple = null;
+    private List<Point> points = null;
 
     public BeaconContour(MatOfPoint contour) {
         this.contour = contour;
     }
 
     /**
-     *
      * @return [0]: lowest point, [1]: leftest point, [2]: rightest point, [3]: top point
      */
     public Point[] get4Tuple() {
         if (fourTuple == null) {
-            List<Point> points = contour.toList();
+            List<Point> points = getPoints();
             Point lowest, rightest, leftest, top;
             lowest = points.get(0);
             rightest = points.get(0);
             leftest = points.get(0);
             top = points.get(0);
 
-            for (Point p: points) {
+            for (Point p : points) {
                 if (p.y > lowest.y) lowest = p;
                 if (p.x > rightest.x) rightest = p;
                 if (p.x < leftest.x) leftest = p;
@@ -44,5 +46,11 @@ public class BeaconContour {
             fourTuple[3] = top;
         }
         return fourTuple;
+    }
+
+    public List<Point> getPoints() {
+        if (points == null)
+            points = contour.toList();
+        return points;
     }
 }
