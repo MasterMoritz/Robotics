@@ -38,17 +38,18 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             return Double.compare(lhs.y, rhs.y);
         }
     };
-    private Mat                  mRgba;
-    private Scalar               greenBallHsv;
-    private Scalar               redBallHsv;
+    private volatile Mat         mRgba;
+    private volatile Scalar               greenBallHsv;
+    private volatile Scalar               redBallHsv;
     /** currently chosen blob color */
     private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
-    private BeaconDetector beaconDetector;
+    private BeaconDetector       beaconDetector;
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
     private Thread               procedureThread;
+    private volatile boolean     stateMachineRunning;
     /**
      * egocentric coordinates of nearest ball, null if no ball detected
      * this is updated by onCameraFrame ->
@@ -97,7 +98,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Log.i(TAG, "called onCreate");
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
-        //robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
         robot.connect();
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -115,6 +115,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         robot.disconnect();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
+        stateMachineRunning = false;
     }
 
     @Override
@@ -145,6 +147,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
     public void onCameraViewStopped() {
         mRgba.release();
+        stateMachineRunning = false;
     }
 
 
@@ -154,9 +157,13 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         if (homographyMatrix == null) {
             homographyMatrix = getHomographyMatrix(mRgba);
         } else {
-        	
+            Log.v(TAG, "homography found");
+            if (mBlobColorHsv != null) {
+                mDetector.setHsvColor(mBlobColorHsv);
+                mDetector.process(mRgba);
+                Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
+            }
         }
-
         return mRgba;
     }
 
@@ -164,7 +171,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * find the nearest ball in the given color
      * @param ballColorHSV
      */
-    public void findBall (Scalar ballColorHSV) {
+    public void findBall(Scalar ballColorHSV) {
     	mDetector.setHsvColor(ballColorHSV);
         mDetector.process(mRgba);
         
@@ -178,6 +185,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
         if (!points.isEmpty()) {
             nearestBall = imageCoordToEgoCoord(Collections.max(points, pointComparator));
+            Log.v(TAG, "nearest ball coordinates: " + nearestBall);
         }
         else {
         	nearestBall = null;
@@ -194,12 +202,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         int ball_count = 10; // number of balls in the field
         Location ball = new Location();
         
-        for(;;)
+        while(stateMachineRunning)
             switch (state) {
-            
-            	//turn around until enough beacons are in view to localize the robot
+                //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
-                	int z = 0;
+                    if (testmode) {
+                        beaconDetector.process(mRgba);
+                        beaconDetector.getBeacons();
+                    }
+                    /*int z = 0;
                     for (z = 0; z < 8; z++) {
 	                	beaconDetector.process(mRgba);
 	                	if (beaconDetector.getBeacons() != null) {
@@ -223,113 +234,112 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // search for a ball
                     else {
                     	state = State.SEARCH_BALL;
-                    }
+                    }*/
                     break;
-                
+
                 //not sure what to do with it
                 case TRY_LOCALIZE:
                     // TODO look around etc
                     // if found relocate()
                     state = State.SEARCH_BALL;
                     break;
-                    
+
                 //search environment for a ball
                 // TODO: TODO and eliminate unneccesary sleeps after confirming working algorithm because we gotta be fast
                 case SEARCH_BALL:
-                	
-                    for(int i = 0; i < 8; i++){
-                    	 findBall(greenBallHsv);
-                    	    	 
-                    	//detected ball
-                        if(ballDetected()){
-                        	Log.v(TAG, "detected ball");
-                        	try {
-                        		sleep(100);
-   		                 	} catch (InterruptedException e) {
-   		                 		e.printStackTrace();
-   		                 	}
-                        	findBall(greenBallHsv);
-                        	//ball magically teleported away
+
+                    for (int i = 0; i < 8; i++) {
+                        findBall(greenBallHsv);
+
+                        //detected ball
+                        if (ballDetected()) {
+                            Log.v(TAG, "detected ball");
+                            try {
+                                sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            findBall(greenBallHsv);
+                            //ball magically teleported away
                             if (!ballDetected()) {
-                            	Log.v(TAG, "lost sight of ball");
-                            	i -= 1;
-                            	continue;
+                                Log.v(TAG, "lost sight of ball");
+                                i -= 1;
+                                continue;
                             }
                             //ball is still there
                             ball = new Location(nearestBall.x, nearestBall.y);
                             break;
-                        } 
+                        }
                         //no ball in sight, turn 45 degrees and try again
                         else {
-                        	Log.v(TAG, "no ball detected");
-	                        try {
-		                        sleep(100);
-		                    } catch (InterruptedException e) {
-		                            e.printStackTrace();
-		                    }
-		                    robot.turn(45);
-		                    
-		                    //already made a 360 by now
-		                    if (i == 7) {
-		                    	//TODO something to find a ball that is not within cam range
-		                    }
-	                    }        
+                            Log.v(TAG, "no ball detected");
+                            try {
+                                sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            robot.turn(45);
+
+                            //already made a 360 by now
+                            if (i == 7) {
+                                //TODO something to find a ball that is not within cam range
+                            }
+                        }
                     }
-                    
+
                     state = State.GOTO_BALL;
                     break;
-                    
+
                 case GOTO_BALL:
                     // TODO place all the shit we already implemented here (and improve it by recalculating path)
                     // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
-                	//^not sure how ´tis intended
-                	robot.turnToLocation(ball);
-                	robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
-                	
-                	findBall(greenBallHsv);
-                	if (ballDetected()) {
-                		state = State.CAGE_BALL;
-                	} else {
-                		state = State.SEARCH_BALL;
-                	}
+                    //^not sure how ï¿½tis intended
+                    robot.turnToLocation(ball);
+                    robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
+
+                    findBall(greenBallHsv);
+                    if (ballDetected()) {
+                        state = State.CAGE_BALL;
+                    } else {
+                        state = State.SEARCH_BALL;
+                    }
                     break;
-                
+
                 // cage ball
                 case CAGE_BALL:
-                	if (!robot.cageOpen) {
-                		robot.openCage();
-                	}
+                    if (!robot.cageOpen) {
+                        robot.openCage();
+                    }
                     robot.closeCage();
                     robot.balls_in_cage += 1;
                     state = State.LOCALIZE;
                     break;
-                    
+
                 // drive robot to target and drop it there
                 case BALL_TO_TARGET:
                     robot.turnToGoal();
                     robot.drive(Robot.euclideanDistance(robot.robotLocation, robot.goal) - 15);
                     state = State.DROP_BALL;
                     break;
-                    
+
                 // drop all balls in cage and search for new balls if existant
                 case DROP_BALL:
                     robot.openCage();
                     ball_count -= robot.balls_in_cage;
                     robot.balls_in_cage = 0;
-                    
+
                     if (ball_count == 0) {
-                    	state = State.FIN;
-                    }
-                    else {
-                    	state = State.SEARCH_BALL;
+                        state = State.FIN;
+                    } else {
+                        state = State.SEARCH_BALL;
                     }
                     break;
-                    
+
                 // robot finished task
                 case FIN:
                     return;
-            
-        }
+
+            }
     }
 
 
@@ -349,6 +359,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         boolean isLeft = false;
         double robotX = 0.0;
         double robotY = 0.0;
+        /* orientation */
         double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/Math.abs(beacons.second.egocentricCoordinates.y));
         robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(r2, 2) - Math.pow(r1, 2))/(2 * 125.0 * r1)); //law of cosines
         if(beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0){
@@ -359,7 +370,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
         switch(cornerBeacon){
         
-        case RED_BLACK:	//beacon in upper right
+        case RED_GREEN:	//beacon in upper right
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x - y;
         		robotY = cornerBeacon.coordinates.y - x;
@@ -369,7 +380,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         		robotY = cornerBeacon.coordinates.y - y;
         	}
         	break;
-        case BLACK_RED: //beacon in lower right
+        case GREEN_RED: //beacon in lower right
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x - x;
         		robotY = cornerBeacon.coordinates.y + y;
@@ -380,7 +391,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         		robotTheta += 270.0;
         	}
         	break;
-        case BLACK_BLUE: //beacon in lower left
+        case GREEN_BLUE: //beacon in lower left
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x + y;
         		robotY = cornerBeacon.coordinates.y + x;
@@ -391,7 +402,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         		robotTheta += 180.0;
         	}
         	break;
-        case BLUE_BLACK: //beacon in upper left
+        case BLUE_GREEN: //beacon in upper left
         	if(isLeft){
         		robotX = cornerBeacon.coordinates.x + x;
         		robotY = cornerBeacon.coordinates.y - y;
@@ -404,13 +415,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
-        robot.robotLocation.setTheta(robotTheta);	//this should be the right theta now
-        
-        //this should probably be the right theta, if not we have to use 3 beacons which is a chore
-        /*double egoTheta = Math.atan(beacons.first.egocentricCoordinates.y / beacons.first.egocentricCoordinates.x);
-        double absTheta = Math.atan(beacons.first.coordinates.y - robotY / beacons.first.coordinates.x - robotX);
-        
-        robot.robotLocation.setTheta(Math.abs(absTheta) - Math.abs(egoTheta));*/
+        robot.robotLocation.setTheta(robotTheta);
     }
 
     /**
@@ -541,13 +546,14 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     	returnToStart();
     }
 
+
     /**
      *
      * @param imgPoint the point on the image
      * @return the egocentric coordinates in cm, x heads to the front y heads to the left
      */
     public static Point imageCoordToEgoCoord(Point imgPoint) {
-        if (testmode) return imgPoint;
+        //if (testmode) return imgPoint;
         if (homographyMatrix == null) throw new RuntimeException("we don't even have a homography matrix yet!");
         if (imgPoint == null) return null;
         Mat src =  new Mat(1, 1, CvType.CV_32FC2);
@@ -695,9 +701,9 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
     }
 
-    public void calibrateBlackBeacon(MenuItem item) {
+    public void calibrateGreenBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
-            BeaconColor.BLACK.setHsvColor(mBlobColorHsv);
+            BeaconColor.GREEN.setHsvColor(mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
@@ -768,5 +774,22 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void stopExam2(View view) {
         procedureThread.stop();
         robot.stop();
+    }
+
+    public void startExam3(View view) {
+        stateMachineRunning = true;
+        new Thread(){
+            @Override
+            public void run() {
+                while(homographyMatrix == null) { // don't need this
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                stateMachine();
+            }
+        }.start();
     }
 }

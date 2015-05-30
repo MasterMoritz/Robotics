@@ -2,5 +2,7 @@
 
 ![alt tag](http://postimg.org/image/89lwre35h/
 
-let yellow = black
+let yellow = green
 let white = purple
+
+(blue is pale blue)
