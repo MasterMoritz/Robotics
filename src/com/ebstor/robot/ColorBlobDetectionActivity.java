@@ -372,15 +372,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         r2 = lowestPoint2.y/Math.sin(Math.atan(lowestPoint2.y/lowestPoint2.x));
         d = 125.0;
         x = (Math.pow(d, 2) - Math.pow(r2, 2) + Math.pow(r1, 2))/(2*d);
-        y = 1/(2*d) * Math.sqrt((-d + r2 - r1)*(-d - r2 + r1)*(-d + r2 + r1)*(d + r2 + r1));
+        y = Math.sqrt(Math.pow(r1, 2) - Math.pow(x, 2));
         Beacon cornerBeacon;
         boolean isLeft = false;
         double robotX = 0.0;
         double robotY = 0.0;
-
+        
         /* orientation */
         double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/(-beacons.second.egocentricCoordinates.y));
-        robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(r2, 2) - Math.pow(r1, 2))/(2 * 125.0 * r1)); //law of cosines
+        robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(r2, 2) - Math.pow(r1, 2))/(2 * 125.0 * r2)); //law of cosines
         if(beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0){
         	cornerBeacon = beacons.first;
         	isLeft = true;
