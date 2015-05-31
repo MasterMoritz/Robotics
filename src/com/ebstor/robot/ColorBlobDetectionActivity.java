@@ -395,7 +395,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     robotTheta += 180.0;
                 } else {
                     robotX = cornerBeacon.coordinates.x - y;
-                    robotY = Math.abs(x);
+                    robotY = x + beacons.first;
                     robotTheta += 270.0;
                 }
                 break;
