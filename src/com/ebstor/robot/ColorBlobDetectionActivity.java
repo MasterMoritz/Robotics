@@ -189,6 +189,41 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         
         ballLocationUpdated = true;
     }
+
+    //does not always work...
+    public static boolean isCircle(MatOfPoint thisContour) {
+
+        Rect ret = null;
+
+        MatOfPoint2f thisContour2f = new MatOfPoint2f();
+        MatOfPoint approx = new MatOfPoint();
+        MatOfPoint2f approxContour2f = new MatOfPoint2f();
+
+        thisContour.convertTo(thisContour2f, CvType.CV_32FC2);
+
+        Imgproc.approxPolyDP(thisContour2f, approxContour2f, Imgproc.arcLength(thisContour2f, true)*0.02, true);
+
+        approxContour2f.convertTo(approx, CvType.CV_32S);
+
+        if (Math.abs(approx.size().area()) < 5 || !Imgproc.isContourConvex(approx)) {
+        	return false;
+        }
+        if (approx.size().height > 6) {
+        	Log.v(TAG, "yes");
+        	double area = thisContour.size().area();
+            ret = Imgproc.boundingRect(thisContour);
+            double radius = ret.width / 2;
+            
+            if (Math.abs(1 - ((double)ret.width / ret.height)) <= 1.6 &&
+            	Math.abs(1 - (area / (Math.PI * Math.pow(radius, 2)))) <= 1.6) 
+            {
+            	return true;
+            }
+            else return false;
+        }
+
+        else return false;
+    }
     
     /**
      * execute the tasks corresponding to the current state, then go into the next state and repeat
