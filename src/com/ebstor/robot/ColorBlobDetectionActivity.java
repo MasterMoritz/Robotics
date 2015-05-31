@@ -350,15 +350,16 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Point leftBeacon = beacons.first.egocentricCoordinates;
         Point rightBeacon = beacons.second.egocentricCoordinates;
         // distance to left beacon
-        //dist_left = leftBeacon.y/Math.sin(Math.atan(leftBeacon.y/leftBeacon.x));
-        dist_left = Math.sqrt(Math.pow(leftBeacon.x, 2) + Math.pow(leftBeacon.y, 2));
+        dist_left = leftBeacon.y/Math.sin(Math.atan(leftBeacon.y/leftBeacon.x));
+        //dist_left = Math.sqrt(Math.pow(leftBeacon.x, 2) + Math.pow(leftBeacon.y, 2));
         // distance to right beacon
-        //dist_right = rightBeacon.y/Math.sin(Math.atan(rightBeacon.y/rightBeacon.x));
-        dist_right = Math.sqrt(Math.pow(rightBeacon.x, 2) + Math.pow(rightBeacon.y, 2));
+        dist_right = rightBeacon.y/Math.sin(Math.atan(rightBeacon.y/rightBeacon.x));
+        //dist_right = Math.sqrt(Math.pow(rightBeacon.x, 2) + Math.pow(rightBeacon.y, 2));
         Log.v(tag, "distance to left beacon: " + dist_left + " distance to right beacon: " + dist_right);
         d = 125.0;
         x = (Math.pow(d, 2) - Math.pow(dist_right, 2) + Math.pow(dist_left, 2)) / (2 * d);
-        y = Math.sqrt(Math.pow(dist_left, 2) - Math.pow(x, 2));
+        y = 1/d * Math.sqrt((-d + r2 - r1)*(-d - r2 + r1)*(-d + r2 + r1)*(d + r2 + r1));
+		y /= 2;
         Log.v(tag, "x is " + x + " y is " + y);
         Beacon cornerBeacon;
         boolean isLeft = false;
