@@ -61,6 +61,7 @@ public class BeaconDetector {
             beaconContours.get(color).clear();
         BeaconColor[] values = BeaconColor.values();
         for (BeaconColor beaconColor : values) {
+            if (beaconColor.hsvColor() == null) continue;
             Scalar hsvColor = beaconColor.hsvColor();
             blobDetector.setHsvColor(hsvColor);
             blobDetector.process(rgbaImage);
@@ -78,7 +79,7 @@ public class BeaconDetector {
                         int comp = compareContours(beaconContour.get4Tuple(), beaconContour2.get4Tuple());
                         if (comp != 0) {
                             Beacon beaconRed = findRedBeacons(comp, values[i], beaconContour.get4Tuple(), beaconContour2.get4Tuple());
-                            if (beaconRed != null)
+                            if (beaconRed != null && !beaconsDetected.contains(beaconRed))
                                 beaconsDetected.add(beaconRed);
                         }
                     }
@@ -92,45 +93,53 @@ public class BeaconDetector {
                         int comp = compareContours(beaconContour.get4Tuple(), beaconContour2.get4Tuple());
                         if (comp != 0) {
                             Beacon beaconBlue = findBlueBeacons(comp, values[i], beaconContour.get4Tuple(), beaconContour2.get4Tuple());
-                            if (beaconBlue != null)
+                            if (beaconBlue != null && !beaconsDetected.contains(beaconBlue))
                                 beaconsDetected.add(beaconBlue);
                         }
                     }
     }
 
-
     private Beacon findRedBeacons(int comp, BeaconColor color, Point[] red4Tuple, Point[] other4Tuple) {
         // if comp < 0 then color is above red, fourTuple2 is above fourTuple1
         Beacon result = null;
+        Point egoCoord = null;
         switch (color) {
             case BLUE:
                 if (comp < 0) {
                     result = Beacon.BLUE_RED;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
                 } else {
                     result = Beacon.RED_BLUE;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
                 }
                 break;
             case PURPLE:
                 if (comp < 0) {
                     result = Beacon.PURPLE_RED;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
                 }
                 break;
             case GREEN:
                 if (comp < 0) {
                     result = Beacon.GREEN_RED;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
                 } else {
                     result = Beacon.RED_GREEN;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
                 }
                 break;
             default:
                 return null;
         }
-        return result;
+        if (beaconsDetected.contains(result)
+                && (Math.sqrt(Math.pow(result.egocentricCoordinates.x, 2) +
+                Math.pow(result.egocentricCoordinates.y, 2))
+                < Math.sqrt(Math.pow(egoCoord.x, 2) + Math.pow(egoCoord.y, 2)))) {
+            return null; // old value is nearer
+        } else {
+            result.egocentricCoordinates = egoCoord;
+            return result;
+        }
     }
 
     private Beacon findBlueBeacons(int comp, BeaconColor color, Point[] blue4Tuple, Point[] other4Tuple) {
@@ -138,26 +147,36 @@ public class BeaconDetector {
             red has already been detected
           */
         Beacon result = null;
+        Point egoCoord = null;
         switch (color) {
             case GREEN:
                 if (comp < 0) {
                     result = Beacon.GREEN_BLUE;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(blue4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(blue4Tuple[0]);
                 } else {
                     result = Beacon.BLUE_GREEN;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
                 }
                 break;
             case PURPLE:
                 if (comp < 0) {
                     result = Beacon.PURPLE_BLUE;
-                    result.egocentricCoordinates = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(blue4Tuple[0]);
                 }
                 break;
             default:
                 return null;
         }
-        return result;
+        if (beaconsDetected.contains(result)
+            && (Math.sqrt(Math.pow(result.egocentricCoordinates.x, 2) +
+                    Math.pow(result.egocentricCoordinates.y, 2))
+                    < Math.sqrt(Math.pow(egoCoord.x, 2) + Math.pow(egoCoord.y, 2)))) {
+                return null;
+        } else {
+            result.egocentricCoordinates = egoCoord;
+            return result;
+        }
+
     }
 
     /**

@@ -158,12 +158,16 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         if (homographyMatrix == null) {
             homographyMatrix = getHomographyMatrix(mRgba);
         } else {
-            Log.v(TAG, "homography found");
             if (mBlobColorHsv != null) {
                 mDetector.setHsvColor(mBlobColorHsv);
                 mDetector.process(mRgba);
                 Imgproc.drawContours(mRgba, mDetector.getContours(), -1, new Scalar(255, 255, 255, 255));
+                if (!mDetector.getContours().isEmpty()) {
+                    List<Point> points = mDetector.getContours().get(0).toList();
+                    Log.v("homography test", imageCoordToEgoCoord(Collections.max(points, pointComparator)).toString());
+                }
             }
+
         }
         return mRgba;
     }
@@ -417,18 +421,18 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         final String tag = "Relocate";
         Pair<Beacon, Beacon> beacons = beaconDetector.getBeacons();
         if (beacons == null) {
-            Log.i(TAG, "Not enough beacons detected");
+            Log.i(tag, "Not enough beacons detected");
             return;
         }
         double d, x, y, dist_left, dist_right;
         Point leftBeacon = beacons.first.egocentricCoordinates;
         Point rightBeacon = beacons.second.egocentricCoordinates;
         // distance to left beacon
-        dist_left = leftBeacon.y/Math.sin(Math.atan(leftBeacon.y/leftBeacon.x));
-        //dist_left = Math.sqrt(Math.pow(leftBeacon.x, 2) + Math.pow(leftBeacon.y, 2));
+        //dist_left = leftBeacon.y/Math.sin(Math.atan(leftBeacon.y/leftBeacon.x));
+        dist_left = Math.sqrt(Math.pow(leftBeacon.x, 2) + Math.pow(leftBeacon.y, 2));
         // distance to right beacon
-        dist_right = rightBeacon.y/Math.sin(Math.atan(rightBeacon.y/rightBeacon.x));
-        //dist_right = Math.sqrt(Math.pow(rightBeacon.x, 2) + Math.pow(rightBeacon.y, 2));
+        //dist_right = rightBeacon.y/Math.sin(Math.atan(rightBeacon.y/rightBeacon.x));
+        dist_right = Math.sqrt(Math.pow(rightBeacon.x, 2) + Math.pow(rightBeacon.y, 2));
         Log.v(tag, "distance to left beacon: " + dist_left + " distance to right beacon: " + dist_right);
         d = 125.0;
         x = (Math.pow(d, 2) - Math.pow(dist_right, 2) + Math.pow(dist_left, 2)) / (2 * d);
