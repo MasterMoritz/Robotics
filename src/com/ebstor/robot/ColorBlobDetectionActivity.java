@@ -6,10 +6,13 @@ import android.util.Pair;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.EditText;
+
 import com.ebstor.robot.beacons.Beacon;
 import com.ebstor.robot.beacons.BeaconColor;
+import com.ebstor.robot.beacons.BeaconContour;
 import com.ebstor.robot.beacons.BeaconDetector;
 import com.ebstor.robot.corefunctions.*;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -19,7 +22,9 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+
 import java.util.*;
+
 import static java.lang.Thread.sleep;
 
 public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
@@ -172,24 +177,61 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         mDetector.process(mRgba);
         
         List<MatOfPoint> contours = mDetector.getContours();
-        List<Point> points = new ArrayList<>();
-        
         Log.v(TAG, "ball contour count: " + contours.size());
         Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
-        for (MatOfPoint m : contours)
-            points.addAll(m.toList());
 
-        if (!points.isEmpty()) {
-            nearestBall = imageCoordToEgoCoord(Collections.max(points, pointComparator));
-            Log.v(TAG, "nearest ball coordinates: " + nearestBall);
+        MatOfPoint ball = null;
+    
+        for (MatOfPoint m : contours) {
+        	if (!isInBeacon(m)) {
+        		if (ball == null) {
+        			ball = m;
+        		} 
+        		else {
+        			if (new BeaconContour(m).get4Tuple()[0].y > new BeaconContour(ball).get4Tuple()[0].y) {
+        				ball = m;
+        			}
+            	}
+            }
+        }
+
+        if (ball == null) {
+        	nearestBall = null;
         }
         else {
-        	nearestBall = null;
+            nearestBall = imageCoordToEgoCoord(Collections.max(ball.toList(), pointComparator));
+            Log.v(TAG, "nearest ball coordinates: " + nearestBall);
         }
         
         ballLocationUpdated = true;
     }
 
+    public boolean isInBeacon(MatOfPoint contour) {
+    	//get highest middlepoint of contour
+    	BeaconContour acontour = new BeaconContour(contour);
+    	Point[] apoints = acontour.get4Tuple();
+    	Point highestMiddle = new Point( (Math.abs(apoints[2].x) - Math.abs(apoints[1].x))/2 + apoints[1].x, apoints[3].y);
+    	
+    	//compare with lower beacon colors
+        List<MatOfPoint> contours;
+        
+        //search for red
+    	mDetector.setHsvColor(BeaconColor.RED.hsvColor());
+        mDetector.process(mRgba);
+        contours = mDetector.getContours();
+        Point[] colorpoints;
+        
+        for (MatOfPoint c : contours) {
+        	colorpoints = new BeaconContour(c).get4Tuple();
+        	
+        	// if highestMiddle is between colorpoints then contour is in beacon
+        	if (highestMiddle.x >= colorpoints[1].x && highestMiddle.x <= colorpoints[2].x && highestMiddle.y <= colorpoints[0].y) {
+        		return true;
+        	}
+        }
+    	return false;
+    }
+    
     //does not always work...
     public static boolean isCircle(MatOfPoint thisContour) {
 
