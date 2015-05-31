@@ -32,5 +32,8 @@ public enum Beacon {
     }
 
 
-
+    @Override
+    public String toString() {
+         return super.toString() + " at x: " + egocentricCoordinates.x + " y: " + egocentricCoordinates.y;
+    }
 }

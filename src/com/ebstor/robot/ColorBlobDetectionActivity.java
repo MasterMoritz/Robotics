@@ -19,9 +19,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-
 import java.util.*;
-
 import static java.lang.Thread.sleep;
 
 public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
@@ -52,8 +50,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private volatile boolean     stateMachineRunning;
     /**
      * egocentric coordinates of nearest ball, null if no ball detected
-     * this is updated by onCameraFrame ->
-     * every frame that does not contain any blobs results in this variable being null
      */
     public Point nearestBall = null;
     /**
@@ -197,8 +193,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /**
      * execute the tasks corresponding to the current state, then go into the next state and repeat
      */
-    private void stateMachine() {
-        State state = State.LOCALIZE; // starting state
+    private void stateMachine(State start) {
+        State state = start; // starting state
         int ball_count = 10; // number of balls in the field
         Location ball = new Location();
         
@@ -296,34 +292,20 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
 
                 	//^not sure how �tis intended
-                	robot.turnToLocation(ball);
-                	robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
+                    robot.turn(Robot.degreesToBall(nearestBall));
+                    robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
                 	
                 	findBall(greenBallHsv);
-                	if (ballDetected()) {
+                	if (ballDetected())
                 		state = State.CAGE_BALL;
-                	} else {
-                		state = State.SEARCH_BALL;
-                	}
-
-                    //^not sure how �tis intended
-                    robot.turnToLocation(ball);
-                    robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
-
-                    findBall(greenBallHsv);
-                    if (ballDetected()) {
-                        state = State.CAGE_BALL;
-                    } else {
+                	else
                         state = State.SEARCH_BALL;
-                    }
 
                     break;
 
-                // cage ball
                 case CAGE_BALL:
-                    if (!robot.cageOpen) {
+                    if (!robot.cageOpen) // wtf? if it was not open by now we sure would not get the ball inside
                         robot.openCage();
-                    }
                     robot.closeCage();
                     robot.balls_in_cage += 1;
                     state = State.LOCALIZE;
@@ -336,7 +318,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     state = State.DROP_BALL;
                     break;
 
-                // drop all balls in cage and search for new balls if existant
+                // drop all balls in cage and search for new balls if existent
                 case DROP_BALL:
                     robot.openCage();
                     ball_count -= robot.balls_in_cage;
@@ -358,84 +340,90 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
 
     public void relocate() {
-        Pair<Beacon,Beacon> beacons = beaconDetector.getBeacons();
+        final String tag = "Relocate";
+        Pair<Beacon, Beacon> beacons = beaconDetector.getBeacons();
         if (beacons == null) {
             Log.i(TAG, "Not enough beacons detected");
             return;
         }
-        double d, x, y, r1, r2;
-        Point lowestPoint1 = beacons.first.egocentricCoordinates;
-        Point lowestPoint2 = beacons.second.egocentricCoordinates;
+        double d, x, y, dist_left, dist_right;
+        Point leftBeacon = beacons.first.egocentricCoordinates;
+        Point rightBeacon = beacons.second.egocentricCoordinates;
         // distance to left beacon
-        r1 = lowestPoint1.y/Math.sin(Math.atan(lowestPoint1.y/lowestPoint1.x));
+        //dist_left = leftBeacon.y/Math.sin(Math.atan(leftBeacon.y/leftBeacon.x));
+        dist_left = Math.sqrt(Math.pow(leftBeacon.x, 2) + Math.pow(leftBeacon.y, 2));
         // distance to right beacon
-        r2 = lowestPoint2.y/Math.sin(Math.atan(lowestPoint2.y/lowestPoint2.x));
+        //dist_right = rightBeacon.y/Math.sin(Math.atan(rightBeacon.y/rightBeacon.x));
+        dist_right = Math.sqrt(Math.pow(rightBeacon.x, 2) + Math.pow(rightBeacon.y, 2));
+        Log.v(tag, "distance to left beacon: " + dist_left + " distance to right beacon: " + dist_right);
         d = 125.0;
-        x = (Math.pow(d, 2) - Math.pow(r2, 2) + Math.pow(r1, 2))/(2*d);
-        y = Math.sqrt(Math.pow(r1, 2) - Math.pow(x, 2));
+        x = (Math.pow(d, 2) - Math.pow(dist_right, 2) + Math.pow(dist_left, 2)) / (2 * d);
+        y = Math.sqrt(Math.pow(dist_left, 2) - Math.pow(x, 2));
+        Log.v(tag, "x is " + x + " y is " + y);
         Beacon cornerBeacon;
         boolean isLeft = false;
         double robotX = 0.0;
         double robotY = 0.0;
         
         /* orientation */
-        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x/(-beacons.second.egocentricCoordinates.y));
-        robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(r2, 2) - Math.pow(r1, 2))/(2 * 125.0 * r2)); //law of cosines
-        if(beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0){
-        	cornerBeacon = beacons.first;
-        	isLeft = true;
-        }else{
-        	cornerBeacon = beacons.second;
+        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x / (-beacons.second.egocentricCoordinates.y));
+        robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(dist_right, 2) - Math.pow(dist_left, 2)) / (2 * 125.0 * dist_right)); //law of cosines
+        if (beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0) {
+            cornerBeacon = beacons.first;
+            isLeft = true;
+        } else {
+            cornerBeacon = beacons.second;
         }
-        switch(cornerBeacon){
-        
-        case RED_GREEN:	//beacon in upper right
-        	if(isLeft){
-        		robotX = cornerBeacon.coordinates.x - y;
-        		robotY = cornerBeacon.coordinates.y - x;
-        		robotTheta += 270.0;
-        	}else{
-        		robotX = cornerBeacon.coordinates.x - x;
-        		robotY = cornerBeacon.coordinates.y - y;
-        	}
-        	break;
-        case GREEN_RED: //beacon in lower right
-        	if(isLeft){
-        		robotX = cornerBeacon.coordinates.x - x;
-        		robotY = cornerBeacon.coordinates.y + y;
-        		robotTheta += 180.0;
-        	}else{
-        		robotX = cornerBeacon.coordinates.x - y;
-        		robotY = cornerBeacon.coordinates.y + x;
-        		robotTheta += 270.0;
-        	}
-        	break;
-        case GREEN_BLUE: //beacon in lower left
-        	if(isLeft){
-        		robotX = cornerBeacon.coordinates.x + y;
-        		robotY = cornerBeacon.coordinates.y + x;
-        		robotTheta += 90.0;
-        	}else{
-        		robotX = cornerBeacon.coordinates.x + x;
-        		robotY = cornerBeacon.coordinates.y + y;
-        		robotTheta += 180.0;
-        	}
-        	break;
-        case BLUE_GREEN: //beacon in upper left
-        	if(isLeft){
-        		robotX = cornerBeacon.coordinates.x + x;
-        		robotY = cornerBeacon.coordinates.y - y;
-        	}else{
-        		robotX = cornerBeacon.coordinates.y + x;
-        		robotY = cornerBeacon.coordinates.x - y;
-        		robotTheta += 90.0;
-        	}
-        	break;
+        Log.v(tag, "corner beacon is " + cornerBeacon + ", isLeft: " + isLeft);
+        switch (cornerBeacon) {
+
+            case RED_GREEN:    //beacon in upper right
+                if (isLeft) {
+                    robotX = cornerBeacon.coordinates.x - y;
+                    robotY = cornerBeacon.coordinates.y - x;
+                    robotTheta += 270.0;
+                } else {
+                    robotX = cornerBeacon.coordinates.x - x;
+                    robotY = cornerBeacon.coordinates.y - y;
+                }
+                break;
+            case GREEN_RED: //beacon in lower right
+                if (isLeft) {
+                    robotX = cornerBeacon.coordinates.x - x;
+                    robotY = cornerBeacon.coordinates.y + y;
+                    robotTheta += 180.0;
+                } else {
+                    robotX = cornerBeacon.coordinates.x - y;
+                    robotY = cornerBeacon.coordinates.y + x;
+                    robotTheta += 270.0;
+                }
+                break;
+            case GREEN_BLUE: //beacon in lower left
+                if (isLeft) {
+                    robotX = cornerBeacon.coordinates.x + y;
+                    robotY = cornerBeacon.coordinates.y + x;
+                    robotTheta += 90.0;
+                } else {
+                    robotX = cornerBeacon.coordinates.x + x;
+                    robotY = cornerBeacon.coordinates.y + y;
+                    robotTheta += 180.0;
+                }
+                break;
+            case BLUE_GREEN: //beacon in upper left
+                if (isLeft) {
+                    robotX = cornerBeacon.coordinates.x + x;
+                    robotY = cornerBeacon.coordinates.y - y;
+                } else {
+                    robotX = cornerBeacon.coordinates.y + x;
+                    robotY = cornerBeacon.coordinates.x - y;
+                    robotTheta += 90.0;
+                }
+                break;
         }
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
         robot.robotLocation.setTheta(robotTheta);
-        Log.i(TAG,"New Location: " + robot.robotLocation);
+        Log.i(tag, "New Location: " + robot.robotLocation);
     }
 
     /**
@@ -809,7 +797,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         e.printStackTrace();
                     }
                 }
-                stateMachine();
+                stateMachine(com.ebstor.robot.State.SEARCH_BALL);
             }
         }.start();
     }
