@@ -205,17 +205,14 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
         approxContour2f.convertTo(approx, CvType.CV_32S);
 
-        if (Math.abs(approx.size().area()) < 5 || !Imgproc.isContourConvex(approx)) {
-        	return false;
-        }
         if (approx.size().height > 6) {
         	Log.v(TAG, "yes");
         	double area = thisContour.size().area();
             ret = Imgproc.boundingRect(thisContour);
             double radius = ret.width / 2;
             
-            if (Math.abs(1 - ((double)ret.width / ret.height)) <= 1.6 &&
-            	Math.abs(1 - (area / (Math.PI * Math.pow(radius, 2)))) <= 1.6) 
+            if (Math.abs(1 - ((double)ret.width / ret.height)) <= 1 &&
+            	Math.abs(1 - (area / (Math.PI * Math.pow(radius, 2)))) <= 1) 
             {
             	return true;
             }
