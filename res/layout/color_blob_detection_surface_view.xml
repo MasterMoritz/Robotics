@@ -1,0 +1,49 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/FrameLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+        tools:context = "com.ebstor.robot.ColorBlobDetectionActivity">
+
+    <org.opencv.android.JavaCameraView
+        android:id="@+id/color_blob_detection_activity_surface_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"/>
+    <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="START"
+            android:id="@+id/start_exam3"
+            android:layout_gravity="start|top" android:onClick="startExam3" android:clickable="true"/>
+
+    <EditText
+        android:id="@+id/target_x"
+        android:layout_width="94dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top"
+        android:clickable="true"
+        android:inputType="numberDecimal"
+        android:text="x0" />
+
+    <EditText
+        android:id="@+id/target_y"
+        android:layout_width="94dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:clickable="true"
+        android:inputType="numberDecimal"
+        android:text="y0" />
+
+    <Button style="?android:attr/buttonStyleSmall" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="STOP" android:id="@+id/stop_button"
+            android:layout_gravity="left|bottom" android:onClick="stopWorkerThread" android:clickable="true"/>
+    <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TEST"
+            android:id="@+id/test"
+            android:layout_gravity="left|center_vertical" android:onClick="test" android:clickable="true"/>
+
+</FrameLayout>

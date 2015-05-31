@@ -1,11 +1,15 @@
 package com.ebstor.robot;
 
 import android.content.Intent;
+import android.util.Log;
 import android.widget.*;
+
 import com.ebstor.robot.corefunctions.Robot;
+import com.ebstor.robot.corefunctions.SensorCondition;
+
 import jp.ksksue.driver.serial.FTDriver;
 
-import com.example.robot.R;
+import com.ebstor.robot.R;
 
 import android.app.Activity;
 import android.hardware.usb.UsbManager;
@@ -21,13 +25,15 @@ public class MainActivity extends Activity {
 	private EditText distance;
     private EditText angle;
     public static Robot robot = null;
+    private static final String TAG = "MainActivity";
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button powah = (Button) findViewById(R.id.powah);
-        robot = new Robot((TextView) findViewById(R.id.textLog),new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
+        if (robot == null) robot = new Robot(new FTDriver((UsbManager) getSystemService(USB_SERVICE)));
+        //robot.connect();
         powah.setOnTouchListener(new OnTouchListener() {
 
             @Override
@@ -56,6 +62,11 @@ public class MainActivity extends Activity {
         } else {
             connect();
         }
+    }
+    
+    public void readSensors(View v) {
+        int[] sensor = robot.com.getSensors();
+        Log.v(TAG, "Left: " + Integer.toString(sensor[0]) + "| Middle: " + Integer.toString(sensor[1]) + " | Right: " + Integer.toString(sensor[2]));
     }
 
 	@Override
@@ -104,15 +115,33 @@ public class MainActivity extends Activity {
     }
 
 
+
+
     public void makeASquare(View v) {
+
         Double dist = Double.valueOf(distance.getText().toString());
         for (int i = 0; i < 4; i++) {
-            robot.drive();
-            robot.turn(90);
+            robot.drive(dist);
+            robot.turn(-90);
         }
+    }
+    
+    public void berserk(View v) {
+        robot.randomBerserkerMode();
     }
 
 
+    public void startColorBlobActivity(MenuItem item) {
+        Intent intent = new Intent(this,ColorBlobDetectionActivity.class);
+        startActivity(intent);
+    }
 
 
+    public void raiseBar(View view) {
+        robot.openCage();
+    }
+
+    public void lowerBar(View view) {
+        robot.closeCage();
+    }
 }

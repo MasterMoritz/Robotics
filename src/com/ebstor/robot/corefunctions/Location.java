@@ -55,9 +55,17 @@ public class Location {
 		this.y = y;
 	}
     public void setTheta(double theta) {
-		this.theta = theta;
+        theta %= 360;
+        if (theta < 0) theta = 360 + theta;
+        this.theta = theta;
 	}
     
+   
+    public Location(Location l) {
+    	this.x = l.getX();
+    	this.y = l.getY();
+    	this.theta = l.getTheta();
+    }
     @Override
     public String toString() {
     	return ("x = " + x + " | y = " + y + " | theta = " + theta);

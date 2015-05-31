@@ -1,10 +1,13 @@
 package com.ebstor.robot.communication;
 
+import android.util.Log;
 import android.widget.TextView;
 import jp.ksksue.driver.serial.FTDriver;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.http.auth.BasicUserPrincipal;
 
 import static java.lang.Thread.sleep;
 
@@ -13,23 +16,23 @@ import static java.lang.Thread.sleep;
  */
 public class Communicator {
 
+    private static final String TAG = "Communicator";
+
     private FTDriver driver;
-    private TextView textLog ;
     private static final long WAIT_BUFFER = 50;
 
-    public Communicator(FTDriver driver, TextView textLog) {
+    public Communicator(FTDriver driver) {
         this.driver = driver;
-        this.textLog = textLog;
     }
 
     public void connect() {
-        if (driver.begin(9600)) textLog.setText("connected! ");
-        else textLog.setText("connection not okay");
+        if (driver.begin(9600)) Log.i(TAG,"connected! ");
+        else Log.e(TAG,"connection not okay");
     }
 
     public void disconnect() {
         driver.end();
-        if (!driver.isConnected()) textLog.append("disconnected! ");
+        if (!driver.isConnected()) Log.i(TAG,"disconnected! ");
     }
 
     public boolean isConnected() {
@@ -45,7 +48,7 @@ public class Communicator {
             }
             driver.write(data);
         } else {
-            textLog.append("not connected\n");
+            Log.e(TAG,"not connected");
         }
     }
 
@@ -72,6 +75,18 @@ public class Communicator {
         return read();
     }
 
+    public void setBar(byte value) {
+        write(new byte[] { 'o', value, '\r', '\n' });
+    }
+
+    public void setBarDown() {
+        setBar((byte)0);
+        for (int i = 0; i < 10; i++) lowerBar();
+    }
+
+    public void setBarUp() {
+        setBar((byte)255);
+    }
 
     public void setVelocity(byte left, byte right) {
         write(
@@ -84,12 +99,24 @@ public class Communicator {
         );
     }
 
+    public void lowerBar(){
+    	write(
+    			new byte[] {'-', '\r', '\n'}
+    	);
+    }
+    
+    public void raiseBar(){
+    	write(
+    			new byte[] {'+', '\r', '\n'}
+    	);
+    }
+    
     public void stop() {
         write(new byte[]{'s', '\r', '\n'});
     }
 
     public int[] getSensors() {
-    	try{sleep(WAIT_BUFFER);}catch(Exception e){}
+    	try{sleep(WAIT_BUFFER);}catch(Exception e){};
         int[] sensors = new int[3];
         
         String[] parsed = readWrite(new byte[] { 'q', '\r', '\n' }).split("\\s+");
@@ -101,10 +128,15 @@ public class Communicator {
 			}
 		}
 		
-		sensors[0] = Integer.decode(hexas.get(2)); //left
-		sensors[1] = Integer.decode(hexas.get(4)); //middle
-		sensors[2] = Integer.decode(hexas.get(3)); //right
-		
+		if (hexas.size() < 5) {
+			sensors = getSensors();
+		}
+		else {
+			sensors[0] = Integer.decode(hexas.get(2)); //left
+			sensors[1] = Integer.decode(hexas.get(4)); //middle
+			sensors[2] = Integer.decode(hexas.get(3)); //right
+		}
+	
         return sensors;
     }
 
@@ -123,15 +155,4 @@ public class Communicator {
         return Integer.valueOf(parsed, 16);
     }
 
-    public void setTextLog(TextView txlog) {
-    	textLog = txlog;
-    }
-    
-    public void setText(String text) {
-    	this.textLog.setText(text + "\n");
-    }
-    
-    public void append(String text) {
-    	this.textLog.append(text + "\n");
-    }
 }

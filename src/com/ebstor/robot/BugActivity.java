@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.ebstor.robot.controller.LocationSpammer;
 import com.ebstor.robot.corefunctions.Location;
-import com.example.robot.R;
+import com.ebstor.robot.corefunctions.SensorCondition;
+import com.ebstor.robot.R;
 
 /**
  * Created by johannes on 3/24/15.
@@ -23,7 +26,6 @@ public class BugActivity extends MainActivity {
         x_coordinate = (EditText) findViewById(R.id.x_coordinate);
         y_coordinate = (EditText) findViewById(R.id.y_coordinate);
         textLog = (TextView) findViewById(R.id.bugTextLog);
-        robot.com.setTextLog(textLog);
         robot.connect();
     }
 
@@ -36,8 +38,29 @@ public class BugActivity extends MainActivity {
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
+        int[] sensor = robot.com.getSensors();
         
-        robot.obstacleMode();
+        //bug 2 , alternative to robot.bug2()
+        while (!robot.reachedGoal()){
+        	
+	        robot.turnToGoal();
+	        sensor = robot.com.getSensors();
+	        if (sensor[0] >= 30 && sensor[2] >= 30) {
+	        	robot.drive(20);
+	        }
+	        else {
+	        	robot.turn(-90);
+	        }
+	        sensor = robot.com.getSensors();
+	        if (sensor[0] >= 30 && sensor[2] >= 30) {
+	        	robot.drive(20);
+	        }
+	        robot.turnToGoal();
+        }
+
+        //turn to goal theta
+        robot.turn(- (robot.robotLocation.getTheta() - robot.goal.getTheta()));
+        System.out.println("final pose: " + robot.robotLocation);
     }
 
     public void testTurnToGoal(View v) {
