@@ -350,15 +350,16 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Point leftBeacon = beacons.first.egocentricCoordinates;
         Point rightBeacon = beacons.second.egocentricCoordinates;
         // distance to left beacon
-        //dist_left = leftBeacon.y/Math.sin(Math.atan(leftBeacon.y/leftBeacon.x));
-        dist_left = Math.sqrt(Math.pow(leftBeacon.x, 2) + Math.pow(leftBeacon.y, 2));
+        dist_left = leftBeacon.y/Math.sin(Math.atan(leftBeacon.y/leftBeacon.x));
+        //dist_left = Math.sqrt(Math.pow(leftBeacon.x, 2) + Math.pow(leftBeacon.y, 2));
         // distance to right beacon
-        //dist_right = rightBeacon.y/Math.sin(Math.atan(rightBeacon.y/rightBeacon.x));
-        dist_right = Math.sqrt(Math.pow(rightBeacon.x, 2) + Math.pow(rightBeacon.y, 2));
+        dist_right = rightBeacon.y/Math.sin(Math.atan(rightBeacon.y/rightBeacon.x));
+        //dist_right = Math.sqrt(Math.pow(rightBeacon.x, 2) + Math.pow(rightBeacon.y, 2));
         Log.v(tag, "distance to left beacon: " + dist_left + " distance to right beacon: " + dist_right);
         d = 125.0;
         x = (Math.pow(d, 2) - Math.pow(dist_right, 2) + Math.pow(dist_left, 2)) / (2 * d);
-        y = Math.sqrt(Math.pow(dist_left, 2) - Math.pow(x, 2));
+        y = 1/d * Math.sqrt((-d + dist_right - dist_left)*(-d - dist_right + dist_left)*(-d + dist_right + dist_left)*(d + dist_right + dist_left));
+		y /= 2;
         Log.v(tag, "x is " + x + " y is " + y);
         Beacon cornerBeacon;
         boolean isLeft = false;
@@ -377,57 +378,57 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Log.v(tag, "corner beacon is " + cornerBeacon + ", isLeft: " + isLeft);
         switch (cornerBeacon) {
 
-            case RED_GREEN:    //beacon in upper right
-                if (isLeft) {
-                    robotX = cornerBeacon.coordinates.x - y;
-                    robotY = cornerBeacon.coordinates.y - x;
-                    robotTheta += 270.0;
-                } else {
-                    robotX = x;
-                    robotY = cornerBeacon.coordinates.y - y;
+        case RED_GREEN:    //beacon in upper right
+            if (isLeft) {
+                robotX = cornerBeacon.coordinates.x - y;
+                robotY = cornerBeacon.coordinates.y - x;
+                robotTheta += 270.0;
+            } else {
+                robotX = x;
+                robotY = cornerBeacon.coordinates.y - y;
+            }
+            break;
+        case GREEN_RED: //beacon in lower right
+            if (isLeft) {
+                robotX = cornerBeacon.coordinates.x - x;
+                robotY = cornerBeacon.coordinates.y + y;
+                robotTheta += 180.0;
+            } else {
+                robotX = cornerBeacon.coordinates.x - y;
+                if(x > 0){
+                	robotY = -x;
+                }else{
+                	robotY = Math.abs(x);
                 }
-                break;
-            case GREEN_RED: //beacon in lower right
-                if (isLeft) {
-                    robotX = cornerBeacon.coordinates.x - x;
-                    robotY = cornerBeacon.coordinates.y + y;
-                    robotTheta += 180.0;
-                } else {
-                    robotX = cornerBeacon.coordinates.x - y;
-                    if(x > 0){
-                    	robotY = -x;
-                    }else{
-                    	robotY = Math.abs(x);
-                    }
-                    robotTheta += 270.0;
+                robotTheta += 270.0;
+            }
+            break;
+        case GREEN_BLUE: //beacon in lower left
+            if (isLeft) {
+                robotX = cornerBeacon.coordinates.x + y;
+                robotY = cornerBeacon.coordinates.y + x;
+                robotTheta += 90.0;
+            } else {
+                if(x > 0){
+                	robotX = -x;
+                }else{
+                	robotX = Math.abs(x);
                 }
-                break;
-            case GREEN_BLUE: //beacon in lower left
-                if (isLeft) {
-                    robotX = cornerBeacon.coordinates.x + y;
-                    robotY = cornerBeacon.coordinates.y + x;
-                    robotTheta += 90.0;
-                } else {
-                    if(x > 0){
-                    	robotX = -x;
-                    }else{
-                    	robotX = Math.abs(x);
-                    }
-                    robotY = cornerBeacon.coordinates.y + y;
-                    robotTheta += 180.0;
-                }
-                break;
-            case BLUE_GREEN: //beacon in upper left
-                if (isLeft) {
-                    robotX = cornerBeacon.coordinates.x + x;
-                    robotY = cornerBeacon.coordinates.y - y;
-                } else {
-                    robotX = cornerBeacon.coordinates.x + y;
-                    robotY = x;
-                    robotTheta += 90.0;
-                }
-                break;
-        }
+                robotY = cornerBeacon.coordinates.y + y;
+                robotTheta += 180.0;
+            }
+            break;
+        case BLUE_GREEN: //beacon in upper left
+            if (isLeft) {
+                robotX = cornerBeacon.coordinates.x + x;
+                robotY = cornerBeacon.coordinates.y - y;
+            } else {
+                robotX = cornerBeacon.coordinates.x + y;
+                robotY = x;
+                robotTheta += 90.0;
+            }
+            break;
+    }
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
         robot.robotLocation.setTheta(robotTheta);
