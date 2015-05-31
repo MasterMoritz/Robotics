@@ -383,7 +383,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     robotY = cornerBeacon.coordinates.y - x;
                     robotTheta += 270.0;
                 } else {
-                    robotX = cornerBeacon.coordinates.x - x;
+                    robotX = -x;
                     robotY = cornerBeacon.coordinates.y - y;
                 }
                 break;
@@ -394,7 +394,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     robotTheta += 180.0;
                 } else {
                     robotX = cornerBeacon.coordinates.x - y;
-                    robotY = cornerBeacon.coordinates.y + x;
+                    robotY = Math.abs(x);
                     robotTheta += 270.0;
                 }
                 break;
@@ -404,7 +404,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     robotY = cornerBeacon.coordinates.y + x;
                     robotTheta += 90.0;
                 } else {
-                    robotX = cornerBeacon.coordinates.x + x;
+                    robotX = Math.abs(x);
                     robotY = cornerBeacon.coordinates.y + y;
                     robotTheta += 180.0;
                 }
@@ -414,7 +414,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     robotX = cornerBeacon.coordinates.x + x;
                     robotY = cornerBeacon.coordinates.y - y;
                 } else {
-                    robotX = cornerBeacon.coordinates.y + x;
+                    robotX = x;
                     robotY = cornerBeacon.coordinates.x - y;
                     robotTheta += 90.0;
                 }
