@@ -280,12 +280,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             switch (state) {
                 //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
-                    if (testmode) {
-                        beaconDetector.process(mRgba);
-                        relocate();
 
-                    }
-                    /*int z = 0;
+                    int z = 0;
                     for (z = 0; z < 8; z++) {
 	                	beaconDetector.process(mRgba);
 	                	if (beaconDetector.getBeacons() != null) {
@@ -309,7 +305,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // search for a ball
                     else {
                     	state = State.SEARCH_BALL;
-                    }*/
+                    }
                     break;
 
                 //not sure what to do with it
@@ -665,7 +661,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     	  float x = -48.0f; // coordinates of first detected inner corner on chessboard
     	  float y = 309.0f;
     	  float delta = 12.0f; // size of a single square edge in chessboard
-    	  LinkedList<Point> PointList = new LinkedList<Point>();
+    	  LinkedList<Point> PointList = new LinkedList<>();
     	 
     	  // Define real-world coordinates for given chessboard pattern:
     	  for (int i = 0; i < mPatternSize.height; i++) {
