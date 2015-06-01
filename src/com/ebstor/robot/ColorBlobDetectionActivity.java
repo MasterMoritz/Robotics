@@ -11,6 +11,7 @@ import com.ebstor.robot.beacons.Beacon;
 import com.ebstor.robot.beacons.BeaconColor;
 import com.ebstor.robot.beacons.BeaconContour;
 import com.ebstor.robot.beacons.BeaconDetector;
+import com.ebstor.robot.communication.Communicator;
 import com.ebstor.robot.corefunctions.*;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -270,22 +271,44 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     
     /**
      * execute the tasks corresponding to the current state, then go into the next state and repeat
+     * @throws InterruptedException 
      */
-    private void stateMachine(State start) {
+    private void stateMachine(State start) throws InterruptedException {
         State state = start; // starting state
         int ball_count = 10; // number of balls in the field
         Location ball = new Location();
         
         while(stateMachineRunning)
             switch (state) {
+            	case START:
+
+                    int o = 0;
+                    for (o = 0; o < 8; o++) {
+	                	beaconDetector.process(mRgba);
+	                	if (beaconDetector.getBeacons() != null) {
+	                		relocate();
+	                		break;
+	                	}
+	                	else {
+	                		robot.turn(45);
+	                	}
+                    }
+                    // couldn't find enough beacons to relocate
+                    if (o == 8) {
+                    	//hope that robot finds enough beacons next time, because we can't drive around without knowing our location
+                    	continue;
+                    }
+                    
+                    robot.turnToGoal();
+                    robot.drive(Robot.euclideanDistance(robot.robotLocation, robot.goal));
+                    Communicator.leash.clear();
+                    state = State.SEARCH_BALL;
+                    break;
+                    
                 //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
-                    if (testmode) {
-                        beaconDetector.process(mRgba);
-                        relocate();
 
-                    }
-                    /*int z = 0;
+                    int z = 0;
                     for (z = 0; z < 8; z++) {
 	                	beaconDetector.process(mRgba);
 	                	if (beaconDetector.getBeacons() != null) {
@@ -309,7 +332,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // search for a ball
                     else {
                     	state = State.SEARCH_BALL;
-                    }*/
+                    }
                     break;
 
                 //not sure what to do with it
@@ -369,7 +392,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // TODO place all the shit we already implemented here (and improve it by recalculating path)
                     // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
 
-                	//^not sure how �tis intended
+                	//^not sure how 'tis intended
                     robot.turn(Robot.degreesToBall(nearestBall));
                     robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
                 	
@@ -386,6 +409,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         robot.openCage();
                     robot.closeCage();
                     robot.balls_in_cage += 1;
+                    robot.com.leash();
                     state = State.LOCALIZE;
                     break;
 
@@ -509,7 +533,11 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
-        robot.robotLocation.setTheta(robotTheta);
+        //this should probably be the right theta, if not we have to use 3 beacons which is a chore
+        double egoTheta = Math.atan(beacons.first.egocentricCoordinates.x / beacons.first.egocentricCoordinates.y);
+        double absTheta = Math.atan(beacons.first.coordinates.y - robotY / beacons.first.coordinates.x - robotX);
+        
+        robot.robotLocation.setTheta(Math.abs(absTheta) - Math.abs(egoTheta));
         Log.i(tag, "New Location: " + robot.robotLocation);
     }
 
@@ -655,7 +683,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Mat dest = new Mat(1, 1, CvType.CV_32FC2);
         src.put(0, 0, imgPoint.x, imgPoint.y);
         Core.perspectiveTransform(src, dest, homographyMatrix);
-        Point dest_point = new Point(dest.get(0, 0)[0]/10, dest.get(0, 0)[1]/10);
+        Point dest_point = new Point(dest.get(0, 0)[1]/10, -dest.get(0, 0)[0]/10);
         Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
         return dest_point;
     }
@@ -665,7 +693,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     	  float x = -48.0f; // coordinates of first detected inner corner on chessboard
     	  float y = 309.0f;
     	  float delta = 12.0f; // size of a single square edge in chessboard
-    	  LinkedList<Point> PointList = new LinkedList<Point>();
+    	  LinkedList<Point> PointList = new LinkedList<>();
     	 
     	  // Define real-world coordinates for given chessboard pattern:
     	  for (int i = 0; i < mPatternSize.height; i++) {
@@ -884,7 +912,12 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         e.printStackTrace();
                     }
                 }
-                stateMachine(com.ebstor.robot.State.SEARCH_BALL);
+                try {
+					stateMachine(com.ebstor.robot.State.START);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
         }.start();
     }

@@ -39,7 +39,6 @@ public class BeaconContour {
                 if (p.x < leftest.x) leftest = p;
                 if (p.y < top.y) top = p;
             }
-            lowest = new Point((Math.abs(rightest.x) - Math.abs(leftest.x))/2 + leftest.x, lowest.y);
             fourTuple = new Point[4];
             fourTuple[0] = lowest;
             fourTuple[1] = leftest;
