@@ -655,16 +655,17 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Mat dest = new Mat(1, 1, CvType.CV_32FC2);
         src.put(0, 0, imgPoint.x, imgPoint.y);
         Core.perspectiveTransform(src, dest, homographyMatrix);
-        Point dest_point = new Point(dest.get(0, 0)[1]/10, -dest.get(0, 0)[0]/10);
+        Point dest_point = new Point(dest.get(0, 0)[1]/10, dest.get(0, 0)[0]/10);
         Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
         return dest_point;
     }
 
     public static Mat getHomographyMatrix(Mat mRgba) {
     	  final Size mPatternSize = new Size(6, 9); // number of inner corners in the used chessboard pattern 
-    	  float x = -48.0f; // coordinates of first detected inner corner on chessboard
+    	  float x = -115.0f; // coordinates of first detected inner corner on chessboard
     	  float y = 309.0f;
-    	  float delta = 12.0f; // size of a single square edge in chessboard
+    	  float delta = 25.0f; // size of a single square edge in chessboard
+    	  x += 8*delta;
     	  LinkedList<Point> PointList = new LinkedList<Point>();
     	 
     	  // Define real-world coordinates for given chessboard pattern:
@@ -674,7 +675,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     	      PointList.addLast(new Point(x,y));
     	      y += delta;
     	    }
-    	    x += delta;
+    	    x -= delta;
     	  }
     	  MatOfPoint2f RealWorldC = new MatOfPoint2f();
     	  RealWorldC.fromList(PointList);
