@@ -662,7 +662,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
     public static Mat getHomographyMatrix(Mat mRgba) {
     	  final Size mPatternSize = new Size(6, 9); // number of inner corners in the used chessboard pattern 
-    	  float x = -115.0f; // coordinates of first detected inner corner on chessboard
+    	  float x = -115; // coordinates of first detected inner corner on chessboard
     	  float y = 309.0f;
     	  float delta = 25.0f; // size of a single square edge in chessboard
     	  x += 8*delta;
