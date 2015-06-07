@@ -184,29 +184,25 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Log.v(TAG, "ball contour count: " + contours.size());
         Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
-        MatOfPoint ball = null;
-    
+        Point ball = new Point(0,Double.NEGATIVE_INFINITY);
+
+        boolean ballfound = false;
         for (MatOfPoint m : contours) {
-        	if (!isInBeacon(m)) {
-        		if (ball == null) {
-        			ball = m;
-        		} 
-        		else {
-        			if (new BeaconContour(m).get4Tuple()[0].y > new BeaconContour(ball).get4Tuple()[0].y) {
-        				ball = m;
-        			}
-            	}
+        	if (isCircle(m)) {
+                ballfound = true;
+        		Point nearest = Collections.max(m.toList(),pointComparator);
+                if (pointComparator.compare(nearest,ball) > 0)
+                    ball = nearest;
             }
         }
 
-        if (ball == null) {
-        	nearestBall = null;
-        }
-        else {
-            nearestBall = imageCoordToEgoCoord(Collections.max(ball.toList(), pointComparator));
+        if (ballfound) {
+            nearestBall = imageCoordToEgoCoord(ball);
             Log.v(TAG, "nearest ball coordinates: " + nearestBall);
+        } else {
+            nearestBall = null;
         }
-        
+
         ballLocationUpdated = true;
     }
 
@@ -251,21 +247,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
         approxContour2f.convertTo(approx, CvType.CV_32S);
 
-        if (approx.size().height > 6) {
-        	Log.v(TAG, "yes");
-        	double area = thisContour.size().area();
-            ret = Imgproc.boundingRect(thisContour);
-            double radius = ret.width / 2;
-            
-            if (Math.abs(1 - ((double)ret.width / ret.height)) <= 1 &&
-            	Math.abs(1 - (area / (Math.PI * Math.pow(radius, 2)))) <= 1) 
-            {
-            	return true;
-            }
-            else return false;
+        Log.v("isCircle", "number of vertices: " + approx.toList().size());
+        if (approx.toList().size() > 4) {
+            Log.v("isCircle", "yes, it's a circle");
+            return true;
+        } else {
+            Log.v("isCircle","nope, not a circle");
+            return false;
         }
 
-        else return false;
     }
     
     /**
@@ -666,8 +656,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
           float y = 115; // coordinates of first detected inner corner on chessboard
     	  float delta = 25.0f; // size of a single square edge in chessboard
     	  //y += 8*delta;
-    	  LinkedList<Point> PointList = new LinkedList<Point>();
-    	 
+    	  LinkedList<Point> PointList = new LinkedList<>();
+
     	  // Define real-world coordinates for given chessboard pattern:
     	  for (int i = 0; i < mPatternSize.height; i++) {
     	    x = 450.0f;
@@ -893,5 +883,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void test(View view) {
         beaconDetector.process(mRgba);
         relocate();
+        if (mBlobColorHsv != null) {
+            mDetector.setHsvColor(mBlobColorHsv);
+            mDetector.process(mRgba);
+            isCircle(mDetector.getContours().get(0));
+        }
     }
 }
