@@ -33,7 +33,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
-    private static final boolean testmode = false;
+    private static final boolean testmode = true;
     private static Mat           homographyMatrix;
     private static Comparator<Point> pointComparator = new Comparator<Point>() {
         @Override
@@ -274,7 +274,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         beaconDetector.process(mRgba);
                         relocate();
 
-                    }
+                    } else {
                     int z = 0;
                     for (z = 0; z < 8; z++) {
 	                	beaconDetector.process(mRgba);
@@ -299,7 +299,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // search for a ball
                     else {
                     	state = State.SEARCH_BALL;
-                    }
+                    }}
                     break;
 
                 //not sure what to do with it
@@ -499,7 +499,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
-        robot.robotLocation.setTheta(robotTheta);
+        
+        double egoTheta = Math.atan(beacons.first.egocentricCoordinates.y / beacons.first.egocentricCoordinates.x);
+        double absTheta = Math.atan(beacons.first.coordinates.y - robotY / beacons.first.coordinates.x - robotX);
+        robot.robotLocation.setTheta(Math.abs(absTheta) - Math.abs(egoTheta));
         Log.i(tag, "New Location: " + robot.robotLocation);
     }
 
