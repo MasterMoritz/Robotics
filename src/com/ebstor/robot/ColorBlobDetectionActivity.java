@@ -33,7 +33,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
-    private static final boolean testmode = true;
+    private static final boolean testmode = false;
     private static Mat           homographyMatrix;
     private static Comparator<Point> pointComparator = new Comparator<Point>() {
         @Override
@@ -222,7 +222,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Point[] colorpoints;
         
         for (MatOfPoint c : contours) {
-        	colorpoints = new BeaconContour(c).get4Tuple();
+        	colorpoints = (new BeaconContour(c)).get4Tuple();
         	
         	// if highestMiddle is between colorpoints then contour is in beacon
         	if (highestMiddle.x >= colorpoints[1].x && highestMiddle.x <= colorpoints[2].x && highestMiddle.y <= colorpoints[0].y) {
@@ -263,7 +263,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     private void stateMachine(State start) {
         State state = start; // starting state
-        int ball_count = 10; // number of balls in the field
+        int ball_count = 1; // number of balls in the field
         Location ball = new Location();
         
         while(stateMachineRunning)
@@ -275,7 +275,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         relocate();
 
                     }
-                    /*int z = 0;
+                    int z = 0;
                     for (z = 0; z < 8; z++) {
 	                	beaconDetector.process(mRgba);
 	                	if (beaconDetector.getBeacons() != null) {
@@ -299,7 +299,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // search for a ball
                     else {
                     	state = State.SEARCH_BALL;
-                    }*/
+                    }
                     break;
 
                 //not sure what to do with it
