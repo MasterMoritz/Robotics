@@ -161,7 +161,6 @@ public class Robot {
         	velocity *= -1;
         }
         
-        Communicator.leash.add(new Quadruple(velocity, velocity, time));
         com.setVelocity(velocity, velocity);
         sleep_h(time);
         com.stop();
@@ -268,7 +267,6 @@ public class Robot {
                 if (time < 0) {
                     time = 0;
                 }
-                Communicator.leash.add(new Quadruple(-velocity, velocity, time));
                 com.setVelocity((byte)-velocity,(byte)velocity);
                 sleep_h(time);
                 com.stop();
@@ -282,7 +280,6 @@ public class Robot {
             if (time < 0) {
                 time = 0;
             }
-            Communicator.leash.add(new Quadruple(-velocity, velocity, time));
             com.setVelocity((byte)-velocity,(byte)velocity);
             sleep_h(time);
             com.stop();

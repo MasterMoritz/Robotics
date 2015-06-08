@@ -11,7 +11,6 @@ import com.ebstor.robot.beacons.Beacon;
 import com.ebstor.robot.beacons.BeaconColor;
 import com.ebstor.robot.beacons.BeaconContour;
 import com.ebstor.robot.beacons.BeaconDetector;
-import com.ebstor.robot.communication.Communicator;
 import com.ebstor.robot.corefunctions.*;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -34,7 +33,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
-    private static final boolean testmode = true;
+    private static final boolean testmode = false;
     private static Mat           homographyMatrix;
     private static Comparator<Point> pointComparator = new Comparator<Point>() {
         @Override
@@ -185,29 +184,25 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Log.v(TAG, "ball contour count: " + contours.size());
         Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
-        MatOfPoint ball = null;
-    
+        Point ball = new Point(0,Double.NEGATIVE_INFINITY);
+
+        boolean ballfound = false;
         for (MatOfPoint m : contours) {
-        	if (!isInBeacon(m)) {
-        		if (ball == null) {
-        			ball = m;
-        		} 
-        		else {
-        			if (new BeaconContour(m).get4Tuple()[0].y > new BeaconContour(ball).get4Tuple()[0].y) {
-        				ball = m;
-        			}
-            	}
+        	if (isCircle(m)) {
+                ballfound = true;
+        		Point nearest = Collections.max(m.toList(),pointComparator);
+                if (pointComparator.compare(nearest,ball) > 0)
+                    ball = nearest;
             }
         }
 
-        if (ball == null) {
-        	nearestBall = null;
-        }
-        else {
-            nearestBall = imageCoordToEgoCoord(Collections.max(ball.toList(), pointComparator));
+        if (ballfound) {
+            nearestBall = imageCoordToEgoCoord(ball);
             Log.v(TAG, "nearest ball coordinates: " + nearestBall);
+        } else {
+            nearestBall = null;
         }
-        
+
         ballLocationUpdated = true;
     }
 
@@ -227,7 +222,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Point[] colorpoints;
         
         for (MatOfPoint c : contours) {
-        	colorpoints = new BeaconContour(c).get4Tuple();
+        	colorpoints = (new BeaconContour(c)).get4Tuple();
         	
         	// if highestMiddle is between colorpoints then contour is in beacon
         	if (highestMiddle.x >= colorpoints[1].x && highestMiddle.x <= colorpoints[2].x && highestMiddle.y <= colorpoints[0].y) {
@@ -252,62 +247,34 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
         approxContour2f.convertTo(approx, CvType.CV_32S);
 
-        if (approx.size().height > 6) {
-        	Log.v(TAG, "yes");
-        	double area = thisContour.size().area();
-            ret = Imgproc.boundingRect(thisContour);
-            double radius = ret.width / 2;
-            
-            if (Math.abs(1 - ((double)ret.width / ret.height)) <= 1 &&
-            	Math.abs(1 - (area / (Math.PI * Math.pow(radius, 2)))) <= 1) 
-            {
-            	return true;
-            }
-            else return false;
+        Log.v("isCircle", "number of vertices: " + approx.toList().size());
+        if (approx.toList().size() > 4) {
+            Log.v("isCircle", "yes, it's a circle");
+            return true;
+        } else {
+            Log.v("isCircle","nope, not a circle");
+            return false;
         }
 
-        else return false;
     }
     
     /**
      * execute the tasks corresponding to the current state, then go into the next state and repeat
-     * @throws InterruptedException 
      */
-    private void stateMachine(State start) throws InterruptedException {
+    private void stateMachine(State start) {
         State state = start; // starting state
-        int ball_count = 10; // number of balls in the field
+        int ball_count = 1; // number of balls in the field
         Location ball = new Location();
         
         while(stateMachineRunning)
             switch (state) {
-            	case START:
-
-                    int o = 0;
-                    for (o = 0; o < 8; o++) {
-	                	beaconDetector.process(mRgba);
-	                	if (beaconDetector.getBeacons() != null) {
-	                		relocate();
-	                		break;
-	                	}
-	                	else {
-	                		robot.turn(45);
-	                	}
-                    }
-                    // couldn't find enough beacons to relocate
-                    if (o == 8) {
-                    	//hope that robot finds enough beacons next time, because we can't drive around without knowing our location
-                    	continue;
-                    }
-                    
-                    robot.turnToGoal();
-                    robot.drive(Robot.euclideanDistance(robot.robotLocation, robot.goal));
-                    Communicator.leash.clear();
-                    state = State.SEARCH_BALL;
-                    break;
-                    
                 //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
+                    if (testmode) {
+                        beaconDetector.process(mRgba);
+                        relocate();
 
+                    }
                     int z = 0;
                     for (z = 0; z < 8; z++) {
 	                	beaconDetector.process(mRgba);
@@ -392,7 +359,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // TODO place all the shit we already implemented here (and improve it by recalculating path)
                     // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
 
-                	//^not sure how 'tis intended
+                	//^not sure how �tis intended
                     robot.turn(Robot.degreesToBall(nearestBall));
                     robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
                 	
@@ -409,7 +376,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         robot.openCage();
                     robot.closeCage();
                     robot.balls_in_cage += 1;
-                    robot.com.leash();
                     state = State.LOCALIZE;
                     break;
 
@@ -533,11 +499,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
-        //this should probably be the right theta, if not we have to use 3 beacons which is a chore
-        double egoTheta = Math.atan(beacons.first.egocentricCoordinates.x / beacons.first.egocentricCoordinates.y);
-        double absTheta = Math.atan(beacons.first.coordinates.y - robotY / beacons.first.coordinates.x - robotX);
-        
-        robot.robotLocation.setTheta(Math.abs(absTheta) - Math.abs(egoTheta));
+        robot.robotLocation.setTheta(robotTheta);
         Log.i(tag, "New Location: " + robot.robotLocation);
     }
 
@@ -683,26 +645,27 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Mat dest = new Mat(1, 1, CvType.CV_32FC2);
         src.put(0, 0, imgPoint.x, imgPoint.y);
         Core.perspectiveTransform(src, dest, homographyMatrix);
-        Point dest_point = new Point(dest.get(0, 0)[1]/10, -dest.get(0, 0)[0]/10);
+        Point dest_point = new Point(dest.get(0, 0)[0]/10, dest.get(0, 0)[1]/10);
         Log.v(TAG, "coordinates: " + dest_point.x + ", " + dest_point.y);
         return dest_point;
     }
 
     public static Mat getHomographyMatrix(Mat mRgba) {
     	  final Size mPatternSize = new Size(6, 9); // number of inner corners in the used chessboard pattern 
-    	  float x = -48.0f; // coordinates of first detected inner corner on chessboard
-    	  float y = 309.0f;
-    	  float delta = 12.0f; // size of a single square edge in chessboard
+          float x = 450.0f;
+          float y = 115; // coordinates of first detected inner corner on chessboard
+    	  float delta = 25.0f; // size of a single square edge in chessboard
+    	  //y += 8*delta;
     	  LinkedList<Point> PointList = new LinkedList<>();
-    	 
+
     	  // Define real-world coordinates for given chessboard pattern:
     	  for (int i = 0; i < mPatternSize.height; i++) {
-    	    y = 309.0f;
+    	    x = 450.0f;
     	    for (int j = 0; j < mPatternSize.width; j++) {
     	      PointList.addLast(new Point(x,y));
-    	      y += delta;
+    	      x += delta;
     	    }
-    	    x += delta;
+    	    y -= delta;
     	  }
     	  MatOfPoint2f RealWorldC = new MatOfPoint2f();
     	  RealWorldC.fromList(PointList);
@@ -912,12 +875,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         e.printStackTrace();
                     }
                 }
-                try {
-					stateMachine(com.ebstor.robot.State.START);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+                stateMachine(com.ebstor.robot.State.SEARCH_BALL);
             }
         }.start();
     }
@@ -925,5 +883,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void test(View view) {
         beaconDetector.process(mRgba);
         relocate();
+        if (mBlobColorHsv != null) {
+            mDetector.setHsvColor(mBlobColorHsv);
+            mDetector.process(mRgba);
+            isCircle(mDetector.getContours().get(0));
+        }
     }
 }

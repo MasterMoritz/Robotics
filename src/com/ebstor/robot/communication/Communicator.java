@@ -5,13 +5,9 @@ import android.widget.TextView;
 import jp.ksksue.driver.serial.FTDriver;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.http.auth.BasicUserPrincipal;
-
-import com.ebstor.robot.corefunctions.Quadruple;
 
 import static java.lang.Thread.sleep;
 
@@ -21,7 +17,7 @@ import static java.lang.Thread.sleep;
 public class Communicator {
 
     private static final String TAG = "Communicator";
-    public static LinkedList<Quadruple> leash = new LinkedList<>();
+
     private FTDriver driver;
     private static final long WAIT_BUFFER = 50;
 
@@ -157,13 +153,6 @@ public class Communicator {
     public static int hexaToDecimal(String s){
         String parsed = s.substring(2);
         return Integer.valueOf(parsed, 16);
-    }
-    public void leash() throws InterruptedException {
-    	for (Quadruple q : leash) {
-    		setVelocity(q.velocity1, q.velocity2);
-            Thread.sleep(q.time);
-            stop();
-    	}
     }
 
 }

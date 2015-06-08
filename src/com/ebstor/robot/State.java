@@ -4,7 +4,6 @@ package com.ebstor.robot;
  * Created by johannes on 5/28/15.
  */
 public enum State {
-	START,
     /**
      * find 2 beacons and localize robot as soon as found
      */
