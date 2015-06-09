@@ -79,6 +79,18 @@ public class Robot {
     /** serial communicator */
     public Communicator com;
 
+    public SensorCondition isObstacle = new SensorCondition(this) {
+        @Override
+        public boolean holds() {
+            int[] sensors = robot.com.getSensors();
+            int left = sensors[0];
+            int center = sensors[1];
+            int right = sensors[2];
+
+            return (Math.min(left,Math.min(center,right)) <= RANGE_THRESHOLD);
+        }
+    };
+    
     /** setup serial communicator and initialize locations */
     public Robot(FTDriver driver) {
         robotLocation = new Location(0, 0, 0);
@@ -403,17 +415,6 @@ public class Robot {
     }
 
     public void driveAndStopForObstacles(double dist) {
-        SensorCondition isObstacle = new SensorCondition(this) {
-            @Override
-            public boolean holds() {
-                int[] sensors = robot.com.getSensors();
-                int left = sensors[0];
-                int center = sensors[1];
-                int right = sensors[2];
-
-                return (Math.min(left,Math.min(center,right)) <= RANGE_THRESHOLD);
-            }
-        };
         driveUntil(dist, isObstacle);
     }
 
@@ -682,6 +683,21 @@ public class Robot {
         }
         
         return encounteredObstacle;
+    }
+    
+    public void passObstacle(){
+    	while(isObstacle.holds()){
+    		turn(-90);
+    		driveAndStopForObstacles(40);
+    		if(isObstacle.holds()){
+    			turn(-180);
+    			drive(80);
+    			turn(-90);
+    		}else{
+    			turn(90);
+    		}
+    	}
+    	return;
     }
     
     /**

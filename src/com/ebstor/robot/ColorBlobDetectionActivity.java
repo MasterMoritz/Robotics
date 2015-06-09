@@ -378,7 +378,12 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
                 	//not sure how it is intended
                     robot.turn(Robot.degreesToBall(nearestBallEgo));
-                    robot.drive(Robot.euclideanDistance(new Location(), ball) - 15);
+                    robot.driveAndStopForObstacles(Robot.euclideanDistance(new Location(), ball) - 15);
+                    if(robot.isObstacle.holds()){
+                    	robot.passObstacle();
+                    	state = State.SEARCH_BALL;
+                    	break;
+                    }
                     if (!robot.cageOpen)
                         robot.openCage();
                 	findBall(greenBallHsv);
@@ -396,10 +401,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
                 // drive robot to target and drop it there
                 case BALL_TO_TARGET:
-                    robot.turnToGoal();
-                    robot.drive(Robot.euclideanDistance(robot.robotLocation, robot.goal) - 15);
-                    state = State.DROP_BALL;
-                    break;
+                	robot.turnToGoal();
+	                robot.driveAndStopForObstacles(Robot.euclideanDistance(robot.robotLocation, robot.goal) - 15);
+	                if(robot.isObstacle.holds()){
+	                	robot.passObstacle();
+	                	break;
+	                }else{	
+	                    state = State.DROP_BALL;
+	                    break;
+	                }
 
                 // drop all balls in cage and search for new balls if existent
                 case DROP_BALL:
