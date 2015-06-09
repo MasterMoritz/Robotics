@@ -42,8 +42,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
     };
     private volatile Mat         mRgba;
-    private volatile Scalar               greenBallHsv;
-    private volatile Scalar               redBallHsv;
+    private volatile Scalar      greenBallHsv;
+    private volatile Scalar      redBallHsv;
     /** currently chosen blob color */
     private Scalar               mBlobColorHsv;
     private ColorBlobDetector    mDetector;
@@ -56,7 +56,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     /**
      * egocentric coordinates of nearest ball, null if no ball detected
      */
-    public Point nearestBall = null;
+    public Point nearestBallEgo = null;
     /**
      * everytime we get a new location for the ball, this is set to true
      * everytime we call ballDetected() it is set to false
@@ -64,6 +64,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * this way we can be quite sure that we have the correct location
      */
     private boolean ballLocationUpdated = false;
+    
     /**
      * where the robot should take the ball
      */
@@ -197,10 +198,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
 
         if (ballfound) {
-            nearestBall = imageCoordToEgoCoord(ball);
-            Log.v(TAG, "nearest ball coordinates: " + nearestBall);
+            nearestBallEgo = imageCoordToEgoCoord(ball);
+            Log.v(TAG, "nearest ball coordinates: " + nearestBallEgo);
         } else {
-            nearestBall = null;
+            nearestBallEgo = null;
         }
 
         ballLocationUpdated = true;
@@ -289,7 +290,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // couldn't find enough beacons to relocate
                     if (z == 8) {
                     	//hope that robot finds enough beacons next time, because we can't drive around without knowing our location
-                    	continue;
+                    	state = State.FIN;
+                    	break;
                     }
                     
                     // only attempt to cage 1 ball for now before returning to goal
@@ -304,9 +306,24 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
                 //not sure what to do with it
                 case TRY_LOCALIZE:
-                    // TODO look around etc
-                    // if found relocate()
-                    state = State.SEARCH_BALL;
+                    for (int i = 0; i < 8; i++) {
+	                	beaconDetector.process(mRgba);
+	                	if (beaconDetector.getBeacons() != null) {
+	                		relocate();
+	                		break;
+	                	}
+	                	else {
+	                		robot.turn(45);
+	                	}
+                    }
+                    // only attempt to cage 1 ball for now before returning to goal
+                    if (robot.balls_in_cage > 0) {
+                    	state = State.BALL_TO_TARGET;
+                    }
+                    // search for a ball
+                    else {
+                    	state = State.SEARCH_BALL;
+                    }
                     break;
 
                 //search environment for a ball
@@ -332,7 +349,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                                 continue;
                             }
                             //ball is still there
-                            ball = new Location(nearestBall.x, nearestBall.y);
+                            ball = new Location(nearestBallEgo.x, nearestBallEgo.y);
                             break;
                         }
                         //no ball in sight, turn 45 degrees and try again
@@ -346,8 +363,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                             robot.turn(45);
 
                             //already made a 360 by now
-                            if (i == 7) {
-                                //TODO something to find a ball that is not within cam range
+                            if (i == 7){ 
+                                robot.turnToLocation(new Location(0,0));
+                                robot.drive(30);
+                                break;
                             }
                         }
                     }
@@ -356,27 +375,23 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     break;
 
                 case GOTO_BALL:
-                    // TODO place all the shit we already implemented here (and improve it by recalculating path)
-                    // if ball is lost state = SEARCH_BALL else state = CAGE_BALL
 
-                	//^not sure how �tis intended
-                    robot.turn(Robot.degreesToBall(nearestBall));
-                    robot.drive(Robot.euclideanDistance(robot.robotLocation, ball) - 15);
-                	
+                	//not sure how it is intended
+                    robot.turn(Robot.degreesToBall(nearestBallEgo));
+                    robot.drive(Robot.euclideanDistance(new Location(), ball) - 15);
+                    if (!robot.cageOpen)
+                        robot.openCage();
                 	findBall(greenBallHsv);
                 	if (ballDetected())
                 		state = State.CAGE_BALL;
-                	else
+                	else //in order for this to work we have to be sure that the ball will be detected at only 15 cm distance from the robot
                         state = State.SEARCH_BALL;
-
                     break;
 
                 case CAGE_BALL:
-                    if (!robot.cageOpen) // wtf? if it was not open by now we sure would not get the ball inside
-                        robot.openCage();
                     robot.closeCage();
                     robot.balls_in_cage += 1;
-                    state = State.LOCALIZE;
+                    state = State.TRY_LOCALIZE;
                     break;
 
                 // drive robot to target and drop it there
@@ -509,7 +524,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     public boolean ballDetected() {
         ballLocationUpdated = false;
-        return nearestBall != null;
+        return nearestBallEgo != null;
     }
     
     /**
@@ -557,7 +572,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     }
                 }
                 if (ballIsLost) continue;
-                Point targetEgo = new Point(nearestBall.x,nearestBall.y);
+                Point targetEgo = new Point(nearestBallEgo.x,nearestBallEgo.y);
                 // necessary so that turn and drive have the same target
                 Log.i(TAG, "nearest point is = " + targetEgo.x + " | " + targetEgo.y);
                 Log.v(TAG, "turning degrees: " + Robot.degreesToBall(targetEgo));
@@ -875,7 +890,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         e.printStackTrace();
                     }
                 }
-                stateMachine(com.ebstor.robot.State.SEARCH_BALL);
+                stateMachine(com.ebstor.robot.State.LOCALIZE);
             }
         }.start();
     }
