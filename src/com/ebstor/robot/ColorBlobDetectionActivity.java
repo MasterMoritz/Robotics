@@ -268,7 +268,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Location ball = new Location();
         
         while(stateMachineRunning) {
-            Log.v("statemachine", "current state: " + state);
+            Log.v("STATE_MACHINE", "current state: " + state);
             switch (state) {
                 //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
