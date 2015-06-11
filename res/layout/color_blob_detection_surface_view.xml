@@ -44,6 +44,6 @@
             android:layout_height="wrap_content"
             android:text="TEST"
             android:id="@+id/test"
-            android:layout_gravity="left|center_vertical" android:onClick="test" android:clickable="true"/>
+            android:layout_gravity="left|center_vertical" android:onClick="startExam3" android:clickable="true"/>
 
 </FrameLayout>

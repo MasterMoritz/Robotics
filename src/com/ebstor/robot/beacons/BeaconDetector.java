@@ -131,15 +131,18 @@ public class BeaconDetector {
             default:
                 return null;
         }
-        if (beaconsDetected.contains(result)
-                && (Math.sqrt(Math.pow(result.egocentricCoordinates.x, 2) +
-                Math.pow(result.egocentricCoordinates.y, 2))
-                < Math.sqrt(Math.pow(egoCoord.x, 2) + Math.pow(egoCoord.y, 2)))) {
-            return null; // old value is nearer
-        } else {
-            result.egocentricCoordinates = egoCoord;
-            return result;
-        }
+        if (result != null)
+            if (beaconsDetected.contains(result)
+                    && (Math.sqrt(Math.pow(result.egocentricCoordinates.x, 2) +
+                    Math.pow(result.egocentricCoordinates.y, 2))
+                    < Math.sqrt(Math.pow(egoCoord.x, 2) + Math.pow(egoCoord.y, 2)))) {
+
+                return null; // old value is nearer
+            } else {
+                result.egocentricCoordinates = egoCoord;
+                return result;
+            }
+        else return null;
     }
 
     private Beacon findBlueBeacons(int comp, BeaconColor color, Point[] blue4Tuple, Point[] other4Tuple) {
@@ -167,16 +170,18 @@ public class BeaconDetector {
             default:
                 return null;
         }
-        if (beaconsDetected.contains(result)
-            && (Math.sqrt(Math.pow(result.egocentricCoordinates.x, 2) +
+        if (result != null)
+            if (beaconsDetected.contains(result)
+                    && (Math.sqrt(Math.pow(result.egocentricCoordinates.x, 2) +
                     Math.pow(result.egocentricCoordinates.y, 2))
                     < Math.sqrt(Math.pow(egoCoord.x, 2) + Math.pow(egoCoord.y, 2)))) {
-                return null;
-        } else {
-            result.egocentricCoordinates = egoCoord;
-            return result;
-        }
 
+                return null;
+            } else {
+                result.egocentricCoordinates = egoCoord;
+                return result;
+            }
+        else return null;
     }
 
     /**

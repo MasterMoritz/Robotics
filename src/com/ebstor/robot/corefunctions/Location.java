@@ -54,6 +54,7 @@ public class Location {
     public void setY(double y) {
 		this.y = y;
 	}
+
     public void setTheta(double theta) {
         theta %= 360;
         if (theta < 0) theta = 360 + theta;

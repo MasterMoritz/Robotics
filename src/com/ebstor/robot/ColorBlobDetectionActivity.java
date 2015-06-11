@@ -108,6 +108,14 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
         mOpenCvCameraView.setCvCameraViewListener(this);
 
+        BeaconColor.hsvColors.put(BeaconColor.PURPLE, new Scalar(169.125, 103.75, 212.234375, 0.0));
+        BeaconColor.hsvColors.put(BeaconColor.BLUE, new Scalar(136.265625, 254.515625, 221.71875, 0.0));
+        BeaconColor.hsvColors.put(BeaconColor.RED, new Scalar(255.0, 132.15625, 210.6875, 0.0));
+        BeaconColor.hsvColors.put(BeaconColor.GREEN, new Scalar(92.328125, 171.25, 161.359375, 0.0));
+        for (Beacon b : Beacon.values()) {
+            b.egocentricCoordinates = new Point(Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY);
+        }
+
     }
 
     @Override
@@ -264,7 +272,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     private void stateMachine(State start) {
         State state = start; // starting state
-        int ball_count = 1; // number of balls in the field
+        int ball_count = 2; // number of balls in the field
         Location ball = new Location();
         
         while(stateMachineRunning) {
@@ -335,7 +343,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 // TODO: TODO and eliminate unneccesary sleeps after confirming working algorithm because we gotta be fast
                 case SEARCH_BALL:
                 	Log.v("STATE_MACHINE", "SEARCH_BALL");
-                    for (int i = 0; i < 8; i++) {
+                    int i = 0;
+                    for (i = 0; i < 8; i++) {
                         findBall(greenBallHsv);
 
                         //detected ball
@@ -367,17 +376,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                                 e.printStackTrace();
                             }
                             robot.turn(45);
-
-                            //already made a 360 by now
-                            if (i == 7){ 
-                            	Log.v("STATE_MACHINE", "no ball around me");
-                                robot.turnToLocation(new Location(0,0));
-                                robot.drive(30);
-                                break;
-                            }
                         }
                     }
-
+                    if (i == 8) {
+                        //already made a 360 by now
+                        Log.v("STATE_MACHINE", "no ball around me");
+                        robot.turnToLocation(new Location(0,0));
+                        robot.drive(30);
+                        break;
+                    }
                     state = State.GOTO_BALL;
                     break;
 
@@ -386,19 +393,19 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 	//not sure how it is intended
                     robot.turn(Robot.degreesToBall(nearestBallEgo));
                     robot.driveAndStopForObstacles(Robot.euclideanDistance(new Location(), ball) - 15);
-                    if(robot.isObstacle.holds()){
-                    	Log.v(TAG, "obstacle in the way");
-                    	robot.passObstacle();
-                    	state = State.SEARCH_BALL;
-                    	break;
-                    }
+                    //if(robot.isObstacle.holds()){
+                    //	Log.v("STATE_MACHINE", "obstacle in the way");
+                    //	robot.passObstacle();
+                   // 	state = State.SEARCH_BALL;
+                    //	break;
+                   // }
                     if (!robot.cageOpen)
                         robot.openCage();
-                	findBall(greenBallHsv);
-                	if (ballDetected())
+                	//findBall(greenBallHsv);
+                	//if (ballDetected())
                 		state = State.CAGE_BALL;
-                	else //in order for this to work we have to be sure that the ball will be detected at only 15 cm distance from the robot
-                        state = State.SEARCH_BALL;
+                	//else //in order for this to work we have to be sure that the ball will be detected at only 15 cm distance from the robot
+                      //  state = State.SEARCH_BALL;
                     break;
 
                 case CAGE_BALL:
@@ -417,7 +424,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 	                if(robot.isObstacle.holds()){
 	                	robot.passObstacle();
 	                	break;
-	                }else{	
+	                }else{
 	                    state = State.DROP_BALL;
 	                    break;
 	                }
@@ -811,6 +818,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibrateRedBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.RED.setHsvColor(mBlobColorHsv);
+            Log.i(TAG, "red beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
@@ -818,6 +826,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibrateBlueBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.BLUE.setHsvColor(mBlobColorHsv);
+            Log.i(TAG, "blue beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
@@ -825,6 +834,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibratePurpleBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.PURPLE.setHsvColor(mBlobColorHsv);
+            Log.i(TAG, "purple beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
@@ -832,6 +842,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibrateGreenBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.GREEN.setHsvColor(mBlobColorHsv);
+            Log.i(TAG, "green beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
@@ -918,6 +929,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     }
                 }
                 stateMachine(com.ebstor.robot.State.LOCALIZE);
+                stateMachineRunning = false;
             }
         }.start();
     }
