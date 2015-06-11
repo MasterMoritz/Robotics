@@ -19,7 +19,7 @@ public class Communicator {
     private static final String TAG = "Communicator";
 
     private FTDriver driver;
-    private static final long WAIT_BUFFER = 50;
+    public static final long WAIT_BUFFER = 50;
 
     public Communicator(FTDriver driver) {
         this.driver = driver;

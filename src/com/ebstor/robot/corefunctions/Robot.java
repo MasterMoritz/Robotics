@@ -97,8 +97,8 @@ public class Robot {
         goal = new Location(0, 0, 0);
         this.com = new Communicator(driver);
         
-        MINIMUM_TURN = DEGREE_PER_MILLISECOND * 50;
-        MINIMUM_DRIVE = CM_PER_MILLISECOND * 50;
+        MINIMUM_TURN = DEGREE_PER_MILLISECOND * com.WAIT_BUFFER;
+        MINIMUM_DRIVE = CM_PER_MILLISECOND * com.WAIT_BUFFER;
     }
 
     /**
@@ -163,7 +163,7 @@ public class Robot {
     	int velocity = VELOCITY;
     	
     	//drive distance
-        long time = distanceToTime(distance_cm) - 50;
+        long time = distanceToTime(distance_cm) - com.WAIT_BUFFER;
         if (time < 0) {
         	time = 0;
         }
@@ -215,29 +215,20 @@ public class Robot {
         boolean reached = false;
         double currentDistance = 0;
         
-        long t0 = System.currentTimeMillis() - 50;
         drive();
-    	
-        while (distance_cm > currentDistance && !condition.holds()) {
-        	currentDistance = timeToDistance(System.currentTimeMillis() - t0);
+        long t0 = System.currentTimeMillis();
+
+        while (distance_cm > currentDistance - timeToDistance(com.WAIT_BUFFER)) {
+        	reached = condition.holds();
+            if (reached) break;
+            currentDistance = timeToDistance(System.currentTimeMillis() - t0);
         }
         
         com.stop();
+
         long dt = System.currentTimeMillis() - t0;
-        currentDistance = timeToDistance(dt - t0);
-        robotLocation.translate(dt * Integer.signum(velocity));
-        
-        sleep_h(100);
-        //drive back if driven too much cause of overheads
-        if(currentDistance > distance_cm) {
-        	double diff = distance_cm - currentDistance;
-        	if (diff < MINIMUM_DRIVE) {
-        		drive(-MINIMUM_DRIVE);
-        	}
-        	else {
-        		drive(distance_cm - currentDistance);
-        	}
-        }
+        robotLocation.translate(Robot.timeToDistance(dt) * Integer.signum(velocity));
+
         return reached;
     }
 
@@ -252,7 +243,7 @@ public class Robot {
     	Log.i("Robot", "Turn " + degree + " degrees");
         for (int i = 0; i < Math.abs((int)(degree)/45); i++) {
             if (degree != 0) {
-                long time = degreesToTime(45) - 50;
+                long time = degreesToTime(45) - com.WAIT_BUFFER;
                 if (time < 0) {
                     time = 0;
                 }
@@ -265,7 +256,7 @@ public class Robot {
         
         double remainder = degree % 45;
         if (Math.abs(remainder) > MINIMUM_TURN) {
-            long time = degreesToTime(remainder) - 50;
+            long time = degreesToTime(remainder) - com.WAIT_BUFFER;
             if (time < 0) {
                 time = 0;
             }
@@ -663,11 +654,12 @@ public class Robot {
     }
     
     public void passObstacle() {
-        while (isObstacle.holds()) {
+        do {
             turn(-90);
             driveAndStopForObstacles(30);
             turn(90);
-        }
+        } while (isObstacle.holds());
+
     }
     
     /**

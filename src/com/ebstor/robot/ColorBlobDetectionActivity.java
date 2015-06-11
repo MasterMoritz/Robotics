@@ -382,6 +382,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         //already made a 360 by now
                         Log.v("STATE_MACHINE", "no ball around me");
                         robot.turnToLocation(new Location(0,0));
+                        robot.driveAndStopForObstacles(30);
                         break;
                     }
                     state = State.GOTO_BALL;
