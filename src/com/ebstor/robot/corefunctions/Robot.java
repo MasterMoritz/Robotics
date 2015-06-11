@@ -238,29 +238,6 @@ public class Robot {
         		drive(distance_cm - currentDistance);
         	}
         }
-        /*
-        long time = distanceToTime(distance_cm);
-
-        for (int i = 0; i < time/DRIVE_INTERVAL; i++) {
-            if (condition.holds()) {
-            	reached = true;
-            	break;
-            }
-            com.setVelocity(velocity, velocity);
-            long t0 = System.currentTimeMillis();
-            sleep_h(DRIVE_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            robotLocation.translate(timeToDistance(dt));
-        }
-        // drive the rest of the time, provided that the stopping condition has not been hold
-        if (!reached) {    
-            long t0 = System.currentTimeMillis();
-            sleep_h(time%DRIVE_INTERVAL);
-            long dt = System.currentTimeMillis() - t0;
-            robotLocation.translate(timeToDistance(dt));
-        }
-        com.stop();
-        */
         return reached;
     }
 
@@ -373,7 +350,7 @@ public class Robot {
             if (turningAngle > 180) turningAngle = 360 - turningAngle;
             if (turningAngle < -180) turningAngle = 360 + turningAngle;
             turn(turningAngle);
-            Log.v(TAG,angle + " | " + turningAngle + " | " + robotLocation.getTheta());
+            Log.v(TAG, angle + " | " + turningAngle + " | " + robotLocation.getTheta());
     	} catch(Exception e) {
     		Log.e(TAG,"failed to turn towards location");
     	}
@@ -414,8 +391,8 @@ public class Robot {
         }
     }
 
-    public void driveAndStopForObstacles(double dist) {
-        driveUntil(dist, isObstacle);
+    public boolean driveAndStopForObstacles(double dist) {
+        return driveUntil(dist, isObstacle);
     }
 
     public void setGoal(Location goal) {
@@ -526,7 +503,7 @@ public class Robot {
      * @return the last measured distance
      */
     private void keepDistance(int direction) {
-    	Log.v(TAG,"keeping distance " + Integer.toString(direction));
+    	Log.v(TAG, "keeping distance " + Integer.toString(direction));
 		int[] sensor = com.getSensors();
 		
 		int turnDirection = 2; //right sensor if turning left
@@ -685,19 +662,12 @@ public class Robot {
         return encounteredObstacle;
     }
     
-    public void passObstacle(){
-    	while(isObstacle.holds()){
-    		turn(-90);
-    		driveAndStopForObstacles(40);
-    		if(isObstacle.holds()){
-    			turn(-180);
-    			drive(80);
-    			turn(-90);
-    		}else{
-    			turn(90);
-    		}
-    	}
-    	return;
+    public void passObstacle() {
+        while (isObstacle.holds()) {
+            turn(-90);
+            driveAndStopForObstacles(30);
+            turn(90);
+        }
     }
     
     /**

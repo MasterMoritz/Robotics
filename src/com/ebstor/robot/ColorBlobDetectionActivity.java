@@ -343,7 +343,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 // TODO: TODO and eliminate unneccesary sleeps after confirming working algorithm because we gotta be fast
                 case SEARCH_BALL:
                 	Log.v("STATE_MACHINE", "SEARCH_BALL");
-                    int i = 0;
+                    int i;
                     for (i = 0; i < 8; i++) {
                         findBall(greenBallHsv);
 
@@ -382,7 +382,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                         //already made a 360 by now
                         Log.v("STATE_MACHINE", "no ball around me");
                         robot.turnToLocation(new Location(0,0));
-                        robot.drive(30);
                         break;
                     }
                     state = State.GOTO_BALL;
@@ -392,24 +391,20 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 	Log.v("STATE_MACHINE", "GOTO_BALL");
                 	//not sure how it is intended
                     robot.turn(Robot.degreesToBall(nearestBallEgo));
-                    robot.driveAndStopForObstacles(Robot.euclideanDistance(new Location(), ball) - 15);
-                    //if(robot.isObstacle.holds()){
-                    //	Log.v("STATE_MACHINE", "obstacle in the way");
-                    //	robot.passObstacle();
-                   // 	state = State.SEARCH_BALL;
-                    //	break;
-                   // }
-                    if (!robot.cageOpen)
-                        robot.openCage();
-                	//findBall(greenBallHsv);
-                	//if (ballDetected())
-                		state = State.CAGE_BALL;
-                	//else //in order for this to work we have to be sure that the ball will be detected at only 15 cm distance from the robot
-                      //  state = State.SEARCH_BALL;
+                    boolean obstacle = robot.driveAndStopForObstacles(Robot.euclideanDistance(new Location(), ball) - 30);
+                    if (obstacle) {
+                        robot.passObstacle();
+                        state = State.SEARCH_BALL;
+                    } else {
+                        robot.drive(15);
+                        state = State.CAGE_BALL;
+                    }
                     break;
 
                 case CAGE_BALL:
-                	Log.v("STATE_MACHINE", "CAGE_BALL");
+                    Log.v("STATE_MACHINE", "CAGE_BALL");
+                    if (!robot.cageOpen)
+                        robot.openCage();
                     robot.closeCage();
                     robot.balls_in_cage += 1;
                     state = State.TRY_LOCALIZE;
@@ -420,14 +415,13 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 	Log.v("STATE_MACHINE", "BALL_TO_TARGET");
                 	robot.turnToGoal();
                 	Log.v("STATE_MACHINE", "turned to goal");
-	                robot.driveAndStopForObstacles(Robot.euclideanDistance(robot.robotLocation, robot.goal) - 15);
-	                if(robot.isObstacle.holds()){
+	                obstacle = robot.driveAndStopForObstacles(Robot.euclideanDistance(robot.robotLocation, robot.goal) - 15);
+	                if(obstacle){
 	                	robot.passObstacle();
-	                	break;
 	                }else{
 	                    state = State.DROP_BALL;
-	                    break;
 	                }
+                    break;
 
                 // drop all balls in cage and search for new balls if existent
                 case DROP_BALL:
