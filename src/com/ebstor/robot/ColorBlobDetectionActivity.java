@@ -232,8 +232,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
     	return false;
     }
-    
-    //does not always work...
+
+
     public static boolean isCircle(MatOfPoint thisContour) {
 
         Rect ret = null;
@@ -249,7 +249,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         approxContour2f.convertTo(approx, CvType.CV_32S);
 
         Log.v("isCircle", "number of vertices: " + approx.toList().size());
-        if (approx.toList().size() > 4) {
+        if (approx.toList().size() >= 8) {
             Log.v("isCircle", "yes, it's a circle");
             return true;
         } else {
@@ -267,7 +267,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         int ball_count = 1; // number of balls in the field
         Location ball = new Location();
         
-        while(stateMachineRunning)
+        while(stateMachineRunning) {
+            Log.v("statemachine", "current state: " + state);
             switch (state) {
                 //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
@@ -429,6 +430,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     return;
 
             }
+        }
     }
 
 
@@ -460,8 +462,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         double robotY = 0.0;
         
         /* orientation */
-        double robotTheta = 90.0 - Math.atan(beacons.second.egocentricCoordinates.x / (-beacons.second.egocentricCoordinates.y));
-        robotTheta += Math.acos((Math.pow(125.0, 2) + Math.pow(dist_right, 2) - Math.pow(dist_left, 2)) / (2 * 125.0 * dist_right)); //law of cosines
+        double robotTheta = 90.0 - Math.toDegrees(Math.atan(rightBeacon.x / (-rightBeacon.y)));
+        Log.v("robot orientation","first theta: " + robotTheta);
+        robotTheta += Math.toDegrees(Math.acos((Math.pow(125.0, 2) + Math.pow(dist_right, 2) - Math.pow(dist_left, 2)) / (2 * 125.0 * dist_right))); //law of cosines
+        Log.v("robot orientation", "second theta: " + robotTheta);
         if (beacons.first.coordinates.x != 0 && beacons.first.coordinates.y != 0) {
             cornerBeacon = beacons.first;
             isLeft = true;
@@ -525,6 +529,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         robot.robotLocation.setX(robotX);
         robot.robotLocation.setY(robotY);
         robot.robotLocation.setTheta(robotTheta);
+        Log.v("robot orientation", "final orientation: " + robotTheta);
         Log.i(tag, "New Location: " + robot.robotLocation);
     }
 
@@ -677,15 +682,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
     public static Mat getHomographyMatrix(Mat mRgba) {
     	  final Size mPatternSize = new Size(6, 9); // number of inner corners in the used chessboard pattern 
-          float x = 450.0f;
-          float y = 115; // coordinates of first detected inner corner on chessboard
+          float x = 380.0f;
+          float y = 105; // coordinates of first detected inner corner on chessboard
     	  float delta = 25.0f; // size of a single square edge in chessboard
     	  //y += 8*delta;
     	  LinkedList<Point> PointList = new LinkedList<>();
 
     	  // Define real-world coordinates for given chessboard pattern:
     	  for (int i = 0; i < mPatternSize.height; i++) {
-    	    x = 450.0f;
+    	    x = 382.0f;
     	    for (int j = 0; j < mPatternSize.width; j++) {
     	      PointList.addLast(new Point(x,y));
     	      x += delta;
@@ -906,12 +911,13 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
     public void test(View view) {
-        beaconDetector.process(mRgba);
+        startExam3(view);
+        /*beaconDetector.process(mRgba);
         relocate();
         if (mBlobColorHsv != null) {
             mDetector.setHsvColor(mBlobColorHsv);
             mDetector.process(mRgba);
             isCircle(mDetector.getContours().get(0));
-        }
+        }*/
     }
 }
