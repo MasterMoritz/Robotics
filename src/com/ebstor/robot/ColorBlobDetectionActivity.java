@@ -271,7 +271,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             switch (state) {
                 //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
-                	Log.v(TAG, "start LOCALIZE");
+                	Log.v("STATE_MACHINE", "start LOCALIZE");
                     if (testmode) {
                         beaconDetector.process(mRgba);
                         relocate();
@@ -281,18 +281,18 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     for (z = 0; z < 8; z++) {
 	                	beaconDetector.process(mRgba);
 	                	if (beaconDetector.getBeacons() != null) {
-	                		Log.v(TAG, "relocate");
+	                		Log.v("STATE_MACHINE", "relocate");
 	                		relocate();
 	                		break;
 	                	}
 	                	else {
-	                		Log.v(TAG, "not enough beacons -> turn");
+	                		Log.v("STATE_MACHINE", "not enough beacons -> turn");
 	                		robot.turn(45);
 	                	}
                     }
                     // couldn't find enough beacons to relocate
                     if (z == 8) {
-                    	Log.v(TAG, "no beacons around me");
+                    	Log.v("STATE_MACHINE", "no beacons around me");
                     	//hope that robot finds enough beacons next time, because we can't drive around without knowing our location
                     	state = State.FIN;
                     	break;
