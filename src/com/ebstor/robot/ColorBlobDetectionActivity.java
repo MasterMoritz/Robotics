@@ -198,8 +198,9 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         boolean ballfound = false;
         for (MatOfPoint m : contours) {
         	if (isCircle(m)) {
+                Point nearest = Collections.max(m.toList(),pointComparator);
+                if (!inRange(imageCoordToEgoCoord(nearest))) continue;
                 ballfound = true;
-        		Point nearest = Collections.max(m.toList(),pointComparator);
                 if (pointComparator.compare(nearest,ball) > 0)
                     ball = nearest;
             }
@@ -213,6 +214,15 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
 
         ballLocationUpdated = true;
+    }
+
+    /**
+     *
+     * @param egoPoint
+     * @return if the distance to the point is less than 3m
+     */
+    private boolean inRange(Point egoPoint) {
+        return (Math.sqrt(Math.pow(egoPoint.x,2) + Math.pow(egoPoint.y,2)) < 300);
     }
 
     public boolean isInBeacon(MatOfPoint contour) {
