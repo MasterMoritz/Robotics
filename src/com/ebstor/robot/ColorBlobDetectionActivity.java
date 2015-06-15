@@ -30,6 +30,7 @@ import static java.lang.Thread.sleep;
 public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
 
     private static final String  TAG              = "ColorBlobActivity";
+    private static List<Scalar> BALLS_HSV = new  ArrayList<Scalar>();
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
@@ -205,6 +206,41 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     ball = nearest;
             }
         }
+
+        if (ballfound) {
+            nearestBallEgo = imageCoordToEgoCoord(ball);
+            Log.v(TAG, "nearest ball coordinates: " + nearestBallEgo);
+        } else {
+            nearestBallEgo = null;
+        }
+
+        ballLocationUpdated = true;
+    }
+    public void findBalls() {
+    	Point ball = new Point(0,Double.NEGATIVE_INFINITY);
+    	boolean ballfound = false;
+    	
+    	for (Scalar ballColorHSV: BALLS_HSV) {
+	    	mDetector.setHsvColor(ballColorHSV);
+	        mDetector.process(mRgba);
+	        
+	        List<MatOfPoint> contours = mDetector.getContours();
+	        Log.v(TAG, "ball contour count: " + contours.size());
+	        Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
+	
+	       
+	
+	        
+	        for (MatOfPoint m : contours) {
+	        	if (isCircle(m)) {
+	                Point nearest = Collections.max(m.toList(),pointComparator);
+	                if (!inRange(imageCoordToEgoCoord(nearest))) continue;
+	                ballfound = true;
+	                if (pointComparator.compare(nearest,ball) > 0)
+	                    ball = nearest;
+	            }
+	        }
+    	}
 
         if (ballfound) {
             nearestBallEgo = imageCoordToEgoCoord(ball);
@@ -804,18 +840,18 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         return false; // don't need subsequent touch events
     }
 
-    /** sets the last touched color as green ball value */
-    public void calibrateGreenBall(MenuItem item) {
+    /** adds the last touched color to the calibrated balls */
+    public void calibrateAddBall(MenuItem item) {
         if (mBlobColorHsv != null) {
-            greenBallHsv = mBlobColorHsv;
+            BALLS_HSV.add(mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
 
-    /** sets the last touched color as red ball value */
-    public void calibrateRedBall(MenuItem item) {
+    /** resets the ball calibrations */
+    public void calibrateClearBalls(MenuItem item) {
         if (mBlobColorHsv != null) {
-            redBallHsv = mBlobColorHsv;
+            BALLS_HSV.clear();
             mBlobColorHsv = null;
         }
     }

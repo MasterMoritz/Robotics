@@ -4,16 +4,16 @@
       tools:context="com.ebstor.robot.ColorBlobDetectionActivity" >
 
     <item
-        android:id="@+id/calibrate_redball"
+        android:id="@+id/calibrate_clearBalls"
         android:orderInCategory="100"
-        android:title="calibrate red ball"
-        android:onClick="calibrateRedBall"/>
+        android:title="clear ball calibrations"
+        android:onClick="calibrateClearBalls"/>
 
     <item
-        android:id="@+id/calibrate_greenball"
+        android:id="@+id/calibrate_addBall"
         android:orderInCategory="100"
-        android:title="calibrate green ball"
-        android:onClick="calibrateGreenBall"/>
+        android:title="add ball calibration"
+        android:onClick="calibrateAddBall"/>
 
     <item
             android:id="@+id/calibrate_red_beacon"
