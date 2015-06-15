@@ -391,7 +391,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 	Log.v("STATE_MACHINE", "SEARCH_BALL");
                     int i;
                     for (i = 0; i < 8; i++) {
-                        findBall(greenBallHsv);
+                        findBalls();
 
                         //detected ball
                         if (ballDetected()) {
@@ -401,7 +401,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            findBall(greenBallHsv);
+                            findBalls();
                             //ball magically teleported away
                             if (!ballDetected()) {
                                 Log.v("STATE_MACHINE", "lost sight of ball");
