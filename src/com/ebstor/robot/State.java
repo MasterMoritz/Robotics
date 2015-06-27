@@ -17,7 +17,7 @@ public enum State {
      */
     SEARCH_BALL,
     /**
-     * navigate to a target ball (includes recalculating path)
+     * navigate to a target ball
      */
     GOTO_BALL,
     /**

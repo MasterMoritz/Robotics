@@ -353,9 +353,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     // couldn't find enough beacons to relocate
                     if (z == 10) {
                     	Log.v("STATE_MACHINE", "no beacons around me");
-                    	//hope that robot finds enough beacons next time, because we can't drive around without knowing our location
-                    	state = State.SEARCH_BALL;
-                        robot.robotLocation = new Location();
                         break;
                     }
                     
@@ -397,7 +394,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     break;
 
                 //search environment for a ball
-                // TODO: TODO and eliminate unneccesary sleeps after confirming working algorithm because we gotta be fast
                 case SEARCH_BALL:
                 	Log.v("STATE_MACHINE", "SEARCH_BALL");
                     int i;
