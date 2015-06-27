@@ -654,6 +654,12 @@ public class Robot {
     }
     
     public void passObstacle() {
+        try {
+            Thread.sleep(3000);
+            if (!isObstacle.holds()) return;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         do {
             turn(-90);
             driveAndStopForObstacles(30);

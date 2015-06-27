@@ -11,16 +11,16 @@ import java.util.Map;
 public enum BeaconColor {
     RED,
     BLUE,
-    PURPLE,
-    GREEN;
+    GREEN,
+    YELLOW;
 
     public static Map<BeaconColor,Scalar> hsvColors = new EnumMap<>(BeaconColor.class);
 
     static {
         /*hsvColors.put(RED, new Scalar(2,255,140));
         hsvColors.put(BLUE, new Scalar(138,255,95));
-        hsvColors.put(PURPLE, new Scalar(215,144,95));
-        hsvColors.put(GREEN, new Scalar(45,255,0));*/
+        hsvColors.put(GREEN, new Scalar(215,144,95));
+        hsvColors.put(YELLOW, new Scalar(45,255,0));*/
     }
 
     public Scalar hsvColor() {

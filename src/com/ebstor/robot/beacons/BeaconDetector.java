@@ -37,7 +37,7 @@ public class BeaconDetector {
         try {
             // because i did not define a circular order
             if (beaconsDetected.get(0).equals(Beacon.BLUE_RED) &&
-                    beaconsDetected.get(beaconsDetected.size()).equals(Beacon.BLUE_GREEN)) {
+                    beaconsDetected.get(beaconsDetected.size()).equals(Beacon.BLUE_YELLOW)) {
                 return new Pair<>(beaconsDetected.get(beaconsDetected.size()),beaconsDetected.get(0));
             }
             return new Pair<>(beaconsDetected.get(0), beaconsDetected.get(1));
@@ -113,18 +113,12 @@ public class BeaconDetector {
                     egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
                 }
                 break;
-            case PURPLE:
+            case YELLOW:
                 if (comp < 0) {
-                    result = Beacon.PURPLE_RED;
-                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
-                }
-                break;
-            case GREEN:
-                if (comp < 0) {
-                    result = Beacon.GREEN_RED;
+                    result = Beacon.YELLOW_RED;
                     egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(red4Tuple[0]);
                 } else {
-                    result = Beacon.RED_GREEN;
+                    result = Beacon.RED_YELLOW;
                     egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
                 }
                 break;
@@ -152,6 +146,15 @@ public class BeaconDetector {
         Beacon result = null;
         Point egoCoord = null;
         switch (color) {
+            case YELLOW:
+                if (comp < 0) {
+                    result = Beacon.YELLOW_BLUE;
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(blue4Tuple[0]);
+                } else {
+                    result = Beacon.BLUE_YELLOW;
+                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
+                }
+                break;
             case GREEN:
                 if (comp < 0) {
                     result = Beacon.GREEN_BLUE;
@@ -159,12 +162,6 @@ public class BeaconDetector {
                 } else {
                     result = Beacon.BLUE_GREEN;
                     egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(other4Tuple[0]);
-                }
-                break;
-            case PURPLE:
-                if (comp < 0) {
-                    result = Beacon.PURPLE_BLUE;
-                    egoCoord = ColorBlobDetectionActivity.imageCoordToEgoCoord(blue4Tuple[0]);
                 }
                 break;
             default:

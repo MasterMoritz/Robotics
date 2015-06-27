@@ -30,7 +30,7 @@ import static java.lang.Thread.sleep;
 public class ColorBlobDetectionActivity extends MainActivity implements OnTouchListener, CvCameraViewListener2 {
 
     private static final String  TAG              = "ColorBlobActivity";
-    private static List<Scalar> BALLS_HSV = new  ArrayList<Scalar>();
+    private static List<Scalar> BALLS_HSV = new  ArrayList<>();
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
     private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
@@ -109,10 +109,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
         mOpenCvCameraView.setCvCameraViewListener(this);
 
-        BeaconColor.hsvColors.put(BeaconColor.PURPLE, new Scalar(169.125, 103.75, 212.234375, 0.0));
-        BeaconColor.hsvColors.put(BeaconColor.BLUE, new Scalar(136.265625, 254.515625, 221.71875, 0.0));
-        BeaconColor.hsvColors.put(BeaconColor.RED, new Scalar(255.0, 132.15625, 210.6875, 0.0));
-        BeaconColor.hsvColors.put(BeaconColor.GREEN, new Scalar(92.328125, 171.25, 161.359375, 0.0));
+        BeaconColor.hsvColors.put(BeaconColor.GREEN, new Scalar(75.75, 226.921875, 79.734375, 0.0));
+        BeaconColor.hsvColors.put(BeaconColor.BLUE, new Scalar(148.671875, 219.453125, 107.859375, 0.0));
+        BeaconColor.hsvColors.put(BeaconColor.RED, new Scalar(1.796875, 227.0, 190.46875, 0.0));
+        BeaconColor.hsvColors.put(BeaconColor.YELLOW, new Scalar(33.9375, 254.5, 185.859375, 0.0));
         for (Beacon b : Beacon.values()) {
             b.egocentricCoordinates = new Point(Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY);
         }
@@ -318,7 +318,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     private void stateMachine(State start) {
         State state = start; // starting state
-        int ball_count = 2; // number of balls in the field
+        int ball_count = 4; // number of balls in the field
         Location ball = new Location();
         
         while(stateMachineRunning) {
@@ -326,14 +326,14 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
             switch (state) {
                 //turn around until enough beacons are in view to localize the robot
                 case LOCALIZE:
-                	Log.v("STATE_MACHINE", "start LOCALIZE");
+                    Log.v("STATE_MACHINE", "start LOCALIZE");
                     if (testmode) {
                         beaconDetector.process(mRgba);
                         relocate();
 
                     }
-                    int z = 0;
-                    for (z = 0; z < 8; z++) {
+                    int z;
+                    for (z = 0; z < 10; z++) {
 	                	beaconDetector.process(mRgba);
 	                	if (beaconDetector.getBeacons() != null) {
 	                		Log.v("STATE_MACHINE", "relocate");
@@ -342,15 +342,21 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 	                	}
 	                	else {
 	                		Log.v("STATE_MACHINE", "not enough beacons -> turn");
-	                		robot.turn(45);
-	                	}
+	                		robot.turn(36);
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     // couldn't find enough beacons to relocate
-                    if (z == 8) {
+                    if (z == 10) {
                     	Log.v("STATE_MACHINE", "no beacons around me");
                     	//hope that robot finds enough beacons next time, because we can't drive around without knowing our location
-                    	state = State.FIN;
-                    	break;
+                    	state = State.SEARCH_BALL;
+                        robot.robotLocation = new Location();
+                        break;
                     }
                     
                     // only attempt to cage 1 ball for now before returning to goal
@@ -365,15 +371,20 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
                 //not sure what to do with it
                 case TRY_LOCALIZE:
-                    for (int i = 0; i < 8; i++) {
+                    for (int i = 0; i < 10; i++) {
 	                	beaconDetector.process(mRgba);
 	                	if (beaconDetector.getBeacons() != null) {
 	                		relocate();
 	                		break;
 	                	}
 	                	else {
-	                		robot.turn(45);
-	                	}
+	                		robot.turn(36);
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     // only attempt to cage 1 ball for now before returning to goal
                     if (robot.balls_in_cage > 0) {
@@ -463,11 +474,10 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 	robot.turnToGoal();
                 	Log.v("STATE_MACHINE", "turned to goal");
 	                obstacle = robot.driveAndStopForObstacles(Robot.euclideanDistance(robot.robotLocation, robot.goal) - 15);
-	                if(obstacle){
-	                	robot.passObstacle();
-	                }else{
-	                    state = State.DROP_BALL;
-	                }
+                    if (obstacle) {
+                        robot.passObstacle();
+                    }
+
                     break;
 
                 // drop all balls in cage and search for new balls if existent
@@ -535,7 +545,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         Log.v(tag, "corner beacon is " + cornerBeacon + ", isLeft: " + isLeft);
         switch (cornerBeacon) {
 
-        case RED_GREEN:    //beacon in upper right
+        case RED_YELLOW:    //beacon in upper right
             if (isLeft) {
                 robotX = cornerBeacon.coordinates.x - y;
                 robotY = cornerBeacon.coordinates.y - x;
@@ -545,7 +555,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 robotY = cornerBeacon.coordinates.y - y;
             }
             break;
-        case GREEN_RED: //beacon in lower right
+        case YELLOW_RED: //beacon in lower right
             if (isLeft) {
                 robotX = cornerBeacon.coordinates.x - x;
                 robotY = cornerBeacon.coordinates.y + y;
@@ -560,7 +570,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 robotTheta += 270.0;
             }
             break;
-        case GREEN_BLUE: //beacon in lower left
+        case YELLOW_BLUE: //beacon in lower left
             if (isLeft) {
                 robotX = cornerBeacon.coordinates.x + y;
                 robotY = cornerBeacon.coordinates.y + x;
@@ -575,7 +585,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                 robotTheta += 180.0;
             }
             break;
-        case BLUE_GREEN: //beacon in upper left
+        case BLUE_YELLOW: //beacon in upper left
             if (isLeft) {
                 robotX = cornerBeacon.coordinates.x + x;
                 robotY = cornerBeacon.coordinates.y - y;
@@ -859,7 +869,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibrateRedBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.RED.setHsvColor(mBlobColorHsv);
-            Log.i(TAG, "red beacon: " + mBlobColorHsv);
+            Log.i("colorcalibration", "red beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
@@ -867,23 +877,31 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     public void calibrateBlueBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.BLUE.setHsvColor(mBlobColorHsv);
-            Log.i(TAG, "blue beacon: " + mBlobColorHsv);
+            Log.i("colorcalibration", "blue beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
 
-    public void calibratePurpleBeacon(MenuItem item) {
+   /* public void calibratePurpleBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
-            BeaconColor.PURPLE.setHsvColor(mBlobColorHsv);
-            Log.i(TAG, "purple beacon: " + mBlobColorHsv);
+            BeaconColor.GREEN.setHsvColor(mBlobColorHsv);
+            Log.i("colorcalibration", "purple beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
-    }
+    }*/
 
     public void calibrateGreenBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.GREEN.setHsvColor(mBlobColorHsv);
-            Log.i(TAG, "green beacon: " + mBlobColorHsv);
+            Log.i("colorcalibration", "green beacon: " + mBlobColorHsv);
+            mBlobColorHsv = null;
+        }
+    }
+
+    public void calibrateYellowBeacon(MenuItem item) {
+        if (mBlobColorHsv != null) {
+            BeaconColor.YELLOW.setHsvColor(mBlobColorHsv);
+            Log.i("colorcalibration", "yellow beacon: " + mBlobColorHsv);
             mBlobColorHsv = null;
         }
     }
@@ -910,17 +928,16 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
     public void startExam2(View view) {
-        Log.v(TAG,"startExam2 called");
         EditText x = (EditText) findViewById(R.id.target_x);
         EditText y = (EditText) findViewById(R.id.target_y);
-        
+
         String sx = x.getText().toString();
         String sy = y.getText().toString();
-        
+
         Double dx;
         Double dy;
-        
-       
+
+
         if (x.getText().toString().equals("x") || y.getText().toString().equals("y")) {
             Log.e(TAG,"no target specified");
             return;
@@ -957,6 +974,39 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
     public void startExam3(View view) {
+        Log.v(TAG,"startExam2 called");
+        EditText x = (EditText) findViewById(R.id.target_x);
+        EditText y = (EditText) findViewById(R.id.target_y);
+
+        String sx = x.getText().toString();
+        String sy = y.getText().toString();
+
+        Double dx;
+        Double dy;
+
+
+        if (x.getText().toString().equals("x") || y.getText().toString().equals("y")) {
+            Log.e(TAG,"no target specified");
+            return;
+        }
+        System.out.println("parsing x and y of " + sx + " " + sy);
+        // x20 should be parsed same as only 20
+        try {
+            dx = Double.parseDouble(sx);
+        } catch(Exception e) {
+            dx = Double.parseDouble(sx.substring(1));
+        }
+
+        // y20 should be parsed same as only 20
+        try {
+            dy = Double.parseDouble(sy);
+        } catch(Exception e) {
+            dy = Double.parseDouble(sy.substring(1));
+        }
+
+        robot.goal = new Location(dx,dy);
+
+
         if (stateMachineRunning) return;
         stateMachineRunning = true;
         new Thread(){

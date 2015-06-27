@@ -29,8 +29,8 @@
     <item
             android:id="@+id/calibrate_purple_beacon"
             android:orderInCategory="100"
-            android:title="calibrate purple beacon"
-            android:onClick="calibratePurpleBeacon"/>
+            android:title="calibrate yellow beacon"
+            android:onClick="calibrateYellowBeacon"/>
 
     <item
             android:id="@+id/calibrate_green_beacon"

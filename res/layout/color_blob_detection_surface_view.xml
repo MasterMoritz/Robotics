@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|top"
         android:clickable="true"
-        android:inputType="numberDecimal"
+        android:inputType="numberSigned"
         android:text="x0" />
 
     <EditText
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|top"
         android:clickable="true"
-        android:inputType="numberDecimal"
+        android:inputType="numberSigned"
         android:text="y0" />
 
     <Button style="?android:attr/buttonStyleSmall" android:layout_width="wrap_content"
