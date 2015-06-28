@@ -1,14 +1,13 @@
 package com.ebstor.robot;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.ebstor.robot.controller.LocationSpammer;
 import com.ebstor.robot.corefunctions.Location;
-import com.ebstor.robot.corefunctions.SensorCondition;
+import com.ebstor.robot.corefunctions.Robot;
 import com.ebstor.robot.R;
 
 /**
@@ -18,7 +17,8 @@ public class BugActivity extends MainActivity {
 
     private EditText x_coordinate, y_coordinate;
     private TextView textLog;
-
+    private static final String TAG = "BugActivity";
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,33 +34,34 @@ public class BugActivity extends MainActivity {
     }
 
     public void startBug(View v) {
+    	//set goal location
         int x = Integer.valueOf(x_coordinate.getText().toString());
         int y = Integer.valueOf(y_coordinate.getText().toString());
         Location goal = new Location(x,y);
         robot.setGoal(goal);
-        int[] sensor = robot.com.getSensors();
+        Log.i(TAG, "goal coordinates: " + goal);
         
-        //bug 2 , alternative to robot.bug2()
+        //initialize closest point to goal on mline
+        robot.m_point = new Location(robot.robotLocation);
+        
+        //start m-line algorithm
+        double distanceToGoal;
         while (!robot.reachedGoal()){
-        	
+        	distanceToGoal = Robot.euclideanDistance(robot.robotLocation, robot.goal);
 	        robot.turnToGoal();
-	        sensor = robot.com.getSensors();
-	        if (sensor[0] >= 30 && sensor[2] >= 30) {
-	        	robot.drive(20);
+	        if(robot.driveUntilObstacle(distanceToGoal)) {
+		        //circle around obstacle counterclockwise until mline is hit
+		        robot.followObstacle(-1);
 	        }
-	        else {
-	        	robot.turn(-90);
-	        }
-	        sensor = robot.com.getSensors();
-	        if (sensor[0] >= 30 && sensor[2] >= 30) {
-	        	robot.drive(20);
-	        }
-	        robot.turnToGoal();
         }
-
-        //turn to goal theta
+        
+        //drive/turn to reach the specified pose (x, y, theta)
+        distanceToGoal = Robot.euclideanDistance(robot.robotLocation, robot.goal);
+        robot.turnToGoal();
+        robot.drive(distanceToGoal);
+        Log.v(TAG, "robot reached goal \n RobotLocation: " + robot.robotLocation + "\n GoalLocation" + robot.goal);
         robot.turn(- (robot.robotLocation.getTheta() - robot.goal.getTheta()));
-        System.out.println("final pose: " + robot.robotLocation);
+        Log.v(TAG, "final pose: " + robot.robotLocation);
     }
 
     public void testTurnToGoal(View v) {

@@ -1,17 +1,12 @@
  package com.ebstor.robot.corefunctions;
 
-import java.util.EmptyStackException;
-
 import android.util.Log;
 
 import org.opencv.core.*;
 
-import android.widget.TextView;
-
 import com.ebstor.robot.communication.Communicator;
 
 import jp.ksksue.driver.serial.FTDriver;
-import static java.lang.Thread.sleep;
 
 /**
  * this class contains all abilities the robot has
@@ -36,30 +31,15 @@ public class Robot {
     /** considering the 50ms wait buffer this is the minimum distance that has to be driven <br>
      * is set in constructor */
     private static double MINIMUM_DRIVE;
-    
-    /** the interval in ms after which conditions are checked and odometry is updated (when moving forward) */
-    private long DRIVE_INTERVAL = 500;
-    
-    /** the interval in ms after which conditions are checked and odometry is updated (when turning) */
-    private long TURN_INTERVAL = 250;
-    
-    private static final int ROBOT_WIDTH = 20;
-	private static final int ROBOT_LENGTH = 16;
-    
-    /** the circumference in cm from the within the robot assumes he has reached the goal*/
+
+    /** the circumference in cm from within the robot assumes he has reached the goal*/
     private static final int CIRCUMFERENCE_GOAL = 20;
 	
+    /** tolerance for m-line hitting in cm */
     private static final int CIRCUMFERENCE_MLINE = 5;
 	
     /** the threshold in cm where the robot starts avoiding an obstacle */
     private static final int RANGE_THRESHOLD = 19;
-
-    /** the threshold in cm at which the robot may start driving again */
-    private static final int SOFT_THRESHOLD = 30;
-    
-    /** the angle between the left end of the LOS of the front sensor and the side sensor */
-    private static final double ANGLE_FRONT_SIDE = 10;
-    private static final double ANGLE_RIGHT_LEFT = 40;
     
     /** number of balls already caged */
     public int balls_in_cage = 0;
@@ -97,8 +77,8 @@ public class Robot {
         goal = new Location(0, 0, 0);
         this.com = new Communicator(driver);
         
-        MINIMUM_TURN = DEGREE_PER_MILLISECOND * com.WAIT_BUFFER;
-        MINIMUM_DRIVE = CM_PER_MILLISECOND * com.WAIT_BUFFER;
+        MINIMUM_TURN = DEGREE_PER_MILLISECOND * Communicator.WAIT_BUFFER;
+        MINIMUM_DRIVE = CM_PER_MILLISECOND * Communicator.WAIT_BUFFER;
     }
 
     /**
@@ -163,7 +143,7 @@ public class Robot {
     	int velocity = VELOCITY;
     	
     	//drive distance
-        long time = distanceToTime(distance_cm) - com.WAIT_BUFFER;
+        long time = distanceToTime(distance_cm) - Communicator.WAIT_BUFFER;
         if (time < 0) {
         	time = 0;
         }
@@ -218,7 +198,7 @@ public class Robot {
         drive();
         long t0 = System.currentTimeMillis();
 
-        while (distance_cm > currentDistance - timeToDistance(com.WAIT_BUFFER)) {
+        while (distance_cm > currentDistance - timeToDistance(Communicator.WAIT_BUFFER)) {
         	reached = condition.holds();
             if (reached) break;
             currentDistance = timeToDistance(System.currentTimeMillis() - t0);
@@ -243,7 +223,7 @@ public class Robot {
     	Log.i("Robot", "Turn " + degree + " degrees");
         for (int i = 0; i < Math.abs((int)(degree)/45); i++) {
             if (degree != 0) {
-                long time = degreesToTime(45) - com.WAIT_BUFFER;
+                long time = degreesToTime(45) - Communicator.WAIT_BUFFER;
                 if (time < 0) {
                     time = 0;
                 }
@@ -256,7 +236,7 @@ public class Robot {
         
         double remainder = degree % 45;
         if (Math.abs(remainder) > MINIMUM_TURN) {
-            long time = degreesToTime(remainder) - com.WAIT_BUFFER;
+            long time = degreesToTime(remainder) - Communicator.WAIT_BUFFER;
             if (time < 0) {
                 time = 0;
             }
@@ -265,9 +245,6 @@ public class Robot {
             com.stop();
             robotLocation.rotate(Math.signum(degree)*remainder);
         }
-
-
-
     }
 
     public void turnLeft() {
@@ -315,11 +292,6 @@ public class Robot {
         com.stop();
         long dt = System.currentTimeMillis() - t0;
         robotLocation.rotate(-timeToDegrees(dt));
-    }
-
-
-    private boolean withinCircumferenceOfGoal() {
-        return (euclideanDistance(robotLocation,goal) <= CIRCUMFERENCE_GOAL);
     }
 
     public void turnToGoal() {
@@ -435,21 +407,8 @@ public class Robot {
     public void randomBerserkerMode() {
     	int b = 12;
     	int m = 0;
-    	int r = 1;
-    	int r2 = 1;
+
     	while(m < 6) {
-    		if (Math.random()*100 < 20) {
-    			r = -1;
-    		}
-    		else  {
-    			r = 1;
-    		}
-    		if (Math.random()*100 < 20) {
-    			r2 = -1;
-    		}
-    		else  {
-    			r2 = 1;
-    		}
     		com.setVelocity((int)(Math.random() * 90), (int)(Math.random() * 90));
     		sleep_h((long) (Math.random() * 500 + 200));
     		if (b > (int)(Math.random()*100)) {
@@ -480,123 +439,7 @@ public class Robot {
             e.printStackTrace();
         }
         cageOpen = false;
-    }
-    
-    /** drives a certain distance and checks afterwards if condition is fulfilled */
-    private boolean driveAndCheck(double distance_cm, SensorCondition condition) {
-    	drive(distance_cm);
-    	return condition.holds();
-    }
-    
-    /**
-     * keep distance to an obstacle
-     * @param direction : 1 -> turn counter-clockwise , -1 -> turn clockwise
-     * @return the last measured distance
-     */
-    private void keepDistance(int direction) {
-    	Log.v(TAG, "keeping distance " + Integer.toString(direction));
-		int[] sensor = com.getSensors();
-		
-		int turnDirection = 2; //right sensor if turning left
-		int cturnDirection = 0;
-    	if (direction < 0) {
-    		turnDirection = 0; //left sensor if turning right
-    		cturnDirection = 2;
-    	}
-    	
-    	SensorCondition endOfObstacle = new SensorCondition(this) {
-			public int[] s_new = com.getSensors();
-			public int s_old;
-			
-			@Override
-			public boolean holds() {
-				s_old = s_new[0];
-				s_new = robot.com.getSensors();
-				if (s_new[0] - s_old >= 20) {
-					return true;
-				}
-				return false;
-			}
-
-			@Override
-			public void reset() {
-				s_new = com.getSensors();
-				s_old = s_new[0];
-			}
-
-			@Override
-			public int getInt() {
-				return s_old;
-			}
-		};
-		
-		SensorCondition findObstacle = new SensorCondition(this) {
-			public int[] s_new = robot.com.getSensors();
-			
-			private int nearestPoint;
-			private double theta;
-			private double rtheta;
-			private long t0;
-			
-			@Override
-			public boolean holds() {
-				s_new = robot.com.getSensors();
-				if (s_new[0] < nearestPoint) {
-					nearestPoint = s_new[0];
-					theta = timeToDegrees(System.currentTimeMillis() - t0);
-				}
-				rtheta = timeToDegrees(System.currentTimeMillis() - t0);
-				if (rtheta > 90 ) {
-					return true;
-				}
-				return false;
-			}
-			
-			@Override
-			public void reset() {
-				nearestPoint = 255;
-				t0 = System.currentTimeMillis();
-			};
-
-			@Override
-			public double getDouble() {
-				return (rtheta - theta);
-			}
-			
-			@Override
-			public int getInt() {
-				return nearestPoint;
-			}
-		};
-    	
-		
-		while(true) {
-			sleep_h(100);
-			
-			
-			endOfObstacle.reset();
-			this.turnRightUntil(endOfObstacle);
-			int distance = endOfObstacle.getInt();
-			System.out.println(distance - RANGE_THRESHOLD);
-			sensor = com.getSensors();
-			System.out.println(sensor[cturnDirection]);
-			
-			if (sensor[cturnDirection] <= (distance)) {
-				drive(8);
-			}
-			else {
-				drive(distance);
-			}
-		
-			findObstacle.reset();
-			this.turnLeftUntil(findObstacle);
-			turn(direction * (findObstacle.getDouble()));
-			drive(findObstacle.getInt() - RANGE_THRESHOLD);
-		
-		}
-		
-	}
-	
+    }	
     
     public void driveUntilObstacle() {
         int[] s = new int[3];
@@ -669,36 +512,6 @@ public class Robot {
     }
     
     /**
-     * By using the m-line(line from starting point to goal) this implementation
-     * of an obstacle avoidance algorithm is the most efficient one in most situations.
-     * However, there are cases in which a different implementation(Bug 1) is way more
-     * efficient.
-     */
-    public void bug2(){
-    	
-    	m_point = new Location(robotLocation);
-    	double previousDistance = euclideanDistance(m_point, goal);
-
-    	while(true){
-    		double distToGoal = euclideanDistance(robotLocation, goal);
-    		if(previousDistance < distToGoal){
-    			followObstacle(-1);
-    		}else{
-        		turnToGoal();
-        		driveAndStopForObstacles(distToGoal);
-            	distToGoal = euclideanDistance(robotLocation, goal);
-        		if(withinCircumferenceOfGoal()){
-        			return;
-        		}else{
-        			m_point = new Location(robotLocation);
-        			previousDistance = euclideanDistance(m_point, goal);
-        			followObstacle(-1);
-        		}
-    		}
-    	}
-    }
-    
-    /**
      * The Roboter should change into following mode 
      * leave following mode if it hits the m-line (closer to goal than m_point) again
      * @param direction : 1 ->turn counter-clockwise, -1 -> turn clockwise <br>
@@ -707,7 +520,7 @@ public class Robot {
      * note that a leavingCondition can't be used until driveUntil is as accurate as drive
      */
     public void followObstacle(int direction) {
-    	Log.i(TAG,"following obstacle");
+    	Log.i(TAG, "following obstacle");
 
     	int[] sensor = com.getSensors();
     	Location temp;
@@ -716,21 +529,105 @@ public class Robot {
     	if(sensor[0] == 255 && sensor[1] == 255 && sensor[2] == 255) {
     		return;
     	}
+    	//put robot into a useful transformation
+    	int right = sensor[2];
+    	while ((sensor[0] > 50 && right < 50) && Math.abs(sensor[0] - right) >= 20) {
+    		turn(-10);
+    		sensor = com.getSensors();
+    	}
+
+    	//not used yet, as turn direction is hardcoded
+    	int turnDirection = 2; //right sensor if turning left
+		int cturnDirection = 0;
+    	if (direction < 0) {
+    		turnDirection = 0; //left sensor if turning right
+    		cturnDirection = 2;
+    	}
+    	
+    	drive(sensor[0] - RANGE_THRESHOLD);
+
+    	//Keep Distance RANGE_THRESHOLD to obstacle while circling around it
+    	SensorCondition endOfObstacle = new SensorCondition(this) {
+			public int[] s_new = com.getSensors();
+			public int s_old;
+			
+			@Override
+			public boolean holds() {
+				s_old = s_new[0];
+				s_new = robot.com.getSensors();
+				if (s_new[0] - s_old >= 20) {
+					return true;
+				}
+				return false;
+			}
+
+			@Override
+			public void reset() {
+				s_new = com.getSensors();
+				s_old = s_new[0];
+			}
+
+			@Override
+			public int getInt() {
+				return s_old;
+			}
+		};
+		
+		SensorCondition findObstacle = new SensorCondition(this) {
+			public int[] s_new = robot.com.getSensors();
+			
+			private int nearestPoint;
+			private double theta;
+			private double rtheta;
+			private long t0;
+			
+			@Override
+			public boolean holds() {
+				s_new = robot.com.getSensors();
+				if (s_new[0] < nearestPoint) {
+					nearestPoint = s_new[0];
+					theta = timeToDegrees(System.currentTimeMillis() - t0);
+				}
+				rtheta = timeToDegrees(System.currentTimeMillis() - t0);
+				if (rtheta > 90 ) {
+					return true;
+				}
+				return false;
+			}
+			
+			@Override
+			public void reset() {
+				nearestPoint = 255;
+				t0 = System.currentTimeMillis();
+			};
+
+			@Override
+			public double getDouble() {
+				return (rtheta - theta);
+			}
+			
+			@Override
+			public int getInt() {
+				return nearestPoint;
+			}
+		};
+    	
+		//can't use a sensorcondition until driveUntil is as accurate as drive
 		double alpha;
 		double hyp;
-		int distance;
-		
 		while(true) {
 			sleep_h(100);
-
-			distance = 12;
+						
+			endOfObstacle.reset();
+			this.turnRightUntil(endOfObstacle);
+			int distance = 12;
 			drive(distance);
 
 			//BEGIN check for mline that may have been encountered during driving distance
 			//unfortunately driveUntil causes too much inaccuracy and can't be used yet
 			
-			System.out.println("robotlocation: " + (robotLocation));
-			System.out.println("goallocation: " + goal);
+			Log.i(TAG, "robotlocation: " + (robotLocation));
+			Log.i(TAG, "goallocation: " + goal);
 			temp = new Location(robotLocation); //save current robotlocation
 			alpha = getAngleRad(robotLocation);
 			hyp = Math.abs(robotLocation.getY()/Math.sin(alpha));
@@ -741,8 +638,8 @@ public class Robot {
 				robotLocation.setX(Math.cos(alpha) * hyp);
 				robotLocation.setY(Math.sin(alpha) * hyp);
 				
-				if (encounteredMline(10) && euclideanDistance(robotLocation, goal) < euclideanDistance(m_point, goal)) {
-					System.out.println("encountered mline on: " + robotLocation);
+				if (encounteredMline(15) && euclideanDistance(robotLocation, goal) < euclideanDistance(m_point, goal)) {
+					Log.v(TAG, "encountered mline on: " + robotLocation);
 					robotLocation.setX(temp.getX());
 					robotLocation.setY(temp.getY());
 					
@@ -755,8 +652,11 @@ public class Robot {
 			robotLocation.setY(temp.getY());
 
 			//END check for mline
-			
-			turn(90);
+
+			findObstacle.reset();
+			this.turnLeftUntil(findObstacle);
+			turn(direction * (findObstacle.getDouble()));
+			drive(findObstacle.getInt() - RANGE_THRESHOLD);
 		
 		}
     }
