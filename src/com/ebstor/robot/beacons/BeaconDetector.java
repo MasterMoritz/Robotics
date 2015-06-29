@@ -193,13 +193,12 @@ public class BeaconDetector {
         if (diameter1/diameter2 < 0.50 || diameter2/diameter1 < 0.50) return 0;
 
         /* check if the contours adjoin
-         * 2 diffs because we don't know which one is on top, lazy version
         */
         double diff1 = Math.abs((fourTuple1[3].y-fourTuple2[3].y)/(fourTuple1[0].y - fourTuple1[3].y));
         double diff2 = Math.abs((fourTuple2[3].y-fourTuple1[3].y)/(fourTuple1[0].y - fourTuple1[3].y));
         /* if the difference between top of one contour and lowest of the other (divided by top-bottom to make it
          * independent of the distance) is smaller than 1/10 then the contours do not adjoin */
-        //if (diff1 < 1/10. && diff2 < 1/10.) return 0;
+        if (diff1 < 1/10. && diff2 < 1/10.) return 0;
 
         /* check if they are in the same x area */
         double diameterX = diameter1/ 2;
