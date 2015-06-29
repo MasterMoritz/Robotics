@@ -32,7 +32,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     private static final String  TAG              = "ColorBlobActivity";
     private static List<Scalar> BALLS_HSV = new  ArrayList<>();
     private static final Scalar  GREEN_BALL_RGBA = new Scalar(12,75,12,255);
-    private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60); // TODO make this a correct default value
+    private static final Scalar  RED_BALL_HSV = new Scalar(360,100,60);
     private static final Scalar  LOWEST_POINT_RGBA = new Scalar(34,200,1,255);
     private static final boolean testmode = false;
     private static Mat           homographyMatrix;
