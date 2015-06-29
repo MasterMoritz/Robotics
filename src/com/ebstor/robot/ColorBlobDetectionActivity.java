@@ -183,39 +183,8 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     }
 
     /**
-     * find the nearest ball in the given color
-     * @param ballColorHSV
+     * finds balls in a frame and sets nearestBallEgo
      */
-    public void findBall(Scalar ballColorHSV) {
-    	mDetector.setHsvColor(ballColorHSV);
-        mDetector.process(mRgba);
-        
-        List<MatOfPoint> contours = mDetector.getContours();
-        Log.v(TAG, "ball contour count: " + contours.size());
-        Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
-
-        Point ball = new Point(0,Double.NEGATIVE_INFINITY);
-
-        boolean ballfound = false;
-        for (MatOfPoint m : contours) {
-        	if (isCircle(m)) {
-                Point nearest = Collections.max(m.toList(),pointComparator);
-                if (!inRange(imageCoordToEgoCoord(nearest))) continue;
-                ballfound = true;
-                if (pointComparator.compare(nearest,ball) > 0)
-                    ball = nearest;
-            }
-        }
-
-        if (ballfound) {
-            nearestBallEgo = imageCoordToEgoCoord(ball);
-            Log.v(TAG, "nearest ball coordinates: " + nearestBallEgo);
-        } else {
-            nearestBallEgo = null;
-        }
-
-        ballLocationUpdated = true;
-    }
     public void findBalls() {
     	Point ball = new Point(0,Double.NEGATIVE_INFINITY);
     	boolean ballfound = false;
@@ -227,10 +196,7 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 	        List<MatOfPoint> contours = mDetector.getContours();
 	        Log.v(TAG, "ball contour count: " + contours.size());
 	        Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
-	
-	       
-	
-	        
+
 	        for (MatOfPoint m : contours) {
 	        	if (isCircle(m)) {
 	                Point nearest = Collections.max(m.toList(),pointComparator);
@@ -259,32 +225,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      */
     private boolean inRange(Point egoPoint) {
         return (Math.sqrt(Math.pow(egoPoint.x,2) + Math.pow(egoPoint.y,2)) < 300);
-    }
-
-    public boolean isInBeacon(MatOfPoint contour) {
-    	//get highest middlepoint of contour
-    	BeaconContour acontour = new BeaconContour(contour);
-    	Point[] apoints = acontour.get4Tuple();
-    	Point highestMiddle = new Point( (Math.abs(apoints[2].x) - Math.abs(apoints[1].x))/2 + apoints[1].x, apoints[3].y);
-    	
-    	//compare with lower beacon colors
-        List<MatOfPoint> contours;
-        
-        //search for red
-    	mDetector.setHsvColor(BeaconColor.RED.hsvColor());
-        mDetector.process(mRgba);
-        contours = mDetector.getContours();
-        Point[] colorpoints;
-        
-        for (MatOfPoint c : contours) {
-        	colorpoints = (new BeaconContour(c)).get4Tuple();
-        	
-        	// if highestMiddle is between colorpoints then contour is in beacon
-        	if (highestMiddle.x >= colorpoints[1].x && highestMiddle.x <= colorpoints[2].x && highestMiddle.y <= colorpoints[0].y) {
-        		return true;
-        	}
-        }
-    	return false;
     }
 
 
@@ -366,7 +306,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
                     }
                     break;
 
-                //not sure what to do with it
                 case TRY_LOCALIZE:
                     for (int i = 0; i < 10; i++) {
 	                	beaconDetector.process(mRgba);
@@ -443,7 +382,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
                 case GOTO_BALL:
                 	Log.v("STATE_MACHINE", "GOTO_BALL");
-                	//not sure how it is intended
                     robot.turn(Robot.degreesToBall(nearestBallEgo));
                     boolean obstacle = robot.driveAndStopForObstacles(Robot.euclideanDistance(new Location(), ball) - 30);
                     if (obstacle) {
@@ -734,7 +672,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
      * @return the egocentric coordinates in cm, x heads to the front y heads to the left
      */
     public static Point imageCoordToEgoCoord(Point imgPoint) {
-        //if (testmode) return imgPoint;
         if (homographyMatrix == null) throw new RuntimeException("we don't even have a homography matrix yet!");
         if (imgPoint == null) return null;
         Mat src =  new Mat(1, 1, CvType.CV_32FC2);
@@ -751,7 +688,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
           float x = 380.0f;
           float y = 105; // coordinates of first detected inner corner on chessboard
     	  float delta = 25.0f; // size of a single square edge in chessboard
-    	  //y += 8*delta;
     	  LinkedList<Point> PointList = new LinkedList<>();
 
     	  // Define real-world coordinates for given chessboard pattern:
@@ -782,22 +718,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
     	  }
     	}
 
-
-    /**
-     * @return the point that is the nearest to the robot or null if both p1 and p2 are null
-     */
-    private Point getLowestPoint(Point p1, Point p2) {
-        if (p1 == null)
-            if (p2 == null)
-                return null;
-            else
-                return p2;
-        else if (p2 == null)
-            return p1;
-        else if (pointComparator.compare(p1,p2) <= 0)
-            return p2;
-        else return p1;
-    }
 
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
@@ -831,14 +751,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         int pointCount = touchedRect.width*touchedRect.height;
         for (int i = 0; i < mBlobColorHsv.val.length; i++)
             mBlobColorHsv.val[i] /= pointCount;
-
-        /*mBlobColorRgba = convertScalarHsv2Rgba(mBlobColorHsv);
-
-        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
-                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");*/
-
-
-        //Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 
         touchedRegionRgba.release();
         touchedRegionHsv.release();
@@ -878,14 +790,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         }
     }
 
-   /* public void calibratePurpleBeacon(MenuItem item) {
-        if (mBlobColorHsv != null) {
-            BeaconColor.GREEN.setHsvColor(mBlobColorHsv);
-            Log.i("colorcalibration", "purple beacon: " + mBlobColorHsv);
-            mBlobColorHsv = null;
-        }
-    }*/
-
     public void calibrateGreenBeacon(MenuItem item) {
         if (mBlobColorHsv != null) {
             BeaconColor.GREEN.setHsvColor(mBlobColorHsv);
@@ -907,13 +811,6 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.camera_menu, menu);
         return true;
-    }
-
-    private Scalar convertScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
-        return new Scalar(pointMatRgba.get(0, 0));
     }
 
     private Scalar convertScalarRgba2Hsv(Scalar rgbaColor) {
@@ -1023,12 +920,5 @@ public class ColorBlobDetectionActivity extends MainActivity implements OnTouchL
 
     public void test(View view) {
         startExam3(view);
-        /*beaconDetector.process(mRgba);
-        relocate();
-        if (mBlobColorHsv != null) {
-            mDetector.setHsvColor(mBlobColorHsv);
-            mDetector.process(mRgba);
-            isCircle(mDetector.getContours().get(0));
-        }*/
     }
 }
